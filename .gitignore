@@ -7,5 +7,4 @@ fastcgi_temp/
 logs/
 proxy_temp/
 scgi_temp/
-mime.types
 nginx.conf.compiled
