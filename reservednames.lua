@@ -1,7 +1,6 @@
 return {
   'irs',
   'cra',
-  'ccp',
   'apple',
   'google',
   'pornhub',
@@ -24,7 +23,5 @@ return {
   'slack',
   'minecraft',
   'roblox',
-  'airbus',
-  'boeing',
   'microsoft'
 }
