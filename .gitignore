@@ -8,3 +8,7 @@ logs/
 proxy_temp/
 scgi_temp/
 nginx.conf.compiled
+/luarocks
+/lua
+/lua_modules
+/.luarocks
