@@ -1,17 +1,25 @@
+local uuid = require 'util.uuid'
 local jwt = require 'resty.jwt'
 
 local function generateLoginToken(id)
   local keyfile = io.open('jwtrs256.key', 'r')
   local key = keyfile:read('a')
+  keyfile:close()
+  local time = os.time()
+
   local table = {
     header = {
       typ = 'JWT',
       alg = 'RS256'
     },
     payload = {
-      user = {
-        id = id
-      }
+      iss = 'chat.innatical.com',
+      aud = 'chat.innatical.com',
+      sub = id,
+      iat = time,
+      nbf = time,
+      exp = time + 86400, -- 24 hours in seconds
+      jti = uuid()
     }
   }
   return jwt:sign(key, table)

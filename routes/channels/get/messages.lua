@@ -1,0 +1,43 @@
+local helpers = require 'lapis.application'
+local validate = require 'lapis.validate'
+local Channels = require 'models.channels'
+
+local map = require 'util.map'
+local empty = require 'util.empty'
+local json = require 'cjson'
+
+return function(self)
+  validate.assert_valid(self.params, {
+    { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
+  })
+
+  local channel = helpers.assert_error(Channels:find({ id = self.params.id }), 'ChannelNotFound')
+
+  local pager = channel:get_messages_paginated({
+    per_page = 25,
+    ordered = {
+      'created_at'
+    },
+    order = 'desc'
+  })
+
+  local page = pager:get_page(self.params.created_at)
+
+  local messages = map(page, function(row)
+    return {
+      id = row.id,
+      author_id = row.author_id,
+      created_at = row.created_at,
+      updated_at = row.updated_at,
+      content = row.content
+    }
+  end)
+
+  if empty(messages) then
+    messages = json.empty_array
+  end
+
+  return {
+    json = messages
+  }
+end

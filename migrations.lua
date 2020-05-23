@@ -18,8 +18,9 @@ return {
       { 'id', 'uuid NOT NULL' },
       { 'author_id', 'uuid NOT NULL' },
       { 'content', types.text },
-      { 'time', types.time },
       { 'channel_id', 'uuid NOT NULL' },
+      { 'created_at', types.time},
+      { 'updated_at', types.time},
 
       'PRIMARY KEY (id)'
     })

@@ -1,0 +1,39 @@
+local Users = require 'models.users'
+local helpers = require 'lapis.application'
+local validate = require 'lapis.validate'
+local preload = require 'lapis.db.model'.preload
+
+local json = require 'cjson'
+
+local map = require 'util.map'
+local empty = require 'util.empty'
+
+return function(self)
+  validate.assert_valid(self.params, {
+    { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
+  })
+
+  local members = helpers.assert_error(Users:find({ id = self.params.id }), 'UserNotFound'):get_members()
+  preload(members, 'community')
+
+  local memberStubs = map(members, function(row)
+    local community = row:get_community()
+    return {
+      id = row.id,
+      community = {
+        id = community.id,
+        icon = community.icon,
+        name = community.name,
+        large = community.large
+      }
+    }
+  end)
+
+  if empty(memberStubs) then
+    memberStubs = json.empty_array
+  end
+
+  return {
+    json = memberStubs
+  }
+end
