@@ -24,10 +24,11 @@ require('routes.messages')(app)
 
 -- Middleware
 app:before_filter(function(self)
+  self.res.headers['Access-Control-Allow-Origin'] = '*'
+  self.res.headers['Access-Control-Allow-Methods'] = '*' -- owo, maybe * _breaks things_ maybe define the methods manually
+  self.res.headers['Access-Control-Allow-Headers'] = 'Authorization'
+
   if self.req.method == 'OPTIONS' then
-    self.res.headers['Access-Control-Allow-Origin'] = '*'
-    self.res.headers['Access-Control-Allow-Methods'] = '*' -- owo, maybe * _breaks things_ maybe define the methods manually
-    self.res.headers['Access-Control-Allow-Headers'] = 'Authorization'
     self:write({
       status = 203
     })

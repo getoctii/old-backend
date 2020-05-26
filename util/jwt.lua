@@ -18,7 +18,7 @@ local function generateLoginToken(id)
       sub = id,
       iat = time,
       nbf = time,
-      exp = time + 86400, -- 24 hours in seconds
+      exp = time + 604800, -- 1 week in seconds
       jti = uuid()
     }
   }

@@ -1,6 +1,7 @@
 local helpers = require 'lapis.application'
 local validate = require 'lapis.validate'
 local Channels = require 'models.channels'
+local preload = require 'lapis.db.model'.preload
 
 local map = require 'util.map'
 local empty = require 'util.empty'
@@ -22,11 +23,18 @@ return function(self)
   })
 
   local page = pager:get_page(self.params.created_at)
+  preload(page, 'author')
 
   local messages = map(page, function(row)
+    local author = row:get_author()
     return {
       id = row.id,
-      author_id = row.author_id,
+      author = {
+        id = author.id,
+        username = author.username,
+        avatar = author.avatar,
+        discriminator = author.discriminator
+      },
       created_at = row.created_at,
       updated_at = row.updated_at,
       content = row.content
