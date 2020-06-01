@@ -34,6 +34,13 @@ return {
       'PRIMARY KEY (id)'
     })
 
+    schema.create_table('invites', {
+      { 'invite', 'uuid NOT NULL' },
+      { 'community_id', 'uuid NOT NULL'},
+
+      'PRIMARY KEY (id)'
+    })
+
     schema.create_table('channels', {
       { 'id', 'uuid NOT NULL' },
       { 'name', types.text },
