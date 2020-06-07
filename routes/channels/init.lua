@@ -11,4 +11,6 @@ return function(app)
     GET = helpers.capture_errors_json(require('routes.channels.get.messages')),
     POST = helpers.capture_errors_json(require('routes.channels.post.messages'))
   }))
+
+  app:post('channels.typing', '/channels/:id:/typing', helpers.capture_errors_json(require('routes.channels.post.typing')))
 end

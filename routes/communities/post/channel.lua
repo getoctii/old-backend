@@ -4,6 +4,7 @@ local helpers = require 'lapis.application'
 local Channels = require 'models.channels'
 
 local uuid = require 'util.uuid'
+local broadcast = require 'util.broadcast'
 
 return function(self)
   validate.assert_valid(self.params, {
@@ -17,6 +18,12 @@ return function(self)
     id = uuid(),
     name = self.params.name,
     community_id = community.id
+  })
+
+  broadcast('community:' .. community.id, 'NEW_CHANNEL', {
+    id = channel.id,
+    name = channel.name,
+    community_id = channel.community_id
   })
 
   return {

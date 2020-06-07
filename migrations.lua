@@ -35,7 +35,7 @@ return {
     })
 
     schema.create_table('invites', {
-      { 'invite', 'uuid NOT NULL' },
+      { 'id', 'uuid NOT NULL' },
       { 'community_id', 'uuid NOT NULL'},
 
       'PRIMARY KEY (id)'
