@@ -6,6 +6,7 @@ local encoding = require 'lapis.util.encoding'
 local rand = require 'openssl.rand'
 local http = require 'resty.http'
 local json = require 'cjson'
+local generateLoginToken = require 'util.jwt'
 
 return function(self)
   validate.assert_valid(self.params, {
@@ -38,11 +39,7 @@ return function(self)
   return {
     status = 201,
     json = {
-      id = user.id,
-      username = user.username,
-      avatar = user.avatar,
-      discriminator = user.discriminator,
-      email = user.email
+      authorization = generateLoginToken(user.id)
     }
   }
 end

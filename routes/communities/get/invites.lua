@@ -13,19 +13,22 @@ return function(self)
   })
 
   local community = helpers.assert_error(Communities:find({ id = self.params.id }), 'CommunityNotFound')
-  local channels = map(community:get_channels(), function(row) return {name = row.name, id = row.id} end)
+  local invites = map(community:get_invites(), function(row)
+    return {
+      id = row.id,
+      code = row.code,
+      author_id = row.author_id,
+      created_at = row.created_at,
+      updated_at = row.updated_at,
+      uses = row.uses
+    }
+  end)
 
-  if empty(channels) then
-    channels = json.empty_array
+  if empty(invites) then
+    invites = json.empty_array
   end
 
   return {
-    json = {
-      id = community.id,
-      name = community.name,
-      icon = community.icon,
-      large = community.large,
-      channels = channels
-    }
+    json = invites
   }
 end

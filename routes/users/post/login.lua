@@ -16,12 +16,7 @@ return function(self)
 
   return {
     json = {
-      authorization = generateLoginToken(user.id),
-      id = user.id,
-      username = user.username,
-      avatar = user.avatar,
-      discriminator = user.discriminator,
-      email = user.email
+      authorization = generateLoginToken(user.id)
     }
   }
 end

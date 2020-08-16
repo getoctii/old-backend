@@ -6,7 +6,7 @@ config('development', {
     user = 'postgres',
     password = 'password',
     database = 'neko-chat',
-    port = 5433
+    port = 5432
   },
   public_key = [[
 -----BEGIN PUBLIC KEY-----

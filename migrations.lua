@@ -19,8 +19,8 @@ return {
       { 'author_id', 'uuid NOT NULL' },
       { 'content', types.text },
       { 'channel_id', 'uuid NOT NULL' },
-      { 'created_at', types.time},
-      { 'updated_at', types.time},
+      { 'created_at', types.time },
+      { 'updated_at', types.time },
 
       'PRIMARY KEY (id)'
     })
@@ -36,7 +36,12 @@ return {
 
     schema.create_table('invites', {
       { 'id', 'uuid NOT NULL' },
-      { 'community_id', 'uuid NOT NULL'},
+      { 'code', 'uuid NOT NULL' },
+      { 'community_id', 'uuid NOT NULL' },
+      { 'author_id', 'uuid NOT NULL' },
+      { 'created_at', types.time },
+      { 'updated_at', types.time },
+      { 'uses', types.integer },
 
       'PRIMARY KEY (id)'
     })
