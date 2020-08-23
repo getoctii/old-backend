@@ -14,10 +14,10 @@ return function(self)
     { 'username', exists = true, min_length = 3, max_length = 16, matches_pattern = '^%a+$', 'InvalidUsername' },
     { 'password', exists = true, min_length = 8, max_length = 128, 'InvalidPassword' },
     { 'email', exists = true, min_length = 3, max_length = 128, matches_pattern = '^[A-Za-z0-9%.%%%+%-]+@[A-Za-z0-9%.%%%+%-]+%.%w%w%w?%w?$', 'InvalidEmail' },
-    { 'codes', exists = true, is_uuid = true, 'WrongBetaCode' }
+    { 'betaCode', exists = true, is_uuid = true, 'WrongBetaCode' }
   })
 
-  local code = helpers.assert_error(Codes:find({ id = self.params.code }), { 400, 'WrongBetaCode' })
+  local code = helpers.assert_error(Codes:find({ id = self.params.betaCode }), { 400, 'WrongBetaCode' })
   if code.used then helpers.yield_error({ 400, 'WrongBetaCode' }) end
 
   local salt = encoding.encode_base64(assert(rand.bytes(32))) -- 256 bit salt because we paranoid bois
