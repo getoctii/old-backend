@@ -1,5 +1,5 @@
-local helpers = require 'lapis.application'
+local guard = require 'util.guard'
 
 return function(app)
-  app:get('/messages/:id', helpers.capture_errors_json(require('routes.messages.get.message')))
+  app:get('/messages/:id', guard(require('routes.messages.get.message')))
 end

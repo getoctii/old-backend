@@ -6,7 +6,7 @@ local uuid = require 'util.uuid'
 
 return function(self)
   validate.assert_valid(self.params, {
-    { 'name', exists = true, min_length = 2, max_length = 16, 'CommunityNameInvalid' }
+    { 'name', exists = true, min_length = 2, max_length = 16, { 400, 'CommunityNameInvalid' }}
   })
 
   local community = assert(Communities:create({ -- TODO: handle all db errors

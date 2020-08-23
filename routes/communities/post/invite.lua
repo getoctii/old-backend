@@ -6,7 +6,7 @@ local uuid = require 'util.uuid'
 return function(self)
   print('Hello World!')
   validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
+    { 'id', exists = true, is_uuid = true, { 400, 'InvalidUUID' }}
   })
 
   local invite = Invites:create({

@@ -9,10 +9,10 @@ local empty = require 'util.empty'
 
 return function(self)
   validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
+    { 'id', exists = true, is_uuid = true, { 400, 'InvalidUUID' }}
   })
 
-  local community = helpers.assert_error(Communities:find({ id = self.params.id }), 'CommunityNotFound')
+  local community = helpers.assert_error(Communities:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
   local channels = map(community:get_channels(), function(row) return {name = row.name, id = row.id} end)
 
   if empty(channels) then

@@ -13,7 +13,7 @@ return function(self)
     { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
   })
 
-  local members = helpers.assert_error(Users:find({ id = self.params.id }), 'UserNotFound'):get_members()
+  local members = helpers.assert_error(Users:find({ id = self.params.id }), { 404, 'UserNotFound' }):get_members()
   preload(members, 'community')
 
   local memberStubs = map(members, function(row)

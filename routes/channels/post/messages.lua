@@ -7,7 +7,7 @@ local uuid = require 'util.uuid'
 local broadcast = require 'util.broadcast'
 
 return function(self)
-  local channel = helpers.assert_error(Channels:find({ id = self.params.id }), 'ChannelNotFound')
+  local channel = helpers.assert_error(Channels:find({ id = self.params.id }), { 404, 'ChannelNotFound' })
 
   local row = Messages:create({
     id = uuid(),

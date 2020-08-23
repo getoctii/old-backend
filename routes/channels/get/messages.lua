@@ -9,10 +9,10 @@ local json = require 'cjson'
 
 return function(self)
   validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
+    { 'id', exists = true, is_uuid = true, { 400, 'InvalidUUID' }}
   })
-
-  local channel = helpers.assert_error(Channels:find({ id = self.params.id }), 'ChannelNotFound')
+  print(self.params.created_at)
+  local channel = helpers.assert_error(Channels:find({ id = self.params.id }), { 404, 'ChannelNotFound' })
 
   local pager = channel:get_messages_paginated({
     per_page = 25,

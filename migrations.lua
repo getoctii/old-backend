@@ -49,7 +49,7 @@ return {
     schema.create_table('channels', {
       { 'id', 'uuid NOT NULL' },
       { 'name', types.text },
-      { 'community_id', 'uuid NOT NULL' },
+      { 'community_id', 'uuid' },
 
       'PRIMARY KEY (id)'
     })
@@ -60,6 +60,24 @@ return {
       { 'community_id', 'uuid NOT NULL' },
 
       'PRIMARY KEY (id)'
+    })
+  end,
+  [1597624597] = function()
+    schema.create_table('conversations', {
+      { 'id', 'uuid NOT NULL' },
+      { 'channel_id', 'uuid NOT NULL'}
+    })
+
+    schema.create_table('participants', {
+      { 'id', 'uuid NOT NULL' },
+      { 'conversation_id', 'uuid NOT NULL'},
+      { 'user_id', 'uuid NOT NULL' }
+    })
+  end,
+  [1598154490] = function()
+    schema.create_table('codes', {
+      { 'id', 'uuid NOT NULL' },
+      { 'used', types.boolean }
     })
   end
 }

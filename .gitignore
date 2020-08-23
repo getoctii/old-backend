@@ -2,13 +2,10 @@
 *.key
 *.key.pub
 *.pub
-client_body_temp/
-fastcgi_temp/
 logs/
-proxy_temp/
-scgi_temp/
 nginx.conf.compiled
 /luarocks
 /lua
 /lua_modules
 /.luarocks
+temp/

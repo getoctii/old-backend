@@ -18,6 +18,7 @@ require('routes.channels')(app)
 require('routes.communities')(app)
 require('routes.events')(app)
 require('routes.messages')(app)
+require('routes.conversations')(app)
 
 
 -- TODO: Implement OPTION routes
@@ -26,7 +27,7 @@ require('routes.messages')(app)
 app:before_filter(function(self)
   self.res.headers['Access-Control-Allow-Origin'] = '*'
   self.res.headers['Access-Control-Allow-Methods'] = '*' -- owo, maybe * _breaks things_ maybe define the methods manually
-  self.res.headers['Access-Control-Allow-Headers'] = 'Authorization'
+  self.res.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type'
 
   if self.req.method == 'OPTIONS' then
     self:write({

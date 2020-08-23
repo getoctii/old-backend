@@ -8,11 +8,11 @@ local broadcast = require 'util.broadcast'
 
 return function(self)
   validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID' },
-    { 'name', exists = true, min_length = 2, max_length = 16, 'ChannelNameInvalid' }
+    { 'id', exists = true, is_uuid = true, { 400, 'InvalidUUID' }},
+    { 'name', exists = true, min_length = 2, max_length = 16, { 400, 'ChannelNameInvalid' }}
   })
 
-  local community = helpers.assert_error(Communities:find({ id = self.params.id }), 'CommunityNotFound')
+  local community = helpers.assert_error(Communities:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
 
   local channel = Channels:create({
     id = uuid(),

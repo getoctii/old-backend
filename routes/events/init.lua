@@ -1,5 +1,5 @@
-local helpers = require 'lapis.application'
+local guard = require 'util.guard'
 
 return function(app)
-  app:get('/events/subscribe', helpers.capture_errors_json(require('routes.events.get.subscribe')))
+  app:get('/events/subscribe', guard(require('routes.events.get.subscribe')))
 end
