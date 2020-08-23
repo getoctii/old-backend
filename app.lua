@@ -15,9 +15,9 @@ require 'util.validators.uuid'
 -- Routes
 require('routes.users')(app)
 require('routes.channels')(app)
-require('routes.communities')(app)
+-- require('routes.communities')(app)
 require('routes.events')(app)
-require('routes.messages')(app)
+-- require('routes.messages')(app)
 require('routes.conversations')(app)
 
 
@@ -25,7 +25,7 @@ require('routes.conversations')(app)
 
 -- Middleware
 app:before_filter(function(self)
-  self.res.headers['Access-Control-Allow-Origin'] = '*'
+  self.res.headers['Access-Control-Allow-Origin'] = 'https://chat.innatical.com'
   self.res.headers['Access-Control-Allow-Methods'] = '*' -- owo, maybe * _breaks things_ maybe define the methods manually
   self.res.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type'
 
@@ -37,7 +37,7 @@ app:before_filter(function(self)
   end
 
   if self.route_name ~= 'users.post.login' and self.route_name ~= 'users.post.register' then
-    local token = jwt:verify(config.public_key, self.req.headers.Authorization, {
+    local token = jwt:verify(config.public_key, self.req.headers.Authorization or self.params.authorization, {
       iss = validators.equals('chat.innatical.com'),
       aud = validators.equals('chat.innatical.com'),
       nbf = validators.is_not_before(),

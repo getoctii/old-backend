@@ -43,6 +43,10 @@ return function(self) -- Damn, we make a lot of queries here. Let's consider bat
     user_id = recipient.id, -- TODO: check that acc exists
     conversation_id = conversation.id
   }))
+
+  resubscribe('user:' .. self.user_id)
+  resubscribe('user:' .. recipient.id)
+
   -- TODO: Batch these broadcast messages
   broadcast('user:' .. self.user_id, 'NEW_PARTICIPANT', {
     id = from.id,
@@ -53,8 +57,6 @@ return function(self) -- Damn, we make a lot of queries here. Let's consider bat
     }
   })
 
-  resubscribe('user:' .. self.user_id)
-
   broadcast('user:' .. recipient.id, 'NEW_PARTICIPANT', {
     id = to.id,
     conversation= {
@@ -63,8 +65,6 @@ return function(self) -- Damn, we make a lot of queries here. Let's consider bat
       participants = {self.user_id, recipient.id}
     }
   })
-
-  resubscribe('user:' .. recipient.id)
 
   return {
     json = {

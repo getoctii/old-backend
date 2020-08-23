@@ -1,8 +1,9 @@
-local lapis = require('lapis')
-local db = require('lapis.db')
+local Users = require 'models.users'
 
--- WARNING: not tested, don't trust
-function GenerateDiscriminator(username)
-  local takendiscriminators = db.select('DISTINCT discriminator FROM users WHERE username=?', username)
-  local gendiscriminator = db.select('floor(random() * 9999 + 1)::int')
+local function generateDiscriminator(username)
+  local num = Users:count('username = ?', username)
+  if num >= 9999 then return false, { 400, 'InvalidDiscriminator' } end
+  return num + 1
 end
+
+return generateDiscriminator

@@ -1,5 +1,7 @@
 local helpers = require 'lapis.application'
 local validate = require 'lapis.validate'
+local map = require 'util.map'
+local contains = require 'util.contains'
 
 local Conversations = require 'models.conversations'
 
@@ -9,6 +11,9 @@ return function(self)
   })
 
   local conversation = helpers.assert_error(Conversations:find({ id = self.params.id }), { 404, 'ConversationNotFound' })
+  helpers.assert_error(contains(map(conversation:get_participants(), function(participant)
+    return participant.user_id
+  end), self.user_id), { 403, 'MissingPermissions' })
 
   return {
     json = {

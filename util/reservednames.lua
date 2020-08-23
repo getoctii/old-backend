@@ -1,6 +1,5 @@
 return {
   'irs',
-  'cra',
   'apple',
   'google',
   'pornhub',

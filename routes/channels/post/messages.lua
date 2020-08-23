@@ -3,11 +3,17 @@ local helpers = require 'lapis.application'
 local Channels = require 'models.channels'
 local Messages = require 'models.messages'
 local uuid = require 'util.uuid'
+local map = require 'util.map'
+local contains = require 'util.contains'
 
 local broadcast = require 'util.broadcast'
 
 return function(self)
   local channel = helpers.assert_error(Channels:find({ id = self.params.id }), { 404, 'ChannelNotFound' })
+
+  helpers.assert_error(contains(map(channel:get_conversation():get_participants(), function(participant)
+    return participant.user_id
+  end), self.user_id), { 403, 'MissingPermissions' })
 
   local row = Messages:create({
     id = uuid(),
@@ -31,8 +37,6 @@ return function(self)
     updated_at = row.updated_at,
     content = row.content,
     channel_id = row.channel_id,
-    author_id = row.author_id,
-    community_id = channel.community_id,
     author = {
       id = author.id,
       username = author.username,

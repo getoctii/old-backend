@@ -2,7 +2,6 @@ local Users = require 'models.users'
 local helpers = require 'lapis.application'
 local validate = require 'lapis.validate'
 local preload = require 'lapis.db.model'.preload
-local mm = require 'mm'
 
 local json = require 'cjson'
 
@@ -13,6 +12,8 @@ return function(self)
   validate.assert_valid(self.params, {
     { 'id', exists = true, is_uuid = true, { 400, 'InvalidUUID' } }
   })
+
+  helpers.assert_error(self.params.id == self.user_id, { 403, 'InvalidUser' })
 
   local participants = helpers.assert_error(Users:find({ id = self.params.id }), { 404, 'UserNotFound' }):get_participants()
   preload(participants, { conversation = 'participants' })
