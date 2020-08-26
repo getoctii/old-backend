@@ -29,7 +29,7 @@ app:before_filter(function(self)
   self.res.headers['Access-Control-Allow-Origin'] = '*'
   self.res.headers['Access-Control-Allow-Methods'] = '*' -- owo, maybe * _breaks things_ maybe define the methods manually
   self.res.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type'
-  self.res.headers['owo'] = 'uwu'
+  self.res.headers['owo'] = 'suckmycock'
 
   if self.req.method == 'OPTIONS' then
     self:write({
