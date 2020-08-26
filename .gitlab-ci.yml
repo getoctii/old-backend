@@ -1,0 +1,18 @@
+deploy:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk update && apk add openssh-client bash rsync
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+  environment:
+    name: production
+    url: api.chat.innatical.com
+  script:
+    - ssh neko@10.0.0.6 'cd /home/neko/client-gateway && git pull && lapis build production'
+  only:
+    - master
