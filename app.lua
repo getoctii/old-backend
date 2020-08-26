@@ -1,3 +1,4 @@
+package.path = package.path .. ';./?/init.lua'
 local lapis = require 'lapis'
 local config = require 'lapis.config'.get()
 
@@ -25,7 +26,7 @@ require('routes.conversations')(app)
 
 -- Middleware
 app:before_filter(function(self)
-  self.res.headers['Access-Control-Allow-Origin'] = 'https://chat.innatical.com'
+  self.res.headers['Access-Control-Allow-Origin'] = '*'
   self.res.headers['Access-Control-Allow-Methods'] = '*' -- owo, maybe * _breaks things_ maybe define the methods manually
   self.res.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type'
 

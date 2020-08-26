@@ -2,7 +2,7 @@ local uuid = require 'util.uuid'
 local jwt = require 'resty.jwt'
 
 local function generateLoginToken(id)
-  local keyfile = io.open('jwtrs256.key', 'r')
+  local keyfile = assert(io.open('jwtRS256.key', 'r'))
   local key = keyfile:read('a')
   keyfile:close()
   local time = os.time()

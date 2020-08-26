@@ -9,3 +9,4 @@ nginx.conf.compiled
 /lua_modules
 /.luarocks
 temp/
+config.lua

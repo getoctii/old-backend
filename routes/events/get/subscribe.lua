@@ -25,7 +25,7 @@ return function(self)
       ['Grip-Channel'] = table.concat(grip_channels, ','),
       ['Content-Type'] = 'text/event-stream',
       ['Grip-Keep-Alive'] = '\\n; format=cstring; timeout=30',
-      ['Grip-Link'] = string.format('</events/subscribe?authorization=%s>; rel=next', self.req.headers.Authorization) -- TODO: Make this wayyy less hacky
+      ['Grip-Link'] = string.format('</events/subscribe?authorization=%s>; rel=next', self.req.headers.Authorization or self.params.authorization) -- TODO: Make this wayyy less hacky
     }
   }
 end
