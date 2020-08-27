@@ -51,6 +51,6 @@ return function(self)
 
   return {
     status = 201,
-    render = false
+    layout = false
   }
 end
