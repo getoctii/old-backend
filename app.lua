@@ -12,6 +12,7 @@ local app = lapis.Application()
 
 -- Validators
 require 'util.validators.uuid'
+require 'util.validators.matches_regexp'
 
 -- Routes
 require('routes.users')(app)
