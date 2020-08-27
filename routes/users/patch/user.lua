@@ -50,6 +50,7 @@ return function(self)
   user:update(patch)
 
   return {
-    status = 201
+    status = 201,
+    render = false
   }
 end
