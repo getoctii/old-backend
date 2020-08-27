@@ -13,6 +13,6 @@ deploy:
     name: production
     url: api.chat.innatical.com
   script:
-    - ssh neko@10.0.0.6 'cd /home/neko/client-gateway && git pull && lapis build production'
+    - ssh neko@10.0.0.6 'cd /home/neko/client-gateway && git pull && lapis migrate production && lapis build production'
   only:
     - master
