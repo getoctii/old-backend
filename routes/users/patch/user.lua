@@ -35,7 +35,9 @@ return function(self)
 
   if self.params.username then
     patch.username = self.params.username
-    patch.discriminator = generateDiscriminator(self.params.username)
+    if user.discriminator ~= 0 then
+      patch.discriminator = generateDiscriminator(self.params.username)
+    end
   end
 
   if self.params.avatar then
