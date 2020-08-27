@@ -1,7 +1,11 @@
 local guard = require 'util.guard'
+local respond_to = require 'lapis.application'.respond_to
 
 return function(app)
-  app:get('users.get.user', '/users/:id', guard(require('routes.users.get.user'))) -- DONE
+  app:match('users.get.user', '/users/:id', respond_to({
+    GET = guard(require('routes.users.get.user')),
+    PATCH = guard(require('routes.users.patch.user'))
+  }))
   app:get('users.get.find', '/users/find', guard(require('routes.users.get.find')))
   -- app:get('users.get.members', '/users/:id/members', guard(require('routes.users.get.members')))
   app:get('users.get.participants', '/users/:id/participants', guard(require('routes.users.get.participants')))
