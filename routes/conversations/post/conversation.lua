@@ -21,7 +21,7 @@ return function(self) -- Damn, we make a lot of queries here. Let's consider bat
   helpers.assert_error(self.params.recipient ~= self.user_id, { 422, 'InvalidRecipient' }) -- TODO: add as validation
 
   local recipient = helpers.assert_error(Users:find({ id = self.params.recipient }), { 404, 'RecipientNotFound' })
-  helpers.assert_error(empty(db.select('A.conversation_id, A.user_id, B.user_id FROM participants A, participants B WHERE A.conversation_id = B.conversation_id AND (A.user_id = ? OR A.user_id = ?) AND (B.user_id = ? OR B.user_id = ?);', self.user_id, recipient.id, self.user_id, recipient.id)), { 422, 'AlreadyExists' })
+  helpers.assert_error(not db.select('A.conversation_id, A.user_id, B.user_id FROM participants A, participants B WHERE A.conversation_id = B.conversation_id AND (A.user_id = ? OR A.user_id = ?) AND (B.user_id = ? OR B.user_id = ?);', self.user_id, recipient.id, self.user_id, recipient.id), { 422, 'AlreadyExists' })
 
   local channel = Channels:create({
     id = uuid(),
