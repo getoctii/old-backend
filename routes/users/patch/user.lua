@@ -52,7 +52,7 @@ return function(self)
   user:update(patch)
 
   return {
-    status = 201,
+    status = 204,
     layout = false
   }
 end

@@ -79,5 +79,13 @@ return {
       { 'id', 'uuid NOT NULL' },
       { 'used', types.boolean }
     })
+  end,
+  [1598571122] = function()
+    schema.create_table('relationships', {
+      { 'id', 'uuid NOT NULL' },
+      { 'user_id', 'uuid NOT NULL' },
+      { 'recipient_id', 'uuid NOT NULL' },
+      { 'accepted', types.boolean }
+    })
   end
 }
