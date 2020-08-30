@@ -13,7 +13,8 @@ return function(self)
     id = user.id,
     username = user.username,
     avatar = user.avatar,
-    discriminator = user.discriminator
+    discriminator = user.discriminator,
+    status = user.status
   }
 
   if user.id == self.user_id then

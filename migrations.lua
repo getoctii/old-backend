@@ -87,5 +87,8 @@ return {
       { 'recipient_id', 'uuid NOT NULL' },
       { 'accepted', types.boolean }
     })
+  end,
+  [1598764297] = function()
+    schema.add_column('users', 'status', 'text')
   end
 }

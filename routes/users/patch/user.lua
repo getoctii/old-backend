@@ -14,7 +14,8 @@ return function(self)
     { 'oldPassword', exists = true, optional = true, min_length = 8, max_length = 128, 'InvalidPassword' },
     { 'newPassword', exists = true, optional = true, min_length = 8, max_length = 128, 400, 'InvalidPassword' },
     { 'username', exists = true, optional = true, min_length = 3, max_length = 16, matches_pattern = '^%a+$', 'InvalidUsername' },
-    { 'avatar', exists = true, optional = true, matches_regexp = '^https:\\/\\/file\\.coffee\\/u\\/[a-zA-Z0-9_-]{7,14}\\.(png|jpeg|jpg)$', 'InvalidAvatar' }
+    { 'avatar', exists = true, optional = true, matches_regexp = '^https:\\/\\/file\\.coffee\\/u\\/[a-zA-Z0-9_-]{7,14}\\.(png|jpeg|jpg)$', 'InvalidAvatar' },
+    { 'status', exists = true, optional = true, min_length = 1, max_length = 40, 'InvalidStatus' }
   })
 
   helpers.assert_error(self.params.id == self.user_id, { 403, 'MissingPermissions' })
@@ -46,6 +47,10 @@ return function(self)
 
     helpers.assert_error(status == 200, { 400, 'InvalidAvatar' })
     patch.avatar = self.params.avatar
+  end
+
+  if self.params.status then
+    patch.status = self.params.status
   end
 
   helpers.assert_error(not empty(patch), { 400, 'InvalidPatch'})
