@@ -16,7 +16,7 @@ return function(self)
     return participant.user_id
   end), self.user_id), { 403, 'MissingPermissions' })
 
-  local participant = assert(Participants.find({ conversation_id = conversation.id, user_id = self.user_id}))
+  local participant = assert(Participants:find({ conversation_id = conversation.id, user_id = self.user_id}))
   participant:delete()
 
   return {
