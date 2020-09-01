@@ -1,6 +1,10 @@
 local guard = require 'util.guard'
+local respond_to = require 'lapis.application'.respond_to
 
 return function(app)
-  app:get('conversations.get.conversation', '/conversations/:id', guard(require('routes.conversations.get.conversation')))
   app:post('conversations.post.conversation', '/conversations', guard(require('routes.conversations.post.conversation')))
+  app:match('conversations.get.conversation', '/users/:id', respond_to({
+    GET = guard(require('routes.conversations.delete.conversation')),
+    DELETE = guard(require('routes.conversations.get.conversation'))
+  }))
 end
