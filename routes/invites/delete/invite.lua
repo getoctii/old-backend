@@ -8,11 +8,11 @@ return function(self)
   })
 
   local invite = helpers.assert_error(Invites:find({ id = self.params.id }), 'InviteNotFound')
+  helpers.assert_error(invite:get_community().owner_id == self.user_id, { 403, 'MissingPermissions' })
+
+  assert(invite:delete())
 
   return {
-    json = {
-      id = invite.id,
-      code = invite.code
-    }
+    layout = false
   }
 end

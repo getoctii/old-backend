@@ -1,13 +1,22 @@
+local Communities = require 'models.communities'
+
 local Invites = require 'models.invites'
 local validate = require 'lapis.validate'
+local helpers = require 'lapis.application'
 
 local uuid = require 'util.uuid'
+local contains = require 'util.contains'
+local map = require 'util.map'
 
 return function(self)
-  print('Hello World!')
   validate.assert_valid(self.params, {
     { 'id', exists = true, is_uuid = true, { 400, 'InvalidUUID' }}
   })
+
+  local community = helpers.assert_error(Communities:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
+  helpers.assert_error(contains(map(community:get_members(), function(member)
+    return member.user_id
+  end), self.user_id), { 403, 'MissingPermissions' })
 
   local invite = Invites:create({
     id = uuid(),

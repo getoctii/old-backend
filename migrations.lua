@@ -6,7 +6,7 @@ return {
     schema.create_table('users', {
       { 'id', 'uuid NOT NULL' },
       { 'username', types.text },
-      { 'avatar', types.text }, 
+      { 'avatar', types.text },
       { 'password', types.text },
       { 'discriminator', types.integer },
       { 'email', types.text },
@@ -90,5 +90,8 @@ return {
   end,
   [1598764297] = function()
     schema.add_column('users', 'status', 'text')
+  end,
+  [1600578423] = function()
+    schema.add_column('communities', 'owner_id', 'uuid NOT NULL')
   end
 }

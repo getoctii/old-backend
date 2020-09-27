@@ -13,6 +13,8 @@ return function(self)
     { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
   })
 
+  helpers.assert_error(self.params.id == self.user_id, { 403, 'InvalidUser' })
+
   local members = helpers.assert_error(Users:find({ id = self.params.id }), { 404, 'UserNotFound' }):get_members()
   preload(members, 'community')
 
@@ -24,7 +26,8 @@ return function(self)
         id = community.id,
         icon = community.icon,
         name = community.name,
-        large = community.large
+        large = community.large,
+        owner_id = community.owner_id
       }
     }
   end)

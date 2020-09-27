@@ -1,6 +1,9 @@
+local Members = require 'models.members'
 local Communities = require 'models.communities'
 local validate = require 'lapis.validate'
 local helpers = require 'lapis.application'
+local broadcast = require 'util.broadcast'
+local resubscribe = require 'util.resubscribe'
 
 local json = require 'cjson'
 
@@ -17,20 +20,19 @@ return function(self)
   helpers.assert_error(contains(map(community:get_members(), function(member)
     return member.user_id
   end), self.user_id), { 403, 'MissingPermissions' })
-  local channels = map(community:get_channels(), function(row) return {name = row.name, id = row.id} end)
+  helpers.assert_error(community.owner_id ~= self.user_id, { 403, 'MissingPermissions' })
 
-  if empty(channels) then
-    channels = json.empty_array
-  end
+  local member = Members:find({ user_id = self.user_id, community_id = community.id })
+
+  member:delete()
+
+  broadcast('user:' .. self.user_id, 'DELETE_MEMBER', {
+    id = member.id
+  })
+
+  resubscribe('user:' .. self.user_id)
 
   return {
-    json = {
-      id = community.id,
-      name = community.name,
-      icon = community.icon,
-      large = community.large,
-      channels = channels,
-      owner_id = community.owner_id
-    }
+    layout = false
   }
 end

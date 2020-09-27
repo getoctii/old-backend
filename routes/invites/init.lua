@@ -1,4 +1,6 @@
+local guard = require 'util.guard'
+
 return function(app)
-  app:get('invites.get.invite', '/invites/:id', require('routes.invites.get.invite'))
-  app:post('invites.post.invite', '/invites/:id/use', require('routes.invites.post.use'))
+  app:delete('invites.delete.invite', '/invites/:id', guard(require('routes.invites.delete.invite')))
+  app:post('invites.post.invite', '/invites/:code/use', guard(require('routes.invites.post.use')))
 end

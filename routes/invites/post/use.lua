@@ -1,6 +1,9 @@
 local Users = require 'models.users'
-local Invites = require 'models.invities'
+local Invites = require 'models.invites'
 local Members = require 'models.members'
+
+local broadcast = require 'util.broadcast'
+local resubscribe = require 'util.resubscribe'
 
 local helpers = require 'lapis.application'
 local validate = require 'lapis.validate'
@@ -8,19 +11,37 @@ local uuid = require 'util.uuid'
 
 return function(self)
   validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
+    { 'code', exists = true, is_uuid = true, 'InvalidCode' }
   })
 
-  local invite = helpers.assert_error(Invites:find({ id = self.params.id }), 'InviteNotFound')
-  assert(Users:find({ id = self.user_id }))
+  local invite = helpers.assert_error(Invites:find({ code = self.params.code }), 'InviteNotFound')
+  helpers.assert_error(not Members:find({ community_id = invite.community_id, user_id = self.user_id }), { 400, 'AlreadyInCommunity' })
 
-  Members:create({
+  local community = invite:get_community()
+
+  local member = assert(Members:create({
     id = uuid(),
     community_id = invite.community_id,
     user_id = self.user_id
+  }))
+
+  broadcast('user:' .. self.user_id, 'NEW_MEMBER', {
+    id = member.id,
+    community = {
+      id = community.id,
+      icon = community.icon,
+      name = community.name,
+      large = community.large,
+      owner_id = community.owner_id
+    }
   })
 
+  resubscribe('user:' .. self.user_id)
+
   return {
-    status = 204
+    status = 200,
+    json = {
+      community_id = invite.community_id
+    }
   }
 end

@@ -17,8 +17,11 @@ return function(self)
   })
 
   local community = helpers.assert_error(Communities:find({ id = self.params.id }), 'CommunityNotFound')
+  helpers.assert_error(community.owner_id == self.user_id, { 403, 'MissingPermissions' })
+
   assert(community:delete())
   assert(db.delete('members', 'community_id = ?', self.params.id))
-
-  return {}
+  assert(db.delete('channels', 'community_id = ?', self.params.id))
+  -- TODO: Delete messages as well.
+  return { layout = false }
 end

@@ -17,8 +17,9 @@ require 'util.validators.matches_regexp'
 -- Routes
 require('routes.users')(app)
 require('routes.channels')(app)
--- require('routes.communities')(app)
+require('routes.communities')(app)
 require('routes.events')(app)
+require('routes.invites')(app)
 -- require('routes.messages')(app)
 require('routes.conversations')(app)
 
