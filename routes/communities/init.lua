@@ -16,4 +16,5 @@ return function (app)
   --app:delete('communities.delete.community', '/communities/:id', helpers.capture_errors_json(require('routes.communities.delete.community')))
   app:post('communities.post.channel', '/communities/:id/channels', guard(require('routes.communities.post.channel')))
   app:post('communities.post.leave', '/communities/:id/leave', guard(require('routes.communities.post.leave')))
+  app:get('communities.get.members', '/communities/:id/members', guard(require('routes.communities.get.members')))
 end --owo

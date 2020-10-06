@@ -1,6 +1,6 @@
 local schema = require 'lapis.db.schema'
 local types = schema.types
-
+-- why just why _sql_
 return {
   [1588207587] = function()
     schema.create_table('users', {
@@ -93,5 +93,16 @@ return {
   end,
   [1600578423] = function()
     schema.add_column('communities', 'owner_id', 'uuid NOT NULL')
+  end,
+  [1601356257] = function()
+    schema.create_table('voice_sessions', {
+      { 'id', 'uuid NOT NULL' },
+      { 'user_id', 'uuid NOT NULL' },
+      { 'recipient_id', 'uuid NOT NULL' }
+    })
+  end,
+  [1601514092] = function()
+    schema.add_column('members', 'created_at', types.time {default = 'NOW()'})
+    schema.add_column('members', 'updated_at', types.time {default = 'NOW()'})
   end
 }
