@@ -7,6 +7,7 @@ local inspect = require 'inspect'
 local validators = require 'resty.jwt-validators'
 local helpers = require 'lapis.application'
 local mm = require 'mm'
+local raven = require 'raven'
 
 local app = lapis.Application()
 
@@ -20,16 +21,19 @@ require('routes.channels')(app)
 require('routes.communities')(app)
 require('routes.events')(app)
 require('routes.invites')(app)
--- require('routes.messages')(app)
 require('routes.conversations')(app)
+-- require('routes.voice')(app)
 
-
--- TODO: Implement OPTION routes
+local rvn = raven.new {
+  sender = require('raven.senders.ngx').new {
+    dsn = 'https://15652eb7625a4485bbabde18e37fed37@o271654.ingest.sentry.io/5453638'
+  }
+}
 
 -- Middleware
 app:before_filter(function(self)
   self.res.headers['Access-Control-Allow-Origin'] = '*'
-  self.res.headers['Access-Control-Allow-Methods'] = '*' -- owo, maybe * _breaks things_ maybe define the methods manually
+  self.res.headers['Access-Control-Allow-Methods'] = '*'
   self.res.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type'
 
   if self.req.method == 'OPTIONS' then
@@ -60,7 +64,14 @@ app:before_filter(function(self)
   end
 end)
 
-function app:handle_error()
+function app:handle_error(err, trace)
+  rvn:captureException({{
+    type = err,
+    value = trace,
+    module = '__builtins__'
+  }}, {
+    transaction = ngx.var.request_uri
+  })
   return {
     status = 500,
     json = {
