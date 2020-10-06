@@ -60,6 +60,17 @@ app:before_filter(function(self)
   end
 end)
 
+function app:handle_error()
+  return {
+    status = 500,
+    json = {
+      errors = {
+        'ServerError'
+      }
+    }
+  }
+end
+
 function app:handle_404()
   return { status = 404, json = {
     errors = {
