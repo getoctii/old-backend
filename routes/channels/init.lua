@@ -13,5 +13,5 @@ return function(app)
     POST = guard(require('routes.channels.post.messages'))
   }))
 
-  -- app:post('channels.typing', '/channels/:id/typing', guard(require('routes.channels.post.typing')))
+  app:post('channels.typing', '/channels/:id/typing', guard(require('routes.channels.post.typing')))
 end
