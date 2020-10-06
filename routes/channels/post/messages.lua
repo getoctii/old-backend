@@ -7,8 +7,13 @@ local map = require 'util.map'
 local contains = require 'util.contains'
 
 local broadcast = require 'util.broadcast'
+local validate = require 'lapis.validate'
 
 return function(self)
+  validate.assert_valid(self.params, {
+    { 'id', exists = true, is_uuid = true, 'InvalidUUID' },
+    { 'content', exists = true, min_length = 1, max_length = 2000 }
+  })
   local channel = helpers.assert_error(Channels:find({ id = self.params.id }), { 404, 'ChannelNotFound' })
 
   if not channel.community_id then
