@@ -58,6 +58,7 @@ return function(self)
 
   if channel.community_id then
     local community = channel:get_community()
+    message_event.community_id = channel.community_id
     message_event.community_name = community.name
     message_event.channel_name = channel.name
   end
