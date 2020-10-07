@@ -5,7 +5,7 @@ local uuid = require 'util.uuid'
 local contains = require 'util.contains'
 
 return function(self)
-  helpers.assert_valid(contains({ '99343aac-2301-415d-aece-17b021d3a459', '4e317329-8b17-4473-b1e1-4ceb9056cb5b' }, self.user_id), { 403, 'NotAllowed' })
+  helpers.assert_error(contains({ '99343aac-2301-415d-aece-17b021d3a459', '4e317329-8b17-4473-b1e1-4ceb9056cb5b' }, self.user_id), { 403, 'NotAllowed' })
   local code = assert(Codes:create({ id = uuid(), used = false }))
   return {
     json = {
