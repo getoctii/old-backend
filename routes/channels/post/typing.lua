@@ -29,7 +29,7 @@ return function(self)
 
   broadcast('channel:' .. channel.id, 'TYPING', {
     channel_id = channel.id,
-    username = user.username
+    user_id = user.id
   })
 
   return {
