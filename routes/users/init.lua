@@ -2,6 +2,7 @@ local guard = require 'util.guard'
 local respond_to = require 'lapis.application'.respond_to
 
 return function(app)
+  app:post('users.post.code', '/users/code', guard(require('routes.users.post.code')))
   app:match('users.get.user', '/users/:id', respond_to({
     GET = guard(require('routes.users.get.user')),
     PATCH = guard(require('routes.users.patch.user'))
