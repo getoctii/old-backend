@@ -4,7 +4,7 @@ local Messages = Model:extend('messages', {
   timestamp = true,
   relations = {
     { 'author', belongs_to = 'users' },
-    { 'channel', belongs_to = 'channel' }
+    { 'channel', belongs_to = 'channels' }
   }
 })
 
