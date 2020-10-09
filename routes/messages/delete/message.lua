@@ -28,8 +28,9 @@ return function(self)
 
   assert(message:delete())
 
-  broadcast('channel:' .. channel.id, 'DELETE_MESSAGE', {
-    id = message.id
+  broadcast('channel:' .. channel.id, 'DELETED_MESSAGE', {
+    id = message.id,
+    channel_id = channel.id
   })
 
   return {
