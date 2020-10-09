@@ -22,6 +22,7 @@ require('routes.communities')(app)
 require('routes.events')(app)
 require('routes.invites')(app)
 require('routes.conversations')(app)
+require('routes.messages')(app)
 -- require('routes.voice')(app)
 
 local rvn = raven.new {
