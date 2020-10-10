@@ -40,7 +40,7 @@ return function(self)
 
   broadcast('community:' .. community.id, 'JOIN_MEMBER', {
     id = member.id,
-    community = community.id,
+    community_id = community.id,
     user_id = self.user_id
   })
 
