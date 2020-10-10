@@ -46,6 +46,12 @@ return function(self)
 
   resubscribe('user:' .. self.user_id)
 
+  broadcast('community:' .. community.id, 'JOIN_MEMBER', {
+    id = member.id,
+    community = community.id,
+    user_id = self.user_id
+  })
+
   return {
     json = {
       id = community.id,

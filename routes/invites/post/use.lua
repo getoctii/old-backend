@@ -25,7 +25,7 @@ return function(self)
     user_id = self.user_id
   }))
 
-  broadcast('user:' .. self.user_id, 'NEW_MEMBER', {
+  broadcast('user:' .. self.user_id, 'NEW_MEMBER', { -- Send in same event
     id = member.id,
     community = {
       id = community.id,
@@ -37,6 +37,12 @@ return function(self)
   })
 
   resubscribe('user:' .. self.user_id)
+
+  broadcast('community:' .. community.id, 'JOIN_MEMBER', {
+    id = member.id,
+    community = community.id,
+    user_id = self.user_id
+  })
 
   return {
     status = 200,
