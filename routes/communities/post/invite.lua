@@ -14,9 +14,7 @@ return function(self)
   })
 
   local community = helpers.assert_error(Communities:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
-  helpers.assert_error(contains(map(community:get_members(), function(member)
-    return member.user_id
-  end), self.user_id), { 403, 'MissingPermissions' })
+  helpers.assert_error(community.owner_id == self.user_id, { 403, 'MissingPermissions' })
 
   local invite = Invites:create({
     id = uuid(),
