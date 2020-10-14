@@ -104,5 +104,12 @@ return {
   [1601514092] = function()
     schema.add_column('members', 'created_at', types.time {default = 'NOW()'})
     schema.add_column('members', 'updated_at', types.time {default = 'NOW()'})
+  end,
+  [1602648987] = function()
+    schema.create_table('newsletter_subscribers', {
+      { 'email', types.text },
+
+      'PRIMARY KEY (email)'
+    })
   end
 }

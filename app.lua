@@ -44,7 +44,7 @@ app:before_filter(function(self)
     return
   end
 
-  if self.route_name ~= 'users.post.login' and self.route_name ~= 'users.post.register' then
+  if self.route_name ~= 'users.post.login' and self.route_name ~= 'users.post.register' and self.route_name ~= 'users.post.newsletter' then
     local token = jwt:verify(config.public_key, self.req.headers.Authorization or self.params.authorization, {
       iss = validators.equals('chat.innatical.com'),
       aud = validators.equals('chat.innatical.com'),

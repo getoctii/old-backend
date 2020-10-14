@@ -12,5 +12,6 @@ return function(app)
   app:get('users.get.participants', '/users/:id/participants', guard(require('routes.users.get.participants')))
   -- app:post('users.post.user', '/users/:id/avatar', guard(require('routes.users.post.user')))
   app:post('users.post.login', '/users/login',  guard(require('routes.users.post.login')))
+  app:post('users.post.newsletter', '/users/newsletter',  guard(require('routes.users.post.newsletter')))
   app:post('users.post.register', '/users',  guard(require('routes.users.post.register')))
 end
