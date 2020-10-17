@@ -1,5 +1,5 @@
 local validate = require 'lapis.validate'
-local NewsletterSubscribers = require 'newsletter_subscriptions'
+local NewsletterSubscribers = require 'models.newsletter_subscriptions'
 
 return function(self)
   validate.assert_valid(self.params, {
