@@ -1,5 +1,8 @@
+local config = require 'lapis.config'.get()
 local validate = require 'lapis.validate'
 local NewsletterSubscribers = require 'models.newsletter_subscriptions'
+local http = require 'resty.http'
+local json = require 'cjson'
 
 return function(self)
   validate.assert_valid(self.params, {
@@ -8,6 +11,29 @@ return function(self)
 
   if not NewsletterSubscribers:find({ email = self.params.email }) then
     NewsletterSubscribers:create({ email = self.params.email })
+    local httpc = assert(http.new())
+    assert(httpc:request_uri(config.subscriptions_webhook, {
+      method = 'POST',
+      headers = {
+        ['content-type'] = 'application/json'
+      },
+      body = json.encode({
+        embeds = {
+          {
+            title = 'New Subscriber',
+            color = 5439232,
+            fields = {
+              {
+                name = 'Email',
+                value = self.params.email
+              }
+            }
+          }
+        },
+        username = 'Octii',
+        avatar_url = 'https://file.coffee/u/gpk_5iaji4.png'
+      })
+    }))
   end
 
   return {
