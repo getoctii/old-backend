@@ -21,13 +21,7 @@ return function(self)
         embeds = {
           {
             title = 'New Subscriber',
-            color = 5439232,
-            fields = {
-              {
-                name = 'Email',
-                value = self.params.email
-              }
-            }
+            color = 5439232
           }
         },
         username = 'Octii',
