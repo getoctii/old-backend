@@ -15,7 +15,7 @@ local inspect = require 'inspect'
 
 return function(self) -- Damn, we make a lot of queries here. Let's consider batching them.
   validate.assert_valid(self.params, {
-    { 'recipient', exists = true, is_uuid = true, { 400, 'InvalidUUID' } }
+    { 'recipient', exists = true, is_uuid = true, 'InvalidUUID' }
   })
 
   helpers.assert_error(self.params.recipient ~= self.user_id, { 422, 'InvalidRecipient' }) -- TODO: add as validation

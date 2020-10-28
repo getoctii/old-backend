@@ -7,7 +7,7 @@ local Conversations = require 'models.conversations'
 
 return function(self)
   validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, { 400, 'InvalidUUID' } }
+    { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
   })
 
   local conversation = helpers.assert_error(Conversations:find({ id = self.params.id }), { 404, 'ConversationNotFound' })

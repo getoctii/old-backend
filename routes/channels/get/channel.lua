@@ -8,7 +8,7 @@ local Channels = require 'models.channels'
 
 return function(self)
   validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, { 400, 'InvalidUUID' }}
+    { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
   })
 
   local channel = helpers.assert_error(Channels:find({ id = self.params.id }), { 404, 'ChannelNotFound' })

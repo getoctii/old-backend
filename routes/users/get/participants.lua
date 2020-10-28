@@ -10,7 +10,7 @@ local empty = require 'util.empty'
 
 return function(self)
   validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, { 400, 'InvalidUUID' } }
+    { 'id', exists = true, is_uuid = true, 'InvalidUUID'}
   })
 
   helpers.assert_error(self.params.id == self.user_id, { 403, 'InvalidUser' })
