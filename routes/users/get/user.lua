@@ -15,7 +15,7 @@ return function(self)
     avatar = user.avatar,
     discriminator = user.discriminator,
     status = user.status,
-    state = user.state
+    state = Users.states:to_name(user.state)
   }
 
   if user.id == self.user_id then

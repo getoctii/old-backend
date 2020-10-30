@@ -16,11 +16,11 @@ return function(self)
     { 'username', exists = true, optional = true, min_length = 3, max_length = 16, matches_pattern = '^%a+$', 'InvalidUsername' },
     { 'avatar', exists = true, optional = true, matches_regexp = '^https:\\/\\/file\\.coffee\\/u\\/[a-zA-Z0-9_-]{7,14}\\.(png|jpeg|jpg|gif)$', 'InvalidAvatar' },
     { 'status', exists = true, optional = true, max_length = 140, 'InvalidStatus' },
-    { 'state', exists = true, optional = true, is_integer = true, one_of = {
-      Users.states.offline,
-      Users.states.idle,
-      Users.states.dnd,
-      Users.states.online,
+    { 'state', exists = true, optional = true, one_of = {
+      'offline',
+      'idle',
+      'dnd',
+      'online',
     }, 'InvalidState'}
   })
 
@@ -60,7 +60,7 @@ return function(self)
   end
 
   if self.params.state then
-    patch.state = self.params.state
+    patch.state = User.states:for_db(self.params.state)
   end
 
   helpers.assert_error(not empty(patch), { 400, 'InvalidPatch'})
