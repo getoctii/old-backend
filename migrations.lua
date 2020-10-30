@@ -1,6 +1,7 @@
 local schema = require 'lapis.db.schema'
 local types = schema.types
--- why just why _sql_
+local Users = require 'models.users'
+
 return {
   [1588207587] = function()
     schema.create_table('users', {
@@ -111,5 +112,8 @@ return {
 
       'PRIMARY KEY (email)'
     })
-  end
+  end,
+  [1604033064] = {
+    schema.add_column('users', 'state', types.integer { default = Users.states.offline })
+  }
 }

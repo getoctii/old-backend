@@ -14,7 +14,8 @@ return function(self)
     username = user.username,
     avatar = user.avatar,
     discriminator = user.discriminator,
-    status = user.status
+    status = user.status,
+    state = user.state
   }
 
   if user.id == self.user_id then

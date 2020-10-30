@@ -1,4 +1,5 @@
-local Model = require('lapis.db.model').Model
+local model = require('lapis.db.model')
+local Model, enum = model.Model, model.enum
 
 local Users = Model:extend('users', {
   relations = {
@@ -9,5 +10,12 @@ local Users = Model:extend('users', {
     { 'outgoing_relationships', has_many = 'relationships' }
   }
 })
+
+Users.states = enum {
+  offline = 1,
+  idle = 2,
+  dnd = 3,
+  online = 4
+}
 
 return Users
