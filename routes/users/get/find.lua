@@ -4,8 +4,8 @@ local Users = require 'models.users'
 
 return function(self)
   validate.assert_valid(self.params, {
-    { 'username', exists = true, min_length = 3, max_length = 16, matches_pattern = '^%a+$', { 400, 'InvalidUsername' }},
-    { 'discriminator', exists = true, is_integer = true, { 400, 'InvalidDiscriminator' }}
+    { 'username', exists = true, min_length = 3, max_length = 16, matches_pattern = '^%a+$', 'InvalidUsername'},
+    { 'discriminator', exists = true, is_integer = true, 'InvalidDiscriminator' }
   })
 
   local user = helpers.assert_error(Users:find({ username = self.params.username, discriminator = self.params.discriminator }), { 404, 'UserNotFound' })
