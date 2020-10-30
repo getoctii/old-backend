@@ -60,7 +60,7 @@ return function(self)
   end
 
   if self.params.state then
-    patch.state = User.states:for_db(self.params.state)
+    patch.state = Users.states:for_db(self.params.state)
   end
 
   helpers.assert_error(not empty(patch), { 400, 'InvalidPatch'})
