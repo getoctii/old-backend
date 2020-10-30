@@ -25,7 +25,9 @@ return function(self)
   return {
     json = {
       name = channel.name,
-      community_id = channel.community_id
+      community_id = channel.community_id,
+      description = channel.description,
+      color = channel.color
     }
   }
 end

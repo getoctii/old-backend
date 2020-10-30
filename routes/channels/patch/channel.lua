@@ -7,7 +7,9 @@ local http = require 'resty.http'
 return function(self)
   validate.assert_valid(self.params, {
     { 'id', exists = true, is_uuid = true, 'InvalidUUID' },
-    { 'name', exists = true, matches_regexp = '^[a-zA-Z0-9_\\-]+$', min_length = 2, max_length = 30, 'ChannelNameInvalid' }
+    { 'name', exists = true, optional = true, matches_regexp = '^[a-zA-Z0-9_\\-]+$', min_length = 2, max_length = 30, 'ChannelNameInvalid' },
+    { 'description', exists = true, optional = true, max_length = 140, 'InvalidDescription' },
+    { 'color', exists = true, optional = true, is_color = true, 'InvalidColor' }
   })
 
   local channel = helpers.assert_error(Channels:find({ id = self.params.id }), { 404, 'ChannelsNotFound' })
@@ -21,6 +23,14 @@ return function(self)
 
   if self.params.name then
     patch.name = self.params.name
+  end
+
+  if self.params.description then
+    patch.description = self.params.description
+  end
+
+  if self.params.color then
+    patch.color = self.params.color
   end
 
   helpers.assert_error(not empty(patch), { 400, 'InvalidPatch' })
