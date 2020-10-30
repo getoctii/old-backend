@@ -113,11 +113,11 @@ return {
       'PRIMARY KEY (email)'
     })
   end,
-  [1604033064] = {
+  [1604033064] = function()
     schema.add_column('users', 'state', types.integer { default = Users.states.offline })
-  },
-  [1604034079] = {
+  end,
+  [1604034079] = function()
     schema.add_column('channels', 'description', 'text'),
     schema.add_column('channels', 'color', types.text { default = '#0081FF' })
-  }
+  end
 }
