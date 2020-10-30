@@ -1,6 +1,5 @@
 local schema = require 'lapis.db.schema'
 local types = schema.types
-local Users = require 'models.users'
 
 return {
   [1588207587] = function()
@@ -114,10 +113,10 @@ return {
     })
   end,
   [1604033064] = function()
-    schema.add_column('users', 'state', types.integer { default = Users.states.offline })
+    schema.add_column('users', 'state', types.integer { default = 1 })
   end,
   [1604034079] = function()
     schema.add_column('channels', 'description', 'text')
     schema.add_column('channels', 'color', types.text { default = '#0081FF' })
-  end
+  end,
 }
