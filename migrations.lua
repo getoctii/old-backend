@@ -119,4 +119,9 @@ return {
     schema.add_column('channels', 'description', 'text')
     schema.add_column('channels', 'color', types.text { default = '#0081FF' })
   end,
+  [1604374460] = function()
+    schema.drop_column('users', 'state')
+    schema.add_column('users', 'state', types.integer { default = 4 })
+    schema.add_column('users', 'last_ping', 'integer')
+  end
 }

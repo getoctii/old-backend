@@ -18,6 +18,10 @@ return function(self)
     state = Users.states:to_name(user.state)
   }
 
+  if (not user.last_ping) or ((os.time() - user.last_ping) > 180) then
+    info.state = 'offline'
+  end
+
   if user.id == self.user_id then
     info.email = user.email
   end

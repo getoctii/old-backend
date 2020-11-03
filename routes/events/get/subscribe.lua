@@ -4,6 +4,7 @@ local preload = require 'lapis.db.model'.preload
 
 local map = require 'util.map'
 local flatten = require 'util.flatten'
+local db = require 'lapis.db'
 
 return function(self)
   local user = helpers.assert_error(Users:find({ id = self.user_id }), { 404, 'UserNotFound' }) -- TODO: currently we don't have a check on auth if the user exists, we should do that soon. For now we can do this
@@ -22,6 +23,10 @@ return function(self)
   local grip_channels = map(channels, function(row) return 'channel:' .. row.id end)
 
   local all_grip_channels = flatten({grip_community_channels, grip_channels, grip_communities, {'user:' .. user.id}})
+
+  user:update {
+    last_ping = os.time()
+  }
 
   return {
     headers = {
