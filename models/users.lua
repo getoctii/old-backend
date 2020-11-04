@@ -18,4 +18,10 @@ Users.states = enum {
   online = 4
 }
 
+Users.badges = enum {
+  developer = 1,
+  bug = 2,
+  special = 3
+}
+
 return Users

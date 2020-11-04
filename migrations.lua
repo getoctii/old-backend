@@ -123,5 +123,8 @@ return {
     schema.drop_column('users', 'state')
     schema.add_column('users', 'state', types.integer { default = 4 })
     schema.add_column('users', 'last_ping', 'integer')
+  end,
+  [1604471448] = function()
+    schema.add_column('users', 'badges', types.integer { array = true, default = '{}' })
   end
 }

@@ -1,6 +1,7 @@
 local validate = require 'lapis.validate'
 local helpers = require 'lapis.application'
 local Users = require 'models.users'
+local map = require 'util.map'
 
 return function(self)
   validate.assert_valid(self.params, {
@@ -15,7 +16,10 @@ return function(self)
     avatar = user.avatar,
     discriminator = user.discriminator,
     status = user.status,
-    state = Users.states:to_name(user.state)
+    state = Users.states:to_name(user.state),
+    badges = map(user.badges, function(badge)
+      return Users.badges:to_name(badge)
+    end)
   }
 
   if (not user.last_ping) or ((os.time() - user.last_ping) > 180) then
