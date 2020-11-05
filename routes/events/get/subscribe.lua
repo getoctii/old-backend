@@ -28,9 +28,10 @@ return function(self)
     last_ping = os.time()
   }
 
+  self.res.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type, Cache-Control'
+
   return {
     headers = {
-      ['Access-Control-Allow-Headers'] = 'Cache-Control',
       ['Grip-Hold'] = 'stream',
       ['Grip-Channel'] = table.concat(all_grip_channels, ','),
       ['Content-Type'] = 'text/event-stream',
