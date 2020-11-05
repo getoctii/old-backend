@@ -30,6 +30,7 @@ return function(self)
 
   return {
     headers = {
+      ['Access-Control-Allow-Headers'] = 'Cache-Control',
       ['Grip-Hold'] = 'stream',
       ['Grip-Channel'] = table.concat(all_grip_channels, ','),
       ['Content-Type'] = 'text/event-stream',
