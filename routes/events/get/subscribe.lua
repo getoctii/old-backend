@@ -28,8 +28,6 @@ return function(self)
     last_ping = os.time()
   }
 
-  self.res.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type, Cache-Control'
-
   return {
     headers = {
       ['Grip-Hold'] = 'stream',

@@ -35,7 +35,7 @@ local rvn = raven.new {
 app:before_filter(function(self)
   self.res.headers['Access-Control-Allow-Origin'] = '*'
   self.res.headers['Access-Control-Allow-Methods'] = '*'
-  self.res.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type'
+  self.res.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type, Cache-Control'
 
   if self.req.method == 'OPTIONS' then
     self:write({
