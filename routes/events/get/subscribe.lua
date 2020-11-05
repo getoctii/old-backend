@@ -29,6 +29,7 @@ return function(self)
   }
 
   return {
+    layout = false,
     headers = {
       ['Grip-Hold'] = 'stream',
       ['Grip-Channel'] = table.concat(all_grip_channels, ','),
