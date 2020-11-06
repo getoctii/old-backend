@@ -26,7 +26,7 @@ return function(self)
 
   member:delete()
 
-  broadcast('user:' .. self.user_id, 'DELETE_MEMBER', {
+  broadcast('user:' .. self.user_id, 'DELETED_MEMBER', {
     id = member.id
   })
 

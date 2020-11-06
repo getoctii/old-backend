@@ -30,7 +30,7 @@ return function(self)
   assert(channel:delete())
   assert(db.delete('messages', 'channel_id = ?', self.params.id))
 
-  broadcast('community:' .. channel.community_id, 'DELETE_CHANNEL', {
+  broadcast('community:' .. channel.community_id, 'DELETED_CHANNEL', {
     id = channel.id,
     community_id = channel.community_id
   })

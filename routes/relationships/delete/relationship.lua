@@ -16,22 +16,22 @@ return function(self)
 
     other:delete()
 
-    broadcast('user:' .. other.user_id, 'DELETE_RELATIONSHIP', {
+    broadcast('user:' .. other.user_id, 'DELETED_RELATIONSHIP', {
       id = relationship.id
     })
 
-    broadcast('user:' .. other.recipient_id, 'DELETE_RELATIONSHIP', {
+    broadcast('user:' .. other.recipient_id, 'DELETED_RELATIONSHIP', {
       id = relationship.id
     })
   end
 
   relationship:delete()
 
-  broadcast('user:' .. relationship.user_id, 'DELETE_RELATIONSHIP', {
+  broadcast('user:' .. relationship.user_id, 'DELETED_RELATIONSHIP', {
     id = relationship.id
   })
 
-  broadcast('user:' .. relationship.recipient_id, 'DELETE_RELATIONSHIP', {
+  broadcast('user:' .. relationship.recipient_id, 'DELETED_RELATIONSHIP', {
     id = relationship.id
   })
 
