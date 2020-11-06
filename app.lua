@@ -23,7 +23,7 @@ require('routes.events')(app)
 require('routes.invites')(app)
 require('routes.conversations')(app)
 require('routes.messages')(app)
--- require('routes.voice')(app)
+require('routes.voice')(app)
 
 local rvn = raven.new {
   sender = require('raven.senders.ngx').new {
