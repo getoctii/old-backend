@@ -5,5 +5,4 @@ local respond_to = require 'lapis.application'.respond_to
 return function(app)
   app:post('/voice', guard(require('routes.voice.post.voice')))
   app:post('/voice/:id/accept', guard(require('routes.voice.post.accept')))
-  app:delete('/voice/:id', guard(require('routes.voice.delete.voice')))
 end
