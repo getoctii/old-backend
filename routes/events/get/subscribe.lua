@@ -4,9 +4,14 @@ local preload = require 'lapis.db.model'.preload
 
 local map = require 'util.map'
 local flatten = require 'util.flatten'
-local db = require 'lapis.db'
+local validate = require 'lapis.validate'
 
 return function(self)
+  validate.assert_valid(self.params, {
+    { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
+  })
+
+  helpers.assert_error(self.user_id == self.params.id, { 403, 'NotAllowed' })
   local user = helpers.assert_error(Users:find({ id = self.user_id }), { 404, 'UserNotFound' }) -- TODO: currently we don't have a check on auth if the user exists, we should do that soon. For now we can do this
   local members = user:get_members()
   preload(members, { community = 'channels' })
@@ -35,7 +40,7 @@ return function(self)
       ['Grip-Channel'] = table.concat(all_grip_channels, ','),
       ['Content-Type'] = 'text/event-stream',
       ['Grip-Keep-Alive'] = '\\n; format=cstring; timeout=30',
-      ['Grip-Link'] = string.format('</events/subscribe?authorization=%s>; rel=next', self.req.headers.Authorization or self.params.authorization) -- TODO: Make this wayyy less hacky
+      ['Grip-Link'] = string.format('</events/subscribe/%s?authorization=%s>; rel=next', user.id, self.req.headers.Authorization or self.params.authorization) -- TODO: Make this wayyy less hacky
     }
   }
 end
