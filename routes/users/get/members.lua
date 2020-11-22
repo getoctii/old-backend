@@ -7,7 +7,7 @@ local json = require 'cjson'
 
 local map = require 'util.map'
 local empty = require 'util.empty'
-
+-- Uh, so sometimes the members records don't get deleted. Might want to look into that.
 return function(self)
   validate.assert_valid(self.params, {
     { 'id', exists = true, is_uuid = true, 'InvalidUUID' }

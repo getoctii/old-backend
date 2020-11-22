@@ -3,6 +3,7 @@ local helpers = require 'lapis.application'
 local map = require 'util.map'
 local contains = require 'util.contains'
 local broadcast = require 'util.broadcast'
+local db = require 'lapis.db'
 
 local Message = require 'models.messages'
 
@@ -11,7 +12,7 @@ return function(self)
     { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
   })
 
-  local message = helpers.assert_error(Message:find({ id = self.params.id }), 'MessageNotFound')
+  local message = helpers.assert_error(Message:find({ id = self.params.id }), { 404, 'MessageNotFound' })
   local channel = message:get_channel()
 
   if not channel.community_id then
@@ -25,6 +26,8 @@ return function(self)
   end
 
   helpers.assert_error(message:get_author().id == self.user_id, { 403, 'MissingPermissions' })
+
+  assert(db.delete('read', { last_read_id = message.id }))
 
   assert(message:delete())
 
