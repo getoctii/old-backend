@@ -2,6 +2,7 @@
 *.key
 *.key.pub
 *.pub
+*.pem
 logs/
 nginx.conf.compiled
 /luarocks
