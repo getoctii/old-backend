@@ -7,7 +7,7 @@ return function(channel, event, payload)
   local event_id = assert(uuid())
   local httpc = assert(http.new())
 
-  assert(httpc:request_uri(config.tastyURL .. '/publish', {
+  assert(httpc:request_uri(config.pushpin .. '/publish', {
     method = 'POST',
     headers = {
       ['content-type'] = 'application/json'

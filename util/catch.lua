@@ -1,4 +1,4 @@
-local map = require 'util.map'
+local map = require 'array'.map
 local helpers = require 'lapis.application'
 
 return function(fn)

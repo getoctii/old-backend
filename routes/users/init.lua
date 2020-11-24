@@ -1,17 +1,20 @@
+local lapis = require 'lapis'
 local guard = require 'util.guard'
 local respond_to = require 'lapis.application'.respond_to
 
-return function(app)
-  app:post('users.post.code', '/users/code', guard(require('routes.users.post.code')))
-  app:match('users.get.user', '/users/:id', respond_to({
-    GET = guard(require('routes.users.get.user')),
-    PATCH = guard(require('routes.users.patch.user'))
-  }))
-  app:get('users.get.find', '/users/find', guard(require('routes.users.get.find')))
-  app:get('users.get.members', '/users/:id/members', guard(require('routes.users.get.members')))
-  app:get('users.get.participants', '/users/:id/participants', guard(require('routes.users.get.participants')))
-  -- app:post('users.post.user', '/users/:id/avatar', guard(require('routes.users.post.user')))
-  app:post('users.post.login', '/users/login',  guard(require('routes.users.post.login')))
-  app:post('users.post.newsletter', '/users/newsletter',  guard(require('routes.users.post.newsletter')))
-  app:post('users.post.register', '/users',  guard(require('routes.users.post.register')))
-end
+local app = lapis.Application()
+app.__base = app
+app.name = "users."
+app.path = "/users"
+
+app:match('register', '',  guard(respond_to(require 'routes.users.register')))
+app:match('code', '/code', guard(respond_to(require 'routes.users.code' )))
+app:match('user', '/:id', guard(respond_to(require 'routes.users.user')))
+
+app:match('find', '/find', guard(respond_to(require 'routes.users.find' )))
+app:match('members', '/:id/members', guard(respond_to(require 'routes.users.members' )))
+app:match('participants', '/:id/participants', guard(respond_to(require 'routes.users.participants' )))
+app:match('login', '/login', guard(respond_to(require 'routes.users.login' )))
+app:match('newsletter', '/newsletter', guard(respond_to(require 'routes.users.newsletter')))
+
+return app

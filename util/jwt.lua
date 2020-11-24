@@ -1,9 +1,10 @@
+local config = require 'lapis.config'.get()
 local uuid = require 'util.uuid'
 local jwt = require 'resty.jwt'
 
 local function generateLoginToken(id)
-  local keyfile = assert(io.open('jwtRS256.key', 'r'))
-  local key = keyfile:read('a')
+  local keyfile = assert(io.open(config.jwt.private, 'r'))
+  local key = assert(keyfile:read('a'))
   keyfile:close()
   local time = os.time()
 
