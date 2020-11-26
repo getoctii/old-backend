@@ -18,4 +18,6 @@ RUN \
 
 COPY . .
 
+RUN mkdir /usr/src/app/temp
+
 CMD lapis migrate && lapis server
