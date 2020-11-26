@@ -10,7 +10,7 @@ lua-resty-jwt = "0.2.2-0"
 lapis = "1.8.2-2"
 argon2-ffi = "3.0.1-1"
 lua = "5.1"
-lua-resty-uuid = "1.1-1"
+lua-resty-jit-uuid = "0.0.7-2"
 luaossl = "20200709-0"
 array = "1.3.3-0"
 [scripts]
