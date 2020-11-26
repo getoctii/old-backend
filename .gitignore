@@ -9,5 +9,7 @@ nginx.conf.compiled
 /lua
 /lua_modules
 /.luarocks
-temp/
+temp/**
+!temp/.gitkeep
 config.lua
+keys
