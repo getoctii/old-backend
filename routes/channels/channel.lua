@@ -28,6 +28,14 @@ function Channel:GET()
   end
 
   local read = Read:find({ user_id = self.user_id, channel_id = channel.id })
+  local pager = channel:get_messages_paginated({
+    per_page = 1,
+    ordered = {
+      'created_at'
+    },
+    order = 'desc'
+  })
+
 
   return {
     json = {
@@ -35,7 +43,8 @@ function Channel:GET()
       community_id = channel.community_id,
       description = channel.description,
       color = channel.color,
-      read = (read or {}).last_read_id
+      read = (read or {}).last_read_id,
+      last_message_id = (pager:get_page()[1] or {}).id,
     }
   }
 end
