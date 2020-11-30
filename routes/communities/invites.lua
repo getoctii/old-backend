@@ -4,7 +4,7 @@ local Communities = require 'models.communities'
 local map = require 'array'.map
 local empty = require 'array'.is_empty
 local json = require 'cjson'
-local Invites = require 'models.invites'
+local InvitesModel = require 'models.invites'
 local uuid = require 'util.uuid'
 
 local Invites = {}
@@ -45,7 +45,7 @@ function Invites:POST()
   local community = helpers.assert_error(Communities:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
   helpers.assert_error(community.owner_id == self.user_id, { 403, 'MissingPermissions' })
 
-  local invite = Invites:create({
+  local invite = InvitesModel:create({
     id = uuid(),
     code = uuid(),
     community_id = self.params.id,

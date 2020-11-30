@@ -26,10 +26,13 @@ function Subscribe:GET()
   local participants = user:get_participants()
   preload(participants, { conversation = 'channel' })
 
+  local conversations = map(participants, function(row) return row:get_conversation() end)
+  local formatted_conversations = map(conversations, function(row) return 'conversation:' .. row.id end)
+
   local channels = map(participants, function(row) return row:get_conversation():get_channel() end)
   local grip_channels = map(channels, function(row) return 'channel:' .. row.id end)
 
-  local all_grip_channels = flatten({grip_community_channels, grip_channels, grip_communities, {'user:' .. user.id}})
+  local all_grip_channels = flatten({grip_community_channels, grip_channels, grip_communities, formatted_conversations, {'user:' .. user.id}})
 
   user:update {
     last_ping = os.time()

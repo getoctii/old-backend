@@ -1,6 +1,7 @@
 local validate = require 'lapis.validate'
 local helpers = require 'lapis.application'
 local Invites = require 'models.invites'
+local db = require 'lapis.db'
 
 local Invite = {}
 
@@ -12,7 +13,9 @@ function Invite:DELETE()
   local invite = helpers.assert_error(Invites:find({ id = self.params.id }), 'InviteNotFound')
   helpers.assert_error(invite:get_community().owner_id == self.user_id, { 403, 'MissingPermissions' })
 
-  assert(invite:delete())
+  assert(db.delete('invites', {
+    id = invite.id
+  }))
 
   return {
     layout = false

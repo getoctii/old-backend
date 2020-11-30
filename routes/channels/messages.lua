@@ -9,6 +9,7 @@ local preload = require 'lapis.db.model'.preload
 local empty = require 'array'.is_empty
 local json = require 'cjson'
 local MessagesModel = require 'models.messages'
+local ReadIndicators = require 'models.read'
 
 local Messages = {}
 
@@ -119,6 +120,20 @@ function Messages:POST()
   end
 
   broadcast('channel:' .. channel.id, 'NEW_MESSAGE', message_event)
+
+  local read = ReadIndicators:find({ user_id = self.user_id, channel_id = channel.id })
+
+  if not read then
+    assert(ReadIndicators:create({
+      user_id = self.user_id,
+      channel_id = channel.id,
+      last_read_id = message.id
+    }))
+  else
+    assert(read:update({
+      last_read_id = message.id
+    }))
+  end
 
   return {
     json = message

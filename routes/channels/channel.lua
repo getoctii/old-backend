@@ -39,6 +39,7 @@ function Channel:GET()
 
   return {
     json = {
+      id = channel.id,
       name = channel.name,
       community_id = channel.community_id,
       description = channel.description,
@@ -62,7 +63,9 @@ function Channel:DELETE()
     helpers.assert_error(channel:get_community().owner_id == self.user_id, { 403, 'MissingPermissions' })
   end
 
-  assert(channel:delete())
+  assert(db.delete('channels', {
+    id = channel.id
+  }))
   assert(db.delete('messages', 'channel_id = ?', self.params.id))
 
   broadcast('community:' .. channel.community_id, 'DELETED_CHANNEL', {

@@ -6,6 +6,7 @@ local map = require 'array'.map
 local Members = require 'models.members'
 local broadcast = require 'util.broadcast'
 local resubscribe = require 'util.resubscribe'
+local db = require 'lapis.db'
 
 local Leave = {}
 
@@ -22,7 +23,10 @@ function Leave:POST()
 
   local member = Members:find({ user_id = self.user_id, community_id = community.id })
 
-  member:delete()
+  -- TODO: investigate why obj:delete() errors
+  assert(db.delete('members', {
+    id = member.id
+  }))
 
   broadcast('user:' .. self.user_id, 'DELETED_MEMBER', {
     id = member.id

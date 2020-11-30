@@ -19,5 +19,6 @@ RUN \
 COPY . .
 
 RUN mkdir /usr/src/app/temp
+RUN chmod +x /usr/src/app/docker.sh
 
-CMD lapis migrate && lapis server
+ENTRYPOINT /usr/src/app/docker.sh lapis migrate && lapis server

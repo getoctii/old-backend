@@ -27,7 +27,6 @@ function Read:POST()
 
   local read = ReadIndicators:find({ user_id = self.user_id, channel_id = channel.id })
 
-  -- hacks, do u have pornstash shit setup ok do that quick, dont wanna test in prod lmao
   local pager = channel:get_messages_paginated({
     per_page = 1,
     ordered = {

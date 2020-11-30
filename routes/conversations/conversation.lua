@@ -42,12 +42,16 @@ function Conversation:DELETE()
   end), self.user_id), { 403, 'MissingPermissions' })
 
   local participant = assert(Participants:find({ conversation_id = conversation.id, user_id = self.user_id}))
-  participant:delete()
-
-  -- TODO: Notify other partiticpants.
-  broadcast('user:' .. self.user_id, 'DELETED_PARTICIPANT', {
+  assert(db.delete('participants', {
     id = participant.id
+  }))
+
+  broadcast('conversation:' .. conversation.id, 'DELETED_PARTICIPANT', {
+    id = participant.id,
+    user_id = self.user_id
   })
+
+  resubscribe('conversation:' .. conversation.id)
 
   return {
     layout = false
