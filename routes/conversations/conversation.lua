@@ -48,7 +48,8 @@ function Conversation:DELETE()
 
   broadcast('conversation:' .. conversation.id, 'DELETED_PARTICIPANT', {
     id = participant.id,
-    user_id = self.user_id
+    user_id = self.user_id,
+    conversation_id = participant:get_conversation().id
   })
 
   resubscribe('conversation:' .. conversation.id)

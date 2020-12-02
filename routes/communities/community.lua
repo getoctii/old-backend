@@ -24,14 +24,7 @@ function Community:GET()
     return member.user_id
   end), self.user_id), { 403, 'MissingPermissions' })
   local channels = map(community:get_channels(), function(row)
-    local pager = row:get_messages_paginated({
-      per_page = 1,
-      ordered = {
-        'created_at'
-      },
-      order = 'desc'
-    })
-    return {name = row.name, id = row.id, last_message_id = (pager:get_page()[1] or {}).id}
+    return row.id
   end)
 
   if empty(channels) then

@@ -16,5 +16,6 @@ app:match('members', '/:id/members', guard(respond_to(require 'routes.users.memb
 app:match('participants', '/:id/participants', guard(respond_to(require 'routes.users.participants' )))
 app:match('login', '/login', guard(respond_to(require 'routes.users.login' )))
 app:match('newsletter', '/newsletter', guard(respond_to(require 'routes.users.newsletter')))
+app:match('read', '/:id/read', guard(respond_to(require 'routes.users.read' )))
 
 return app
