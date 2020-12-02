@@ -1,10 +1,13 @@
+local lapis = require 'lapis'
 local guard = require 'util.guard'
 local respond_to = require 'lapis.application'.respond_to
 
-return function(app)
-  app:post('conversations.post.conversation', '/conversations', guard(require('routes.conversations.post.conversation')))
-  app:match('conversations.get.conversation', '/conversations/:id', respond_to({
-    GET = guard(require('routes.conversations.get.conversation')),
-    DELETE = guard(require('routes.conversations.delete.conversation'))
-  }))
-end
+local app = lapis.Application()
+app.__base = app
+app.name = "conversations."
+app.path = "/conversations"
+
+app:match('create', '', guard(respond_to(require 'routes.conversations.create' )))
+app:match('conversation', '/:id', guard(respond_to(require 'routes.conversations.conversation' )))
+
+return app

@@ -1,6 +1,13 @@
+local lapis = require 'lapis'
 local guard = require 'util.guard'
+local respond_to = require 'lapis.application'.respond_to
 
-return function(app)
-  app:delete('invites.delete.invite', '/invites/:id', guard(require('routes.invites.delete.invite')))
-  app:post('invites.post.invite', '/invites/:code/use', guard(require('routes.invites.post.use')))
-end
+local app = lapis.Application()
+app.__base = app
+app.name = "invites."
+app.path = "/invites"
+
+app:match('invite', '/:id', guard(respond_to(require 'routes.invites.invite' )))
+app:match('use', '/:code/use', guard(respond_to(require 'routes.invites.use' )))
+
+return app

@@ -1,0 +1,28 @@
+version: "3.8"
+services:
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: octii
+      POSTGRES_USER: octii
+      POSTGRES_DB: octii
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      # If you ever need to access the DB from an external tool
+      - 5432:5432
+  pushpin:
+    image: fanout/pushpin
+    volumes:
+      - ./pushpin:/etc/pushpin
+    ports: 
+      - 7999:7999
+  gateway:
+    build: .
+    volumes:
+      - ./config.lua:/usr/src/app/config.lua
+      - ./keys:/usr/src/app/keys
+    depends_on:
+      - postgres
+volumes:
+  postgres_data:

@@ -2,11 +2,14 @@
 *.key
 *.key.pub
 *.pub
+*.pem
 logs/
 nginx.conf.compiled
 /luarocks
 /lua
 /lua_modules
 /.luarocks
-temp/
+temp/**
+!temp/.gitkeep
 config.lua
+keys

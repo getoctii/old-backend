@@ -3,28 +3,17 @@ local lapis = require 'lapis'
 local config = require 'lapis.config'.get()
 
 local jwt = require 'resty.jwt'
-local inspect = require 'inspect'
 local validators = require 'resty.jwt-validators'
-local helpers = require 'lapis.application'
-local mm = require 'mm'
 local raven = require 'raven'
 
 local app = lapis.Application()
+app.include = function(self, a)
+	self.__class.include(self, a, nil, self)
+end
 
 -- Validators
 require 'util.validators.uuid'
 require 'util.validators.matches_regexp'
-
--- Routes
-require('routes.users')(app)
-require('routes.channels')(app)
-require('routes.communities')(app)
-require('routes.events')(app)
-require('routes.invites')(app)
-require('routes.conversations')(app)
-require('routes.messages')(app)
-require('routes.voice')(app)
-
 local rvn = raven.new {
   sender = require('raven.senders.ngx').new {
     dsn = 'https://15652eb7625a4485bbabde18e37fed37@o271654.ingest.sentry.io/5453638'
@@ -44,8 +33,11 @@ app:before_filter(function(self)
     return
   end
 
-  if self.route_name ~= 'users.post.login' and self.route_name ~= 'users.post.register' and self.route_name ~= 'users.post.newsletter' then
-    local token = jwt:verify(config.public_key, self.req.headers.Authorization or self.params.authorization, {
+  if self.route_name ~= 'users.login' and self.route_name ~= 'users.register' and self.route_name ~= 'users.newsletter' then
+    local key_file = assert(io.open(config.jwt.public))
+    local key = assert(key_file:read('a'))
+    key_file:close()
+    local token = jwt:verify(key, self.req.headers.Authorization or self.params.authorization, {
       iss = validators.equals('chat.innatical.com'),
       aud = validators.equals('chat.innatical.com'),
       nbf = validators.is_not_before(),
@@ -65,23 +57,23 @@ app:before_filter(function(self)
   end
 end)
 
-function app:handle_error(err, trace)
-  rvn:captureException({{
-    type = err,
-    value = trace,
-    module = '__builtins__'
-  }}, {
-    transaction = ngx.var.request_uri
-  })
-  return {
-    status = 500,
-    json = {
-      errors = {
-        'ServerError'
-      }
-    }
-  }
-end
+-- function app:handle_error(err, trace)
+--   rvn:captureException({{
+--     type = err,
+--     value = trace,
+--     module = '__builtins__'
+--   }}, {
+--     transaction = ngx.var.request_uri
+--   })
+--   return {
+--     status = 500,
+--     json = {
+--       errors = {
+--         'ServerError'
+--       }
+--     }
+--   }
+-- end
 
 function app:handle_404()
   return { status = 404, json = {
@@ -90,5 +82,15 @@ function app:handle_404()
     }
   }}
 end
+
+-- Routes
+app:include('routes.users')
+app:include('routes.channels')
+app:include('routes.communities')
+app:include('routes.events')
+app:include('routes.invites')
+app:include('routes.conversations')
+app:include('routes.messages')
+app:include('routes.voice')
 
 return app

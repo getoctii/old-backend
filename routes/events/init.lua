@@ -1,5 +1,12 @@
+local lapis = require 'lapis'
 local guard = require 'util.guard'
+local respond_to = require 'lapis.application'.respond_to
 
-return function(app)
-  app:get('/events/subscribe/:id', guard(require('routes.events.get.subscribe'))) -- TODO: innpin when?
-end
+local app = lapis.Application()
+app.__base = app
+app.name = "events."
+app.path = "/events"
+
+app:match('subscribe', '/subscribe/:id', guard(respond_to(require 'routes.events.subscribe' ))) -- TODO: innpin when?
+
+return app

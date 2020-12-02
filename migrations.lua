@@ -126,5 +126,14 @@ return {
   end,
   [1604471448] = function()
     schema.add_column('users', 'badges', types.integer { array = true, default = '{}' })
+  end,
+  [1604996163] = function()
+    schema.create_table('read', {
+      { 'user_id', 'uuid NOT NULL' },
+      { 'channel_id', 'uuid NOT NULL' },
+      { 'last_read_id', 'uuid NOT NULL' },
+
+      'PRIMARY KEY (user_id, channel_id)'
+    })
   end
 }
