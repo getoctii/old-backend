@@ -8,6 +8,7 @@ local generateLoginToken = require 'util.jwt'
 local Codes = require 'models.codes'
 local helpers = require 'lapis.application'
 local generateDiscriminator = require 'util.generatediscriminator'
+local email = require 'util.email'
 
 local Register = {}
 
@@ -15,7 +16,7 @@ function Register:POST()
   validate.assert_valid(self.params, {
     { 'username', exists = true, min_length = 3, max_length = 16, matches_pattern = '^%a+$', 'InvalidUsername' },
     { 'password', exists = true, min_length = 8, max_length = 128, 'InvalidPassword' },
-    { 'email', exists = true, min_length = 3, max_length = 128, matches_pattern = '^[A-Za-z0-9%.%%%+%-]+@[A-Za-z0-9%.%%%+%-]+%.%w%w%w?%w?$', 'InvalidEmail' },
+    { 'email', exists = true, min_length = 3, max_length = 128, matches_pattern = email, 'InvalidEmail' },
     { 'betaCode', exists = true, is_uuid = true, 'WrongBetaCode' }
   })
 

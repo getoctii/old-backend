@@ -1,6 +1,7 @@
 local validate = require 'lapis.validate'
 local helpers = require 'lapis.application'
 local Users = require 'models.users'
+local email = require 'util.email'
 
 local argon2 = require 'argon2'
 local generateLoginToken = require 'util.jwt'
@@ -9,7 +10,7 @@ local Login = {}
 
 function Login:POST()
   validate.assert_valid(self.params, {
-    { 'email', exists = true, min_length = 3, max_length = 128, matches_pattern = '^[A-Za-z0-9%.%%%+%-]+@[A-Za-z0-9%.%%%+%-]+%.%w%w%w?%w?$', 'InvalidEmail'},
+    { 'email', exists = true, min_length = 3, max_length = 128, matches_pattern = email, 'InvalidEmail'},
     { 'password', exists = true, min_length = 8, max_length = 128, 'InvalidPassword'}
   })
 

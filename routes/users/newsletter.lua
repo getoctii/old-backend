@@ -3,12 +3,13 @@ local validate = require 'lapis.validate'
 local NewsletterSubscribers = require 'models.newsletter_subscriptions'
 local http = require 'resty.http'
 local json = require 'cjson'
+local email = require 'util.email'
 
 local Newsletter = {}
 
 function Newsletter:POST()
   validate.assert_valid(self.params, {
-    { 'email', exists = true, min_length = 3, max_length = 128, matches_pattern = '^[A-Za-z0-9%.%%%+%-]+@[A-Za-z0-9%.%%%+%-]+%.%w%w%w?%w?$', 'InvalidEmail'}
+    { 'email', exists = true, min_length = 3, max_length = 128, matches_regexp = email, 'InvalidEmail'}
   })
 
   if not NewsletterSubscribers:find({ email = self.params.email }) then
