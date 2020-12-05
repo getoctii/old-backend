@@ -16,7 +16,7 @@ function Register:POST()
   validate.assert_valid(self.params, {
     { 'username', exists = true, min_length = 3, max_length = 16, matches_pattern = '^%a+$', 'InvalidUsername' },
     { 'password', exists = true, min_length = 8, max_length = 128, 'InvalidPassword' },
-    { 'email', exists = true, min_length = 3, max_length = 128, matches_pattern = email, 'InvalidEmail' },
+    { 'email', exists = true, min_length = 3, max_length = 128, matches_regexp = email, 'InvalidEmail' },
     { 'betaCode', exists = true, is_uuid = true, 'WrongBetaCode' }
   })
 
