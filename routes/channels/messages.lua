@@ -68,7 +68,7 @@ end
 function Messages:POST()
   validate.assert_valid(self.params, {
     { 'id', exists = true, is_uuid = true, 'InvalidUUID' },
-    { 'content', exists = true, min_length = 1, max_length = 2000 , 'InvalidMessage'}
+    { 'content', exists = true, min_length = 1, max_length = 2000, 'InvalidMessage'}
   })
   local channel = helpers.assert_error(Channels:find({ id = self.params.id }), { 404, 'ChannelNotFound' })
 

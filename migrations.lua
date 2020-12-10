@@ -135,5 +135,14 @@ return {
 
       'PRIMARY KEY (user_id, channel_id)'
     })
+  end,
+  [1606976331] = function()
+    schema.create_table('mentions', {
+      { 'id', 'uuid NOT NULL' },
+      { 'message_id', 'uuid NOT NULL' },
+      { 'user_id', 'uuid NOT NULL' },
+
+      'PRIMARY KEY (id)'
+    })
   end
 }
