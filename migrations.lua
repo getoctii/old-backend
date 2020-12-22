@@ -144,5 +144,11 @@ return {
 
       'PRIMARY KEY (id)'
     })
-  end
+  end,
+  [1607906314] = function()
+    schema.add_column('mentions', 'read', types.boolean)
+  end,
+  [1607918238] = function()
+    schema.add_column('users', 'color', types.text { default = '#0081FF' })
+  end,
 }

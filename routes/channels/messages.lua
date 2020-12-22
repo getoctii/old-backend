@@ -10,6 +10,7 @@ local empty = require 'array'.is_empty
 local json = require 'cjson'
 local MessagesModel = require 'models.messages'
 local ReadIndicators = require 'models.read'
+local Mentions = require 'models.mentions'
 
 local Messages = {}
 
@@ -133,6 +134,34 @@ function Messages:POST()
     assert(read:update({
       last_read_id = message.id
     }))
+  end
+
+  -- TODO: Cleanup
+  for match in ngx.re.gmatch(message.content, '<@([A-Za-z0-9-]+?)>', 'g') do
+    local user_id = match[1]
+    if not channel.community_id then
+      if contains(map(channel:get_conversation():get_participants(), function(participant)
+        return participant.user_id
+      end), user_id) then
+        Mentions:create({
+          id = uuid(),
+          user_id = user_id,
+          message_id = message.id,
+          read = false
+        })
+      end
+    else
+      if contains(map(channel:get_community():get_members(), function(member)
+        return member.user_id
+      end), user_id) then
+        Mentions:create({
+          id = uuid(),
+          user_id = user_id,
+          message_id = message.id,
+          read = false
+        })
+      end
+    end
   end
 
   return {
