@@ -15,6 +15,7 @@ function Login:POST()
   })
 
   local user = helpers.assert_error(Users:find({ email = self.params.email }), { 404, 'UserNotFound' })
+  helpers.assert_error(not user.disabled, { 403, 'DisabledUser' })
   helpers.assert_error(argon2.verify(user.password, self.params.password), { 401, 'WrongPassword' })
 
   return {
