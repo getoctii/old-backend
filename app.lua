@@ -57,22 +57,24 @@ app:before_filter(function(self)
   end
 end)
 
-function app:handle_error(err, trace)
-  rvn:captureException({{
-    type = err,
-    value = trace,
-    module = '__builtins__'
-  }}, {
-    transaction = ngx.var.request_uri
-  })
-  return {
-    status = 500,
-    json = {
-      errors = {
-        'ServerError'
+if config._name == 'production' then
+  function app:handle_error(err, trace)
+    rvn:captureException({{
+      type = err,
+      value = trace,
+      module = '__builtins__'
+    }}, {
+      transaction = ngx.var.request_uri
+    })
+    return {
+      status = 500,
+      json = {
+        errors = {
+          'ServerError'
+        }
       }
     }
-  }
+  end
 end
 
 function app:handle_404()
