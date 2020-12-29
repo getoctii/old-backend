@@ -11,6 +11,7 @@ local json = require 'cjson'
 local MessagesModel = require 'models.messages'
 local ReadIndicators = require 'models.read'
 local Mentions = require 'models.mentions'
+local db = require 'lapis.db'
 
 local Messages = {}
 
@@ -135,6 +136,8 @@ function Messages:POST()
       last_read_id = message.id
     }))
   end
+
+  db.query('UPDATE mentions SET read = true FROM messages WHERE mentions.message_id = messages.id AND messages.channel_id = ?', channel.id)
 
   -- TODO: Cleanup
   for match in ngx.re.gmatch(message.content, '<@([A-Za-z0-9-]+?)>') do
