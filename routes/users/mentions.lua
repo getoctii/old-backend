@@ -21,13 +21,15 @@ function Mentions:GET()
 
   local mentions = {}
   for _, row in ipairs(raw_mentions) do
-    local channel_id = row:get_message().channel_id
-    if not mentions[channel_id] then mentions[channel_id] = {} end
-    table.insert(mentions[channel_id], {
-      id = row.id,
-      message_id = row.message_id,
-      read = row.read
-    })
+    local channel_id = (row:get_message() or {}).channel_id
+    if channel_id then
+      if not mentions[channel_id] then mentions[channel_id] = {} end
+      table.insert(mentions[channel_id], {
+        id = row.id,
+        message_id = row.message_id,
+        read = row.read
+      })
+    end
   end
 
   return {
