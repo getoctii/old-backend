@@ -22,7 +22,7 @@ function MembersSearch:GET()
     return member.user_id
   end), self.user_id), { 403, 'MissingPermissions' })
 
-
+  -- SECURITY: Might want to revisit this query. If we made our username requirements less strict, someone could use metacharacters used for the like operator. This isn't an issue atm.
   local filtered = Members:select("INNER JOIN users u ON members.user_id = u.id WHERE community_id = ? AND u.username LIKE '%' || ? || '%'", community.id, self.params.query)
   preload(filtered, 'user')
 
