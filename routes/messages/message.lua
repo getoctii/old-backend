@@ -61,6 +61,7 @@ function Message:DELETE()
   helpers.assert_error(message:get_author().id == self.user_id, { 403, 'MissingPermissions' })
 
   -- assert(db.delete('read', { last_read_id = message.id }))
+  assert(db.delete('mentions', { message_id = message.id }))
   assert(db.delete('messages', { id = message.id }))
 
   broadcast('channel:' .. channel.id, 'DELETED_MESSAGE', {

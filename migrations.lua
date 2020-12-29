@@ -136,6 +136,21 @@ return {
       'PRIMARY KEY (user_id, channel_id)'
     })
   end,
+  [1606976331] = function()
+    schema.create_table('mentions', {
+      { 'id', 'uuid NOT NULL' },
+      { 'message_id', 'uuid NOT NULL' },
+      { 'user_id', 'uuid NOT NULL' },
+
+      'PRIMARY KEY (id)'
+    })
+  end,
+  [1607906314] = function()
+    schema.add_column('mentions', 'read', types.boolean)
+  end,
+  [1607918238] = function()
+    schema.add_column('users', 'color', types.text { default = '#0081FF' })
+  end,
   [1608605219] = function()
     schema.add_column('users', 'disabled', types.boolean { default = false })
   end

@@ -4,7 +4,7 @@ local Channels = require 'models.channels'
 local contains = require 'array'.includes
 local map = require 'array'.map
 local ReadIndicators = require 'models.read'
-
+local db = require 'lapis.db'
 
 local Read = {}
 
@@ -46,6 +46,8 @@ function Read:POST()
       last_read_id = (pager:get_page()[1] or {}).id
     }))
   end
+
+  db.query('UPDATE mentions SET read = true FROM messages WHERE mentions.message_id = messages.id AND messages.channel_id = ?', channel.id)
 
   return {
     layout = false,

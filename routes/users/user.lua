@@ -27,7 +27,8 @@ function User:GET()
     state = Users.states:to_name(user.state),
     badges = map(user.badges, function(badge)
       return Users.badges:to_name(badge)
-    end)
+    end),
+    color = user.color
   }
 
   if (not user.last_ping) or ((os.time() - user.last_ping) > 180) then
@@ -56,7 +57,8 @@ function User:PATCH()
       'idle',
       'dnd',
       'online',
-    }, 'InvalidState'}
+    }, 'InvalidState'},
+    { 'color', exists = true, optional = true, is_color = true, 'InvalidColor' }
   })
 
   helpers.assert_error(self.params.id == self.user_id, { 403, 'MissingPermissions' })
@@ -96,6 +98,10 @@ function User:PATCH()
 
   if self.params.state then
     patch.state = Users.states:for_db(self.params.state)
+  end
+
+  if self.params.color then
+    patch.color = self.params.color
   end
 
   helpers.assert_error(not empty(patch), { 400, 'InvalidPatch'})

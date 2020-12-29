@@ -10,6 +10,8 @@ local empty = require 'array'.is_empty
 local json = require 'cjson'
 local MessagesModel = require 'models.messages'
 local ReadIndicators = require 'models.read'
+local Mentions = require 'models.mentions'
+local db = require 'lapis.db'
 
 local Messages = {}
 
@@ -68,7 +70,7 @@ end
 function Messages:POST()
   validate.assert_valid(self.params, {
     { 'id', exists = true, is_uuid = true, 'InvalidUUID' },
-    { 'content', exists = true, min_length = 1, max_length = 2000 , 'InvalidMessage'}
+    { 'content', exists = true, min_length = 1, max_length = 2000, 'InvalidMessage'}
   })
   local channel = helpers.assert_error(Channels:find({ id = self.params.id }), { 404, 'ChannelNotFound' })
 
@@ -133,6 +135,31 @@ function Messages:POST()
     assert(read:update({
       last_read_id = message.id
     }))
+  end
+
+  db.query('UPDATE mentions SET read = true FROM messages WHERE mentions.message_id = messages.id AND messages.channel_id = ?', channel.id)
+
+  -- TODO: Cleanup
+  for match in ngx.re.gmatch(message.content, '<@([A-Za-z0-9-]+?)>') do
+    local user_id = match[1]
+    if (not channel.community_id and
+      contains(map(channel:get_conversation():get_participants(), function(participant) return participant.user_id end), user_id))
+      or contains(map(channel:get_community():get_members(), function(member) return member.user_id end), user_id) then
+      Mentions:create({
+        id = uuid(),
+        user_id = user_id,
+        message_id = message.id,
+        read = false
+      })
+
+      broadcast('user:' .. user_id, 'NEW_MENTION', {
+        id = uuid(),
+        user_id = user_id,
+        message_id = message.id,
+        read = false,
+        channel_id = channel.id
+      })
+    end
   end
 
   return {

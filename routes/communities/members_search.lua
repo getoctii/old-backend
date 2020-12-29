@@ -1,6 +1,7 @@
 local helpers = require 'lapis.application'
 local validate = require 'lapis.validate'
 local Communities = require 'models.communities'
+local Members = require 'models.members'
 local preload = require 'lapis.db.model'.preload
 
 local map = require 'array'.map
@@ -8,11 +9,12 @@ local contains = require 'array'.includes
 local empty = require 'array'.is_empty
 local json = require 'cjson'
 
-local Members = {}
+local MembersSearch = {}
 
-function Members:GET()
+function MembersSearch:GET()
   validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
+    { 'id', exists = true, is_uuid = true, 'InvalidUUID' },
+    { 'query', exists = true, min_length = 1, max_length = 16, matches_pattern = '^%a+$', 'InvalidQuery' }
   })
 
   local community = helpers.assert_error(Communities:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
@@ -20,18 +22,11 @@ function Members:GET()
     return member.user_id
   end), self.user_id), { 403, 'MissingPermissions' })
 
-  local pager = community:get_members_paginated({
-    per_page = 25,
-    ordered = {
-      'created_at'
-    },
-    order = 'desc'
-  })
+  -- SECURITY: Might want to revisit this query. If we made our username requirements less strict, someone could use metacharacters used for the like operator. This isn't an issue atm.
+  local filtered = Members:select("INNER JOIN users u ON members.user_id = u.id WHERE community_id = ? AND u.username LIKE '%' || ? || '%'", community.id, self.params.query)
+  preload(filtered, 'user')
 
-  local page = pager:get_page(self.params.created_at)
-  preload(page, 'user')
-
-  local members = map(page, function(row)
+  local members = map(filtered, function(row)
     local member = row:get_user()
     return {
       id = row.id,
@@ -55,4 +50,4 @@ function Members:GET()
   }
 end
 
-return Members
+return MembersSearch
