@@ -151,4 +151,7 @@ return {
   [1607918238] = function()
     schema.add_column('users', 'color', types.text { default = '#0081FF' })
   end,
+  [1608605219] = function()
+    schema.add_column('users', 'disabled', types.boolean { default = false })
+  end
 }
