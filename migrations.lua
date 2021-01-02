@@ -153,5 +153,14 @@ return {
   end,
   [1608605219] = function()
     schema.add_column('users', 'disabled', types.boolean { default = false })
+  end,
+  [1609557118] = function()
+    schema.create_table('notification_tokens', {
+      { 'user_id', 'uuid NOT NULL' },
+      { 'platform', types.text },
+      { 'token', types.text },
+
+      'PRIMARY KEY (user_id, platform, token)'
+    })
   end
 }
