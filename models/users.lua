@@ -9,7 +9,7 @@ local Users = Model:extend('users', {
     { 'participants', has_many = 'participants' },
     { 'incoming_relationships', key = 'recipient_id', has_many = 'relationships' },
     { 'outgoing_relationships', has_many = 'relationships' },
-    { 'notification_tokens', has_many = 'messages' },
+    { 'notification_tokens', has_many = 'notification_tokens' },
   }
 })
 
