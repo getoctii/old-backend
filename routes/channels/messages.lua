@@ -176,7 +176,7 @@ function Messages:POST()
     })
 
     local user = Users:find(user_id)
-    if (user.state ~= Users.states.dnd) and not ((not user.last_ping) or ((os.time() - user.last_ping) > 180)) then
+    if (user.state ~= Users.states.dnd) and ((not user.last_ping) or ((os.time() - user.last_ping) > 180)) then
       local tokens = user:get_notification_tokens()
 
       for _, token in ipairs(tokens) do
