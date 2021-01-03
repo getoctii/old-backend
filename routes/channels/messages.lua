@@ -179,7 +179,7 @@ function Messages:POST()
         token = token.token,
         payload = {
           title = message_event.community_name and message_event.community_name or message_event.author.username,
-          subtitle = message_event.channel_name and ('#' .. message_event.channel_name) or message_event.author.username,
+          subtitle = message_event.channel_name and ('#' .. message_event.channel_name) or '',
           body = (message_event.community_name and (message_event.author.username .. ': ') or '') .. message_event.content
         }
       })
