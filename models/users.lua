@@ -8,7 +8,8 @@ local Users = Model:extend('users', {
     { 'mentions', has_many = 'mentions' },
     { 'participants', has_many = 'participants' },
     { 'incoming_relationships', key = 'recipient_id', has_many = 'relationships' },
-    { 'outgoing_relationships', has_many = 'relationships' }
+    { 'outgoing_relationships', has_many = 'relationships' },
+    { 'notification_tokens', has_many = 'messages' },
   }
 })
 

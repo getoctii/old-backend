@@ -11,6 +11,8 @@ local json = require 'cjson'
 local MessagesModel = require 'models.messages'
 local ReadIndicators = require 'models.read'
 local Mentions = require 'models.mentions'
+local Users = require 'models.users'
+local push = require 'util.push'
 local db = require 'lapis.db'
 
 local Messages = {}
@@ -139,28 +141,52 @@ function Messages:POST()
 
   db.query('UPDATE mentions SET read = true FROM messages WHERE mentions.message_id = messages.id AND messages.channel_id = ?', channel.id)
 
+  local mentioned_users = {}
+
   -- TODO: Cleanup
   for match in ngx.re.gmatch(message.content, '<@([A-Za-z0-9-]+?)>') do
     local user_id = match[1]
     if (not channel.community_id and
       contains(map(channel:get_conversation():get_participants(), function(participant) return participant.user_id end), user_id))
       or contains(map(channel:get_community():get_members(), function(member) return member.user_id end), user_id) then
-      Mentions:create({
-        id = uuid(),
-        user_id = user_id,
-        message_id = message.id,
-        read = false
-      })
+        mentioned_users[user_id] = true
+    end
+  end
 
-      broadcast('user:' .. user_id, 'NEW_MENTION', {
-        id = uuid(),
-        user_id = user_id,
-        message_id = message.id,
-        read = false,
-        channel_id = channel.id
+  local notifications = {}
+
+  for user_id in pairs(mentioned_users) do
+    Mentions:create({
+      id = uuid(),
+      user_id = user_id,
+      message_id = message.id,
+      read = false
+    })
+
+    broadcast('user:' .. user_id, 'NEW_MENTION', {
+      id = uuid(),
+      user_id = user_id,
+      message_id = message.id,
+      read = false,
+      channel_id = channel.id
+    })
+
+    local tokens = Users:find(user_id):get_notification_tokens()
+
+    for _, token in ipairs(tokens) do
+      table.insert(notifications, {
+        platform = token.platform,
+        token = token.token,
+        payload = {
+          title = message_event.community_name and message.community_name or message.author.username,
+          subtitle = message_event.channel_name and ('#' .. message_event.channel_name) or 'message.author.username',
+          body = (message.community_name and (message.author.username .. ': ') or '') .. message.content
+        }
       })
     end
   end
+
+  push({ payloads = notifications })
 
   return {
     json = message
