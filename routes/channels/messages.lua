@@ -175,18 +175,21 @@ function Messages:POST()
       channel_id = channel.id
     })
 
-    local tokens = Users:find(user_id):get_notification_tokens()
+    local user = Users:find(user_id)
+    if user.state ~= Users.states.dnd then
+      local tokens = user:get_notification_tokens()
 
-    for _, token in ipairs(tokens) do
-      table.insert(notifications, {
-        platform = token.platform,
-        token = token.token,
-        payload = {
-          title = message_event.community_name and message_event.community_name or message_event.author.username,
-          subtitle = message_event.channel_name and ('#' .. message_event.channel_name) or '',
-          body = (message_event.community_name and (message_event.author.username .. ': ') or '') .. parsed_content
-        }
-      })
+      for _, token in ipairs(tokens) do
+        table.insert(notifications, {
+          platform = token.platform,
+          token = token.token,
+          payload = {
+            title = message_event.community_name and message_event.community_name or message_event.author.username,
+            subtitle = message_event.channel_name and ('#' .. message_event.channel_name) or '',
+            body = (message_event.community_name and (message_event.author.username .. ': ') or '') .. parsed_content
+          }
+        })
+      end
     end
   end
 
