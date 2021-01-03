@@ -59,6 +59,7 @@ end)
 
 if config._name == 'production' then
   function app:handle_error(err, trace)
+    print('ERROR:', err, trace)
     rvn:captureException({{
       type = err,
       value = trace,
