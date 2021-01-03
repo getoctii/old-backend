@@ -154,7 +154,7 @@ function Messages:POST()
   end
 
   local parsed_content = ngx.re.gsub(message_event.content,'<@([A-Za-z0-9-]+?)>', function(match)
-    return (Users:find(match[1]) or {}).username or ''
+    return '@' .. ((Users:find(match[1]) or {}).username or 'unknown')
   end)
 
   local notifications = {}
