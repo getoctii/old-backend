@@ -153,6 +153,10 @@ function Messages:POST()
     end
   end
 
+  local parsed_content = ngx.re.gsub(message_event.content,'<@([A-Za-z0-9-]+?)>', function(match)
+    return (Users:find(match[1]) or {}).username or ''
+  end)
+
   local notifications = {}
 
   for user_id in pairs(mentioned_users) do
@@ -180,7 +184,7 @@ function Messages:POST()
         payload = {
           title = message_event.community_name and message_event.community_name or message_event.author.username,
           subtitle = message_event.channel_name and ('#' .. message_event.channel_name) or '',
-          body = (message_event.community_name and (message_event.author.username .. ': ') or '') .. message_event.content
+          body = (message_event.community_name and (message_event.author.username .. ': ') or '') .. parsed_content
         }
       })
     end
