@@ -65,7 +65,7 @@ function Conversation:POST()
 
   resubscribe('user:' .. recipient.id)
 
-  broadcast('user:' .. self.user_id, 'NEW_PARTICIPANT', {
+  broadcast('user:' .. recipient.id, 'NEW_PARTICIPANT', {
     id = from.id,
     conversation = {
       id = conversation.id,
