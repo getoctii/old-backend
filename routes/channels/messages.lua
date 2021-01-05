@@ -193,7 +193,9 @@ function Messages:POST()
     end
   end
 
-  push({ payloads = notifications })
+  if not empty(notifications) then
+    push({ payloads = notifications })
+  end
 
   return {
     json = message
