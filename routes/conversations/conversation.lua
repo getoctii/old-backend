@@ -58,6 +58,9 @@ function Conversation:POST()
     conversation_id = conversation.id
   }))
 
+  conversation:refresh()
+  user_ids = map(conversation:get_participants(), function(row) return row.user_id end)
+
   broadcast('conversation:' .. conversation.id, 'UPDATED_CONVERSATION', {
     conversation_id = conversation.id,
     participants = user_ids
@@ -73,7 +76,6 @@ function Conversation:POST()
     },
     order = 'desc'
   })
-
 
   broadcast('user:' .. recipient.id, 'NEW_PARTICIPANT', {
     id = from.id,
