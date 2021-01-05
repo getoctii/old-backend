@@ -65,11 +65,22 @@ function Conversation:POST()
 
   resubscribe('user:' .. recipient.id)
 
+  local channel = conversation:get_channel()
+  local pager = channel:get_messages_paginated({
+    per_page = 1,
+    ordered = {
+      'created_at'
+    },
+    order = 'desc'
+  })
+
+
   broadcast('user:' .. recipient.id, 'NEW_PARTICIPANT', {
     id = from.id,
     conversation = {
       id = conversation.id,
       channel_id = conversation.channel_id,
+      last_message_id = (pager:get_page()[1] or {}).id,
       participants = user_ids
     }
   })
