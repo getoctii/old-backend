@@ -58,7 +58,7 @@ function Conversation:POST()
     conversation_id = conversation.id
   }))
 
-  broadcast('conversation:' .. conversation.id, 'UPDATE_CONVERSATION', {
+  broadcast('conversation:' .. conversation.id, 'UPDATED_CONVERSATION', {
     conversation_id = conversation.id,
     participants = user_ids
   })
