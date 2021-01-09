@@ -31,13 +31,15 @@ function Participants:GET()
       },
       order = 'desc'
     })
+    local message = pager:get_page()[1] or {}
     return {
       id = row.id,
       conversation = {
         id = conversation.id,
         channel_id = conversation.channel_id,
         -- TODO: This might be a bit inefficent, refactor.
-        last_message_id = (pager:get_page()[1] or {}).id,
+        last_message_id = message.id,
+        last_message_date = message.created_at,
         participants = map(all_participants, function(row)
           return row.user_id
         end)
