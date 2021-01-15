@@ -5,6 +5,9 @@ local config = require 'lapis.config'.get()
 local jwt = require 'resty.jwt'
 local validators = require 'resty.jwt-validators'
 local raven = require 'raven'
+local rand = require 'openssl.rand'
+
+math.randomseed(math.floor(assert(rand.uniform())))
 
 local app = lapis.Application()
 app.include = function(self, a)

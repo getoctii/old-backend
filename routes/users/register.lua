@@ -9,6 +9,7 @@ local Codes = require 'models.codes'
 local helpers = require 'lapis.application'
 local generateDiscriminator = require 'util.generatediscriminator'
 local email = require 'util.email'
+local config = require 'lapis.config'.get()
 
 local Register = {}
 
@@ -36,7 +37,7 @@ function Register:POST()
     password = hashed,
     email = self.params.email,
     id = assert(uuid()),
-    avatar = "https://cdn.nekos.life/avatar/avatar_54.png",
+    avatar = config.default_profile_pictures[math.random(#config.default_profile_pictures)],
     discriminator = generateDiscriminator(self.params.username)
   })
 
