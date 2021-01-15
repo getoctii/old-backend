@@ -162,5 +162,9 @@ return {
 
       'PRIMARY KEY (user_id, platform, token)'
     })
+  end,
+  [1610681439] = function()
+    schema.add_column('newsletter_subscribers', 'created_at', types.time {default = 'NOW()'})
+    schema.add_column('newsletter_subscribers', 'updated_at', types.time {default = 'NOW()'})
   end
 }
