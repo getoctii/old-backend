@@ -1,11 +1,10 @@
 local helpers = require 'lapis.application'
 local Users = require 'models.users'
-local preload = require 'lapis.db.model'.preload
 
 local map = require 'array'.map
-local flatten = require 'array'.flat
 local validate = require 'lapis.validate'
 
+local broadcast_multiple = require 'util.broadcast_multiple'
 local generate_grip_channels = require 'util.generate_grip_channels'
 
 local Subscribe = {}
@@ -23,6 +22,21 @@ function Subscribe:GET()
   user:update {
     last_ping = os.time()
   }
+
+  user:refresh()
+
+  local broadcast_payload = {
+    id = user.id,
+    state = Users.states:to_name(user.state),
+  }
+
+  -- might be redundant but
+  if (not user.last_ping) or ((os.time() - user.last_ping) > 180) then
+    broadcast_payload.state = 'offline'
+  end
+
+  -- TODO: Maybe don't broadcast if user is invis?
+  broadcast_multiple(all_grip_channels, 'UPDATED_USER', broadcast_payload)
 
   return {
     layout = false,
