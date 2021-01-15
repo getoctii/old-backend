@@ -76,6 +76,15 @@ if config._name == 'production' then
       }
     }
   end
+elseif config._name == 'development' then
+  function app:handle_error(err, trace)
+    print('ERROR:', err, trace)
+    return {
+      status = 500,
+      layout = false,
+      err .. trace
+    }
+  end
 end
 
 function app:handle_404()
@@ -95,5 +104,7 @@ app:include('routes.invites')
 app:include('routes.conversations')
 app:include('routes.messages')
 app:include('routes.voice')
+app:include('routes.groups')
+
 
 return app

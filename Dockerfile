@@ -14,7 +14,8 @@ RUN \
   /usr/local/openresty/luajit/bin/luarocks install lua-resty-uuid && \
   /usr/local/openresty/luajit/bin/luarocks install luaossl && \
   /usr/local/openresty/luajit/bin/luarocks install array && \
-  /usr/local/openresty/luajit/bin/luarocks install lua-resty-jit-uuid
+  /usr/local/openresty/luajit/bin/luarocks install lua-resty-jit-uuid && \
+  /usr/local/openresty/luajit/bin/luarocks install penlight
 
 COPY . .
 

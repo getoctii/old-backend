@@ -166,7 +166,7 @@ return {
     })
   end,
   [1609806303] = function()
-    schema.add_column('roles', {
+    schema.create_table('groups', {
       { 'id',  uuid },
       { 'community_id', uuid },
       { 'name', types.text },

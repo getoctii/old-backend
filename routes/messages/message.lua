@@ -40,6 +40,44 @@ function Message:GET()
 
 end
 
+function Message:PATCH()
+  validate.assert_valid(self.params, {
+    { 'id', exists = true, is_uuid = true, { 400, 'InvalidUUID' } },
+    { 'content', exists = true, min_length = 1, max_length = 2000, 'InvalidMessage'}
+  })
+  local message = helpers.assert_error(Messages:find({ id = self.params.id }), { 404, 'MessageNotFound' })
+  local channel = message:get_channel()
+  if not channel.community_id then
+    helpers.assert_error(contains(map(channel:get_conversation():get_participants(), function(participant)
+      return participant.user_id
+    end), self.user_id), { 403, 'MissingPermissions' })
+  else
+    helpers.assert_error(contains(map(channel:get_community():get_members(), function(member)
+      return member.user_id
+    end), self.user_id), { 403, 'MissingPermissions' })
+  end
+  helpers.assert_error(message:get_author().id == self.user_id, { 403, 'MissingPermissions' })
+  message:update({
+    content = self.params.content
+  })
+
+  message:refresh()
+
+  local message_event = {
+    id = message.id,
+    channel_id = message.channel_id,
+    updated_at = message.updated_at,
+    content = message.content
+  }
+
+  broadcast('channel:' .. channel.id, 'UPDATED_MESSAGE', message_event)
+
+  return {
+    layout = false,
+    status = 204
+  }
+end
+
 function Message:DELETE()
   validate.assert_valid(self.params, {
     { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
