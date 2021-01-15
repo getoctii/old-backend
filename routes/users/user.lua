@@ -8,6 +8,8 @@ local empty = require 'array'.is_empty
 local generateDiscriminator = require 'util.generatediscriminator'
 local http = require 'resty.http'
 local map = require 'array'.map
+local broadcast_multiple = require 'util.broadcast_multiple'
+local generate_grip_channels = require 'util.generate_grip_channels'
 
 local User = {}
 
@@ -106,6 +108,20 @@ function User:PATCH()
 
   helpers.assert_error(not empty(patch), { 400, 'InvalidPatch'})
   user:update(patch)
+  user:refresh()
+
+  broadcast_multiple(generate_grip_channels(user), 'UPDATED_USER', {
+    id = user.id,
+    username = user.username,
+    avatar = user.avatar,
+    discriminator = user.discriminator,
+    status = user.status,
+    state = Users.states:to_name(user.state),
+    badges = map(user.badges, function(badge)
+      return Users.badges:to_name(badge)
+    end),
+    color = user.color
+  })
 
   return {
     status = 204,
