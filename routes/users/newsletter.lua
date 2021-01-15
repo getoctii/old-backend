@@ -24,7 +24,13 @@ function Newsletter:POST()
         embeds = {
           {
             title = 'New Subscriber',
-            color = 5439232
+            color = 5439232,
+            fields = {
+              {
+                name = 'Total Count',
+                value = tostring(NewsletterSubscribers:count())
+              }
+            }
           }
         },
         username = 'Octii',
