@@ -7,7 +7,7 @@ local validators = require 'resty.jwt-validators'
 local raven = require 'raven'
 local rand = require 'openssl.rand'
 
-math.randomseed(math.floor(assert(rand.uniform())))
+math.randomseed(math.floor(assert(rand.uniform(2^31 - 1))))
 
 local app = lapis.Application()
 app.include = function(self, a)
