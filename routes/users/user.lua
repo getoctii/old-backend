@@ -110,7 +110,7 @@ function User:PATCH()
   user:update(patch)
   user:refresh()
 
-  broadcast_multiple(generate_grip_channels(user), 'UPDATED_USER', {
+  local user_payload = {
     id = user.id,
     username = user.username,
     avatar = user.avatar,
@@ -121,7 +121,13 @@ function User:PATCH()
       return Users.badges:to_name(badge)
     end),
     color = user.color
-  })
+  }
+
+  if (not user.last_ping) or ((os.time() - user.last_ping) > 180) then
+    user_payload.state = 'offline'
+  end
+
+  broadcast_multiple(generate_grip_channels(user), 'UPDATED_USER', user_payload)
 
   return {
     status = 204,
