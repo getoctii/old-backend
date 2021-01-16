@@ -9,6 +9,7 @@ local Set = require 'pl.Set'
 local C = require 'pl.comprehension'.new()
 local db = require 'lapis.db'
 local inspect = require 'inspect'
+local broadcast = require 'util.broadcast'
 
 local permission_set = Set(C 'x for x=1,17' ())
 
@@ -23,7 +24,7 @@ function Group:GET()
   helpers.assert_error(contains(map(group:get_community():get_members(), function(member)
     return member.user_id
   end), self.user_id), { 403, 'MissingPermissions' })
-
+  
   return {
     json = {
       id = group.id,
@@ -47,21 +48,28 @@ function Group:PATCH()
     { 'color', exists = true, is_color = true, optional = true, 'InvalidColor' },
     { 'permissions', exists = true, optional = true, 'InvalidPermissions' }
   })
-
-  print(inspect(self.params))
-
   if self.params.permissions ~= nil then
     helpers.assert_error(type((self.params.permissions) == 'table') and ((Set(self.params.permissions) + permission_set) == permission_set), { 400, 'InvalidPermissions' })
   end
 
   local group = helpers.assert_error(Groups:find({ id = self.params.id }), { 404, 'GroupNotFound' })
   helpers.assert_error(group:get_community().owner_id == self.user_id, { 403, 'MissingPermissions' })
+  inspect(Set.values(self.params.permissions))
   group:update({
     name = self.params.name,
     color = self.params.color,
     permissions = self.params.permissions and db.array(Set.values(self.params.permissions)) or nil
   })
+  group:refresh()
+  inspect(group)
+  local group_event = {
+    id = group.id,
+    name = group.name,
+    color = group.color,
+    permissions = is_empty(group.permissions) and json.empty_array or group.permissions
+  }
 
+  broadcast('community:' .. group.community_id, 'UPDATED_GROUP', group_event)
   return {
     status = 204,
     layout = false
@@ -75,6 +83,11 @@ function Group:DELETE()
   local group = helpers.assert_error(Groups:find({ id = self.params.id }), { 404, 'GroupNotFound' })
   helpers.assert_error(group:get_community().owner_id == self.user_id, { 403, 'MissingPermissions' })
   assert(db.delete('groups', { id = group.id }))
+
+  broadcast('community:' .. group.community_id, 'DELETED_GROUP', {
+    id = group.id,
+    community_id = group.community_id
+  })
   return {
     layout = false
   }
