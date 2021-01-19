@@ -108,26 +108,27 @@ function User:PATCH()
 
   helpers.assert_error(not empty(patch), { 400, 'InvalidPatch'})
   user:update(patch)
-  user:refresh()
+  -- TODO: Contact pushpin about efficently pushing to multiple channels
+  -- user:refresh()
 
-  local user_payload = {
-    id = user.id,
-    username = user.username,
-    avatar = user.avatar,
-    discriminator = user.discriminator,
-    status = user.status,
-    state = Users.states:to_name(user.state),
-    badges = map(user.badges, function(badge)
-      return Users.badges:to_name(badge)
-    end),
-    color = user.color
-  }
+  -- local user_payload = {
+  --   id = user.id,
+  --   username = user.username,
+  --   avatar = user.avatar,
+  --   discriminator = user.discriminator,
+  --   status = user.status,
+  --   state = Users.states:to_name(user.state),
+  --   badges = map(user.badges, function(badge)
+  --     return Users.badges:to_name(badge)
+  --   end),
+  --   color = user.color
+  -- }
 
-  if (not user.last_ping) or ((os.time() - user.last_ping) > 180) then
-    user_payload.state = 'offline'
-  end
+  -- if (not user.last_ping) or ((os.time() - user.last_ping) > 180) then
+  --   user_payload.state = 'offline'
+  -- end
 
-  broadcast_multiple(generate_grip_channels(user), 'UPDATED_USER', user_payload)
+  -- broadcast_multiple(generate_grip_channels(user), 'UPDATED_USER', user_payload)
 
   return {
     status = 204,

@@ -1,5 +1,6 @@
 package.path = package.path .. ';./?/init.lua'
 local lapis = require 'lapis'
+local validate = require 'lapis.validate'
 local config = require 'lapis.config'.get()
 
 local jwt = require 'resty.jwt'
@@ -17,6 +18,11 @@ end
 -- Validators
 require 'util.validators.uuid'
 require 'util.validators.matches_regexp'
+
+function validate.validate_functions.exists(input)
+  return not not input, '%s must be provided'
+end
+
 local rvn = raven.new {
   sender = require('raven.senders.ngx').new {
     dsn = 'https://15652eb7625a4485bbabde18e37fed37@o271654.ingest.sentry.io/5453638'
@@ -79,7 +85,18 @@ if config._name == 'production' then
       }
     }
   end
+elseif config._name == 'development' then
+  function app:handle_error(err, trace)
+    print('ERROR:', err, trace)
+    return {
+      status = 500,
+      layout = false,
+      err .. trace
+    }
+  end
 end
+
+
 
 function app:handle_404()
   return { status = 404, json = {

@@ -79,7 +79,7 @@ function Community:PATCH()
     { 'owner_id', exists = true, optional = true, is_uuid = true, 'UUIDInvalid' }
   })
 
-  local community = helpers.assert_error(Community:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
+  local community = helpers.assert_error(Communities:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
   helpers.assert_error(community.owner_id == self.user_id, { 403, 'MissingPermissions' })
 
   local patch = {}
