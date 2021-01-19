@@ -23,20 +23,20 @@ function Subscribe:GET()
     last_ping = os.time()
   }
 
-  user:refresh()
+  -- user:refresh()
 
-  local broadcast_payload = {
-    id = user.id,
-    state = Users.states:to_name(user.state),
-  }
+  -- local broadcast_payload = {
+  --   id = user.id,
+  --   state = Users.states:to_name(user.state),
+  -- }
 
-  -- might be redundant but
-  if (not user.last_ping) or ((os.time() - user.last_ping) > 180) then
-    broadcast_payload.state = 'offline'
-  end
+  -- -- might be redundant but
+  -- if (not user.last_ping) or ((os.time() - user.last_ping) > 180) then
+  --   broadcast_payload.state = 'offline'
+  -- end
 
-  -- TODO: Maybe don't broadcast if user is invis?
-  broadcast_multiple(all_grip_channels, 'UPDATED_USER', broadcast_payload)
+  -- -- TODO: Maybe don't broadcast if user is invis?
+  -- broadcast_multiple(all_grip_channels, 'UPDATED_USER', broadcast_payload)
 
   return {
     layout = false,
