@@ -7,6 +7,8 @@ local jwt = require 'resty.jwt'
 local validators = require 'resty.jwt-validators'
 local raven = require 'raven'
 local rand = require 'openssl.rand'
+local Users = require 'models.users'
+local helpers = require 'lapis.application'
 
 math.randomseed(math.floor(assert(rand.uniform(2^31 - 1))))
 
@@ -54,7 +56,26 @@ app:before_filter(function(self)
     })
 
     if token.verified == true then
-      self.user_id = token.payload.sub
+      local user = Users:find({ id = token.payload.sub })
+      if user then
+        if not user.disabled then
+          self.user = user
+        else
+          self:write({
+            status = 403,
+            json = {
+              errors = { 'DisabledUser' }
+            }
+          })
+        end
+      else
+        self:write({
+          status = 404,
+          json = {
+            errors = { 'UserNotFound' }
+          }
+        })
+      end
     else
       self:write({
         status = 403,
@@ -115,5 +136,6 @@ app:include('routes.invites')
 app:include('routes.conversations')
 app:include('routes.messages')
 app:include('routes.voice')
+app:include('routes.admin')
 
 return app

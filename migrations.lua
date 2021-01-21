@@ -166,5 +166,9 @@ return {
   [1610681439] = function()
     schema.add_column('newsletter_subscribers', 'created_at', types.time {default = 'NOW()'})
     schema.add_column('newsletter_subscribers', 'updated_at', types.time {default = 'NOW()'})
+  end,
+  [1611178536] = function()
+    schema.add_column('codes', 'created_at', types.time {default = 'NOW()'})
+    schema.add_column('codes', 'updated_at', types.time {default = 'NOW()'})
   end
 }

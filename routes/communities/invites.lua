@@ -15,7 +15,7 @@ function Invites:GET()
   })
 
   local community = helpers.assert_error(Communities:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
-  helpers.assert_error(community.owner_id == self.user_id, { 403, 'MissingPermissions' })
+  helpers.assert_error(community.owner_id == self.user.id, { 403, 'MissingPermissions' })
 
   local invites = map(community:get_invites(), function(row)
     return {
@@ -43,13 +43,13 @@ function Invites:POST()
   })
 
   local community = helpers.assert_error(Communities:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
-  helpers.assert_error(community.owner_id == self.user_id, { 403, 'MissingPermissions' })
+  helpers.assert_error(community.owner_id == self.user.id, { 403, 'MissingPermissions' })
 
   local invite = InvitesModel:create({
     id = uuid(),
     code = uuid(),
     community_id = self.params.id,
-    author_id = self.user_id,
+    author_id = self.user.id,
     uses = 0
   })
 

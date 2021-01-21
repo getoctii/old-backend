@@ -9,7 +9,6 @@ app.name = "users."
 app.path = "/users"
 
 app:match('register', '',  guard(json_params(respond_to(require 'routes.users.register'))))
-app:match('code', '/code', guard(json_params(respond_to(require 'routes.users.code' ))))
 app:match('user', '/:id', guard(json_params(respond_to(require 'routes.users.user'))))
 
 app:match('find', '/find', guard(json_params(respond_to(require 'routes.users.find' ))))

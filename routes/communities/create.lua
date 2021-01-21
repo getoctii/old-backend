@@ -25,16 +25,16 @@ function Create:POST()
     name = self.params.name, -- TODO: Differenciate between query params and form
     icon = self.params.icon,
     large = true,
-    owner_id = self.user_id
+    owner_id = self.user.id
   }))
 
   local member = assert(Members:create({
     id = assert(uuid()),
-    user_id = self.user_id, -- TODO: check that acc exists
+    user_id = self.user.id, -- TODO: check that acc exists
     community_id = community.id
   }))
 
-  broadcast('user:' .. self.user_id, 'NEW_MEMBER', {
+  broadcast('user:' .. self.user.id, 'NEW_MEMBER', {
     id = member.id,
     community = {
       id = community.id,
@@ -45,12 +45,12 @@ function Create:POST()
     }
   })
 
-  resubscribe('user:' .. self.user_id)
+  resubscribe('user:' .. self.user.id)
 
   broadcast('community:' .. community.id, 'JOIN_MEMBER', {
     id = member.id,
     community_id = community.id,
-    user_id = self.user_id
+    user_id = self.user.id
   })
 
   return {

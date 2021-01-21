@@ -13,17 +13,17 @@ function Use:POST()
   })
 
   local invite = helpers.assert_error(Invites:find({ code = self.params.code }), 'InviteNotFound')
-  helpers.assert_error(not Members:find({ community_id = invite.community_id, user_id = self.user_id }), { 400, 'AlreadyInCommunity' })
+  helpers.assert_error(not Members:find({ community_id = invite.community_id, user_id = self.user.id }), { 400, 'AlreadyInCommunity' })
 
   local community = invite:get_community()
 
   local member = assert(Members:create({
     id = uuid(),
     community_id = invite.community_id,
-    user_id = self.user_id
+    user_id = self.user.id
   }))
 
-  broadcast('user:' .. self.user_id, 'NEW_MEMBER', { -- Send in same event
+  broadcast('user:' .. self.user.id, 'NEW_MEMBER', { -- Send in same event
     id = member.id,
     community = {
       id = community.id,
@@ -34,12 +34,12 @@ function Use:POST()
     }
   })
 
-  resubscribe('user:' .. self.user_id)
+  resubscribe('user:' .. self.user.id)
 
   broadcast('community:' .. community.id, 'JOIN_MEMBER', {
     id = member.id,
     community_id = community.id,
-    user_id = self.user_id
+    user_id = self.user.id
   })
 
   return {

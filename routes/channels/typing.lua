@@ -18,14 +18,14 @@ function Typing:POST()
   if not channel.community_id then
     helpers.assert_error(contains(map(channel:get_conversation():get_participants(), function(participant)
       return participant.user_id
-    end), self.user_id), { 403, 'MissingPermissions' })
+    end), self.user.id), { 403, 'MissingPermissions' })
   else
     helpers.assert_error(contains(map(channel:get_community():get_members(), function(member)
       return member.user_id
-    end), self.user_id), { 403, 'MissingPermissions' })
+    end), self.user.id), { 403, 'MissingPermissions' })
   end
 
-  local user = assert(Users:find({ id = self.user_id }))
+  local user = assert(Users:find({ id = self.user.id }))
 
   broadcast('channel:' .. channel.id, 'TYPING', {
     channel_id = channel.id,

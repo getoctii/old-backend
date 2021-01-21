@@ -22,7 +22,7 @@ function Community:GET()
   local community = helpers.assert_error(Communities:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
   helpers.assert_error(contains(map(community:get_members(), function(member)
     return member.user_id
-  end), self.user_id), { 403, 'MissingPermissions' })
+  end), self.user.id), { 403, 'MissingPermissions' })
   local channels = map(community:get_channels(), function(row)
     return row.id
   end)
@@ -49,7 +49,7 @@ function Community:DELETE()
   })
   -- TODO: NOT ATOMIC BUT OK
   local community = helpers.assert_error(Communities:find({ id = self.params.id }), 'CommunityNotFound')
-  helpers.assert_error(community.owner_id == self.user_id, { 403, 'MissingPermissions' })
+  helpers.assert_error(community.owner_id == self.user.id, { 403, 'MissingPermissions' })
   preload(community, 'members')
 
   for _, row in ipairs(community:get_members()) do
@@ -80,7 +80,7 @@ function Community:PATCH()
   })
 
   local community = helpers.assert_error(Communities:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
-  helpers.assert_error(community.owner_id == self.user_id, { 403, 'MissingPermissions' })
+  helpers.assert_error(community.owner_id == self.user.id, { 403, 'MissingPermissions' })
 
   local patch = {}
 

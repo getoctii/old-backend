@@ -22,7 +22,7 @@ function Conversation:GET()
   local conversation = helpers.assert_error(Conversations:find({ id = self.params.id }), { 404, 'ConversationNotFound' })
   helpers.assert_error(contains(map(conversation:get_participants(), function(participant)
     return participant.user_id
-  end), self.user_id), { 403, 'MissingPermissions' })
+  end), self.user.id), { 403, 'MissingPermissions' })
 
   return {
     json = {
@@ -41,9 +41,9 @@ function Conversation:POST()
   local conversation = helpers.assert_error(Conversations:find({ id = self.params.id }), { 404, 'ConversationNotFound' })
   helpers.assert_error(contains(map(conversation:get_participants(), function(participant)
     return participant.user_id
-  end), self.user_id), { 403, 'MissingPermissions' })
+  end), self.user.id), { 403, 'MissingPermissions' })
 
-  helpers.assert_error(self.params.recipient ~= self.user_id, { 422, 'InvalidRecipient' }) -- TODO: add as validation
+  helpers.assert_error(self.params.recipient ~= self.user.id, { 422, 'InvalidRecipient' }) -- TODO: add as validation
 
   local recipient = helpers.assert_error(Users:find({ id = self.params.recipient }), { 404, 'RecipientNotFound' })
 
@@ -101,16 +101,16 @@ function Conversation:DELETE()
   local conversation = helpers.assert_error(Conversations:find({ id = self.params.id }), { 404, 'ConversationNotFound' })
   helpers.assert_error(contains(map(conversation:get_participants(), function(participant)
     return participant.user_id
-  end), self.user_id), { 403, 'MissingPermissions' })
+  end), self.user.id), { 403, 'MissingPermissions' })
 
-  local participant = assert(Participants:find({ conversation_id = conversation.id, user_id = self.user_id}))
+  local participant = assert(Participants:find({ conversation_id = conversation.id, user_id = self.user.id}))
   assert(db.delete('participants', {
     id = participant.id
   }))
 
   broadcast('conversation:' .. conversation.id, 'DELETED_PARTICIPANT', {
     id = participant.id,
-    user_id = self.user_id,
+    user_id = self.user.id,
     conversation_id = participant:get_conversation().id
   })
 

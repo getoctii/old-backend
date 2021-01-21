@@ -19,7 +19,7 @@ function Find:GET()
     discriminator = user.discriminator
   }
 
-  if user.id == self.user_id then
+  if user.id == self.user.id then
     info.email = user.email
   end
 
