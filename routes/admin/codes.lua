@@ -14,9 +14,9 @@ function Codes:GET()
 
    local pager = OrderedPaginator(CodesDB, 'created_at', {
     per_page = 25,
-    order = 'asc'
+    order = 'desc'
   })
-  
+
   local page = pager:get_page(self.params.created_at)
 
   if empty(page) then
