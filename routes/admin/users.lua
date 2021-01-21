@@ -5,6 +5,7 @@ local validate = require 'lapis.validate'
 local Users = {}
 
 function Users:PATCH()
+  helpers.assert_error(self.user.discriminator == 0, { 403, 'NotAllowed' })
   validate.assert_valid(self.params, {
     { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
   })
