@@ -25,7 +25,7 @@ function Members:GET()
     ordered = {
       'created_at'
     },
-    order = 'desc'
+    order = 'asc'
   })
 
   local page = pager:get_page(self.params.created_at)

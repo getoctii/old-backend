@@ -3,19 +3,20 @@ local CodesDB = require 'models.codes'
 local uuid = require 'util.uuid'
 local empty = require 'array'.is_empty
 local json = require 'cjson'
-local Users = require 'models.users'
 local db = require 'lapis.db'
 local validate = require 'lapis.validate'
+local OrderedPaginator = require 'lapis.db.pagination'.OrderedPaginator
 
 local Codes = {}
 
 function Codes:GET()
   helpers.assert_error(self.user.discriminator == 0, { 403, 'NotAllowed' })
 
-  local pager = CodesDB:paginated('order by created_at desc', {
-    per_page = 25
+   local pager = OrderedPaginator(CodesDB, 'created_at', {
+    per_page = 25,
+    order = 'asc'
   })
-
+  
   local page = pager:get_page(self.params.created_at)
 
   if empty(page) then
