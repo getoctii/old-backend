@@ -26,11 +26,11 @@ function Messages:GET()
   if not channel.community_id then
     helpers.assert_error(contains(map(channel:get_conversation():get_participants(), function(participant)
       return participant.user_id
-    end), self.user_id), { 403, 'MissingPermissions' })
+    end), self.user.id), { 403, 'MissingPermissions' })
   else
     helpers.assert_error(contains(map(channel:get_community():get_members(), function(member)
       return member.user_id
-    end), self.user_id), { 403, 'MissingPermissions' })
+    end), self.user.id), { 403, 'MissingPermissions' })
   end
 
   local pager = channel:get_messages_paginated({
@@ -79,16 +79,16 @@ function Messages:POST()
   if not channel.community_id then
     helpers.assert_error(contains(map(channel:get_conversation():get_participants(), function(participant)
       return participant.user_id
-    end), self.user_id), { 403, 'MissingPermissions' })
+    end), self.user.id), { 403, 'MissingPermissions' })
   else
     helpers.assert_error(contains(map(channel:get_community():get_members(), function(member)
       return member.user_id
-    end), self.user_id), { 403, 'MissingPermissions' })
+    end), self.user.id), { 403, 'MissingPermissions' })
   end
 
   local row = MessagesModel:create({
     id = uuid(),
-    author_id = self.user_id,
+    author_id = self.user.id,
     content = self.params.content,
     channel_id = channel.id
   })
@@ -125,11 +125,11 @@ function Messages:POST()
 
   broadcast('channel:' .. channel.id, 'NEW_MESSAGE', message_event)
 
-  local read = ReadIndicators:find({ user_id = self.user_id, channel_id = channel.id })
+  local read = ReadIndicators:find({ user_id = self.user.id, channel_id = channel.id })
 
   if not read then
     assert(ReadIndicators:create({
-      user_id = self.user_id,
+      user_id = self.user.id,
       channel_id = channel.id,
       last_read_id = message.id
     }))

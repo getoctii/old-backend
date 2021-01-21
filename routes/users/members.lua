@@ -15,7 +15,7 @@ function Members:GET()
     { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
   })
 
-  helpers.assert_error(self.params.id == self.user_id, { 403, 'InvalidUser' })
+  helpers.assert_error(self.params.id == self.user.id, { 403, 'InvalidUser' })
 
   local members = helpers.assert_error(Users:find({ id = self.params.id }), { 404, 'UserNotFound' }):get_members()
   preload(members, 'community')

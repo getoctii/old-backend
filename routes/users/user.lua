@@ -19,7 +19,6 @@ function User:GET()
   })
 
   local user = helpers.assert_error(Users:find({ id = self.params.id }), { 404, 'UserNotFound' })
-
   local info = {
     id = user.id,
     username = user.username,
@@ -30,14 +29,15 @@ function User:GET()
     badges = map(user.badges, function(badge)
       return Users.badges:to_name(badge)
     end),
-    color = user.color
+    color = user.color,
+    disabled = user.disabled
   }
 
   if (not user.last_ping) or ((os.time() - user.last_ping) > 180) then
     info.state = 'offline'
   end
 
-  if user.id == self.user_id then
+  if user.id == self.user.id or self.user.discriminator == 0 then
     info.email = user.email
   end
 
@@ -63,7 +63,7 @@ function User:PATCH()
     { 'color', exists = true, optional = true, is_color = true, 'InvalidColor' }
   })
 
-  helpers.assert_error(self.params.id == self.user_id, { 403, 'MissingPermissions' })
+  helpers.assert_error(self.params.id == self.user.id, { 403, 'MissingPermissions' })
   local user = helpers.assert_error(Users:find({ id = self.params.id }), { 404, 'UserNotFound' })
 
   local patch = {}

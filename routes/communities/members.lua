@@ -18,7 +18,7 @@ function Members:GET()
   local community = helpers.assert_error(Communities:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
   helpers.assert_error(contains(map(community:get_members(), function(member)
     return member.user_id
-  end), self.user_id), { 403, 'MissingPermissions' })
+  end), self.user.id), { 403, 'MissingPermissions' })
 
   local pager = community:get_members_paginated({
     per_page = 25,

@@ -16,7 +16,7 @@ function Voice:POST()
   local recipient = helpers.assert_error(Users:find({ id = self.params.recipient }), { 404, 'RecipientNotFound' })
   local session = assert(VoiceSessions:create({
     id = uuid(),
-    user_id = self.user_id,
+    user_id = self.user.id,
     recipient_id = recipient.id
   }))
 

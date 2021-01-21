@@ -14,8 +14,8 @@ function Subscribe:GET()
     { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
   })
 
-  helpers.assert_error(self.user_id == self.params.id, { 403, 'NotAllowed' })
-  local user = helpers.assert_error(Users:find({ id = self.user_id }), { 404, 'UserNotFound' }) -- TODO: currently we don't have a check on auth if the user exists, we should do that soon. For now we can do this
+  helpers.assert_error(self.user.id == self.params.id, { 403, 'NotAllowed' })
+  local user = helpers.assert_error(Users:find({ id = self.user.id }), { 404, 'UserNotFound' }) -- TODO: currently we don't have a check on auth if the user exists, we should do that soon. For now we can do this
 
   local all_grip_channels = generate_grip_channels(user)
 
