@@ -10,7 +10,7 @@ function Newsletters:GET()
   
   local pager = OrderedPaginator(NewsletterSubscribers, 'created_at', {
     per_page = 25,
-    order = 'asc'
+    order = 'desc'
   })
 
   local page = pager:get_page(self.params.created_at)
