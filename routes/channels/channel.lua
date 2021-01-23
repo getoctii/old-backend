@@ -1,4 +1,4 @@
-local Channels = require 'models.channels'
+local ChannelsModel = require 'models.channels'
 local validate = require 'lapis.validate'
 local helpers = require 'lapis.application'
 local db = require 'lapis.db'
@@ -16,7 +16,7 @@ function Channel:GET()
     { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
   })
 
-  local channel = helpers.assert_error(Channels:find({ id = self.params.id }), { 404, 'ChannelNotFound' })
+  local channel = helpers.assert_error(ChannelsModel:find({ id = self.params.id }), { 404, 'ChannelNotFound' })
   if not channel.community_id then
     helpers.assert_error(contains(map(channel:get_conversation():get_participants(), function(participant)
       return participant.user_id
@@ -56,7 +56,7 @@ function Channel:DELETE()
     { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
   })
 
-  local channel = helpers.assert_error(Channels:find({ id = self.params.id }), 'ChannelNotFound')
+  local channel = helpers.assert_error(ChannelsModel:find({ id = self.params.id }), 'ChannelNotFound')
   if not channel.community_id then
     helpers.yield_error({ 400, 'InvalidChannel' })
   else
@@ -89,7 +89,7 @@ function Channel:PATCH()
     { 'color', exists = true, optional = true, is_color = true, 'InvalidColor' }
   })
 
-  local channel = helpers.assert_error(Channels:find({ id = self.params.id }), { 404, 'ChannelsNotFound' })
+  local channel = helpers.assert_error(ChannelsModel:find({ id = self.params.id }), { 404, 'ChannelsNotFound' })
   if not channel.community_id then
     helpers.yield_error({ 400, 'InvalidChannel' })
   else

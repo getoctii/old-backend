@@ -1,5 +1,5 @@
 local validate = require 'lapis.validate'
-local Communities = require 'models.communities'
+local CommunitiesModel = require 'models.communities'
 local helpers = require 'lapis.application'
 local ChannelsModel = require 'models.channels'
 local uuid = require 'util.uuid'
@@ -16,7 +16,7 @@ function Channels:GET()
   validate.assert_valid(self.params, {
     { 'id', exists = true, is_uuid = true, 'InvalidUUID'}
   })
-  local community = helpers.assert_error(Communities:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
+  local community = helpers.assert_error(CommunitiesModel:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
   helpers.assert_error(contains(map(community:get_members(), function(member)
     return member.user_id
   end), self.user.id), { 403, 'MissingPermissions' })
@@ -43,7 +43,7 @@ function Channels:POST()
     { 'name', exists = true, matches_regexp = '^[a-zA-Z0-9_\\-]+$', min_length = 2, max_length = 30, 'ChannelNameInvalid'}
   })
 
-  local community = helpers.assert_error(Communities:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
+  local community = helpers.assert_error(CommunitiesModel:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
   helpers.assert_error(community.owner_id == self.user.id, { 403, 'MissingPermissions' })
 
   local channel = ChannelsModel:create({

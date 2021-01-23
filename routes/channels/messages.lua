@@ -9,7 +9,7 @@ local preload = require 'lapis.db.model'.preload
 local empty = require 'array'.is_empty
 local json = require 'cjson'
 local MessagesModel = require 'models.messages'
-local ReadIndicators = require 'models.read'
+local ReadIndicatorsModel = require 'models.read'
 local Mentions = require 'models.mentions'
 local Users = require 'models.users'
 local push = require 'util.push'
@@ -54,6 +54,7 @@ function Messages:GET()
         avatar = author.avatar,
         discriminator = author.discriminator
       },
+      type = row.type,
       created_at = row.created_at,
       updated_at = row.updated_at,
       content = row.content
@@ -90,13 +91,15 @@ function Messages:POST()
     id = uuid(),
     author_id = self.user.id,
     content = self.params.content,
-    channel_id = channel.id
+    channel_id = channel.id,
+    type = 1
   })
 
   local author = row:get_author()
 
   local message = {
     id = row.id,
+    type = row.type,
     created_at = row.created_at,
     updated_at = row.updated_at,
     content = row.content
@@ -104,6 +107,7 @@ function Messages:POST()
 
   local message_event = {
     id = row.id,
+    type = row.type,
     created_at = row.created_at,
     updated_at = row.updated_at,
     content = row.content,
@@ -125,10 +129,10 @@ function Messages:POST()
 
   broadcast('channel:' .. channel.id, 'NEW_MESSAGE', message_event)
 
-  local read = ReadIndicators:find({ user_id = self.user.id, channel_id = channel.id })
+  local read = ReadIndicatorsModel:find({ user_id = self.user.id, channel_id = channel.id })
 
   if not read then
-    assert(ReadIndicators:create({
+    assert(ReadIndicatorsModel:create({
       user_id = self.user.id,
       channel_id = channel.id,
       last_read_id = message.id

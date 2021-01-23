@@ -1,5 +1,5 @@
 local helpers = require 'lapis.application'
-local CodesDB = require 'models.codes'
+local CodesModel = require 'models.codes'
 local uuid = require 'util.uuid'
 local empty = require 'array'.is_empty
 local json = require 'cjson'
@@ -12,7 +12,7 @@ local Codes = {}
 function Codes:GET()
   helpers.assert_error(self.user.discriminator == 0, { 403, 'NotAllowed' })
 
-   local pager = OrderedPaginator(CodesDB, 'created_at', {
+   local pager = OrderedPaginator(CodesModel, 'created_at', {
     per_page = 25,
     order = 'desc'
   })
@@ -30,7 +30,7 @@ end
 
 function Codes:POST()
   helpers.assert_error(self.user.discriminator == 0, { 403, 'NotAllowed' })
-  local code = assert(CodesDB:create({ id = uuid(), used = false }))
+  local code = assert(CodesModel:create({ id = uuid(), used = false }))
   return {
     json = {
       code = code
@@ -44,7 +44,7 @@ function Codes:DELETE()
   })
   helpers.assert_error(self.user.discriminator == 0, { 403, 'NotAllowed' })
   
-  local code = helpers.assert_error(CodesDB:find({ id = self.params.id }), 'CodeNotFound')
+  local code = helpers.assert_error(CodesModel:find({ id = self.params.id }), 'CodeNotFound')
 
   assert(db.delete('codes', {
     id = code.id
