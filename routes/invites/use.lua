@@ -7,15 +7,11 @@ local broadcast = require 'util.broadcast'
 local resubscribe = require 'util.resubscribe'
 local MessagesModel = require 'models.messages'
 local ChannelsModel = require 'models.channels'
+local joinMessages = require 'util.messages'.joinMessages
 
-local joinMessages = {
-  ' joined the community!',
-  ' has arrived, back to work!',
-  ' joined, did someone order a pizza?',
-  ' has arrived, give me a break...',
-  ' joined, I don\'t have any welcoming for you.'
-}
-
+-- the leave messages are more like ban messages ngl
+-- one was you leaving, the other is you being banned lmao
+-- i mean we wont be adding bans in this release
 local Use = {}
 
 function Use:POST()
@@ -34,38 +30,20 @@ function Use:POST()
     user_id = self.user.id
   }))
 
-  broadcast('user:' .. self.user.id, 'NEW_MEMBER', { -- Send in same event
-    id = member.id,
-    community = {
-      id = community.id,
-      icon = community.icon,
-      name = community.name,
-      large = community.large,
-      owner_id = community.owner_id
-    }
-  })
+  local systemChannel = community:get_system_channel()
 
-  resubscribe('user:' .. self.user.id)
-
-  broadcast('community:' .. community.id, 'JOIN_MEMBER', {
-    id = member.id,
-    community_id = community.id,
-    user_id = self.user.id
-  })
-
-  if community.system_channel_id then
-    local systemChannel = helpers.assert_error(ChannelsModel:find({ id = community.system_channel_id }), 'SystemChannelNotFound')
+  if systemChannel then
     local row = MessagesModel:create({
       id = uuid(),
       author_id = '30eeda0f-8969-4811-a118-7cefa01098a3',
       content = '<@' .. self.user.id .. '>' .. joinMessages[math.random(#joinMessages)],
-      channel_id = community.system_channel_id,
+      channel_id = systemChannel.id,
       type = 3
     })
 
     local author = row:get_author()
 
-    broadcast('channel:' .. community.system_channel_id, 'NEW_MESSAGE', {
+    broadcast('channel:' .. systemChannel.id, 'NEW_MESSAGE', {
       id = row.id,
       created_at = row.created_at,
       updated_at = row.updated_at,
@@ -83,7 +61,25 @@ function Use:POST()
       channel_name = systemChannel.name
     })
   end
+  -- wtf, so the message should be there before the fetch of channels even happens? wtf
+  resubscribe('user:' .. self.user.id)
 
+  broadcast('user:' .. self.user.id, 'NEW_MEMBER', { -- Send in same event
+    id = member.id,
+    community = {
+      id = community.id,
+      icon = community.icon,
+      name = community.name,
+      large = community.large,
+      owner_id = community.owner_id
+    }
+  })
+  -- wait, IT DIOESN'T CLEAR CACHE LMAO LMAOOOOOOOOOO I FIGURED IT OUT SAME TIME U WERE SAYING IT LOL
+  broadcast('community:' .. community.id, 'JOIN_MEMBER', {
+    id = member.id,
+    community_id = community.id,
+    user_id = self.user.id
+  }) -- did it reload yet?
 
   return {
     status = 200,

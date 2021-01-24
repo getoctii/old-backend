@@ -11,6 +11,9 @@ local resubscribe = require 'util.resubscribe'
 local broadcast = require 'util.broadcast'
 local db = require 'lapis.db'
 local preload = require 'lapis.db.model'.preload
+local MessagesModel = require 'models.messages'
+local joinMessages = require 'util.messages'.joinMessages
+local leaveMessages = require 'util.messages'.leaveMessages
 
 local Conversation = {}
 
@@ -66,6 +69,32 @@ function Conversation:POST()
     participants = user_ids
   })
 
+  local row = MessagesModel:create({
+    id = uuid(),
+    author_id = '30eeda0f-8969-4811-a118-7cefa01098a3',
+    content = '<@' .. self.params.recipient .. '>' .. joinMessages[math.random(#joinMessages)],
+    channel_id = conversation.channel_id,
+    type = 3
+  })
+
+  local author = row:get_author()
+
+  broadcast('channel:' .. conversation.channel_id, 'NEW_MESSAGE', {
+    id = row.id,
+    created_at = row.created_at,
+    updated_at = row.updated_at,
+    content = row.content,
+    channel_id = row.channel_id,
+    author = {
+      id = author.id,
+      username = author.username,
+      avatar = author.avatar,
+      discriminator = author.discriminator
+    },
+    type = row.type,
+    community_id = conversation.channel_id,
+  })
+
   resubscribe('user:' .. recipient.id)
 
   local channel = conversation:get_channel()
@@ -115,6 +144,32 @@ function Conversation:DELETE()
   })
 
   resubscribe('conversation:' .. conversation.id)
+
+  local row = MessagesModel:create({
+    id = uuid(),
+    author_id = '30eeda0f-8969-4811-a118-7cefa01098a3',
+    content = '<@' .. self.user.id .. '>' .. leaveMessages[math.random(#leaveMessages)],
+    channel_id = conversation.channel_id,
+    type = 4
+  })
+
+  local author = row:get_author()
+
+  broadcast('channel:' .. conversation.channel_id, 'NEW_MESSAGE', {
+    id = row.id,
+    created_at = row.created_at,
+    updated_at = row.updated_at,
+    content = row.content,
+    channel_id = row.channel_id,
+    author = {
+      id = author.id,
+      username = author.username,
+      avatar = author.avatar,
+      discriminator = author.discriminator
+    },
+    type = row.type,
+    community_id = conversation.channel_id,
+  })
 
   return {
     layout = false

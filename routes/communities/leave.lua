@@ -39,7 +39,8 @@ function Leave:POST()
   }))
 
   broadcast('user:' .. self.user.id, 'DELETED_MEMBER', {
-    id = member.id
+    id = member.id,
+    community_id = community.id
   })
 
   resubscribe('user:' .. self.user.id)

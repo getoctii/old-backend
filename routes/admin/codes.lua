@@ -5,24 +5,27 @@ local empty = require 'array'.is_empty
 local json = require 'cjson'
 local db = require 'lapis.db'
 local validate = require 'lapis.validate'
-local OrderedPaginator = require 'lapis.db.pagination'.OrderedPaginator
 
 local Codes = {}
 
 function Codes:GET()
   helpers.assert_error(self.user.discriminator == 0, { 403, 'NotAllowed' })
 
-   local pager = OrderedPaginator(CodesModel, 'created_at', {
-    per_page = 25,
-    order = 'desc'
-  })
+  --  local pager = OrderedPaginator(CodesModel, 'created_at', {
+  --   per_page = 25,
+  --   order = 'desc'
+  -- })
 
-  local page = pager:get_page(self.params.created_at)
+  -- local page = pager:get_page(self.params.created_at)
+
+  local page = self.params.last_code_id and
+    db.query('SELECT * FROM (SELECT *, RANK() OVER (order by created_at desc) rank FROM "codes" WHERE order by created_at desc) t WHERE rank > (SELECT rank FROM (SELECT *, RANK() OVER (order by created_at desc) rank FROM codes WHERE id = ?)) LIMIT 25', self.params.last_code_id)
+    or CodesModel:select('ORDER BY created_at DESC LIMIT 25', self.params.id)
 
   if empty(page) then
     page = json.empty_array
   end
-  
+
   return {
     json = page
   }

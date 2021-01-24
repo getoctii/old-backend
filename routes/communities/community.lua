@@ -55,7 +55,8 @@ function Community:DELETE()
 
   for _, row in ipairs(community:get_members()) do
     broadcast('user:' .. row.user_id, 'DELETED_MEMBER', {
-      id = row.id
+      id = row.id,
+      community_id = community.id
     })
   end
 
@@ -78,7 +79,7 @@ function Community:PATCH()
     { 'icon', exists = true, optional = true, matches_regexp = '^https:\\/\\/file\\.coffee\\/u\\/[a-zA-Z0-9_-]{7,14}\\.(png|jpeg|jpg|gif)$', 'InvalidAvatar' },
     { 'name', exists = true, optional = true, min_length = 2, max_length = 16, 'CommunityNameInvalid' },
     { 'owner_id', exists = true, optional = true, is_uuid = true, 'InvalidOwnerUUID' },
-    { 'system_channel_id', exists = true, optional = true, is_uuid = true , 'InvalidChannelUUID'}
+    { 'system_channel_id', exists = true, optional = true, 'InvalidChannelUUID'}
   })
 
   local community = helpers.assert_error(CommunitiesModel:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
@@ -105,9 +106,13 @@ function Community:PATCH()
   end
 
   if self.params.system_channel_id then
-    local channel = helpers.assert_error(ChannelsModel:find({ id = self.params.system_channel_id }), { 404, 'ChannelNotFound' })
-    helpers.assert_error(channel.community_id == community.id, { 404, 'ChannelNotFound' })
-    patch.system_channel_id = self.params.system_channel_id
+    if self.params.system_channel_id ~= json.null then
+      local channel = helpers.assert_error(ChannelsModel:find({ id = self.params.system_channel_id }), { 404, 'ChannelNotFound' })
+      helpers.assert_error(channel.community_id == community.id, { 404, 'ChannelNotFound' })
+      patch.system_channel_id = self.params.system_channel_id
+    else
+      patch.system_channel_id = db.NULL
+    end
   end
 
   helpers.assert_error(not empty(patch), { 400, 'InvalidPatch'})
