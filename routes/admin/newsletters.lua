@@ -17,7 +17,7 @@ function Newsletters:GET()
   -- local page = pager:get_page(self.params.created_at)
 
   local page = self.params.last_email_id and
-    db.query('SELECT * FROM (SELECT *, RANK() OVER (order by created_at desc) rank FROM "newsletter_subscribers" WHERE order by created_at desc) t WHERE rank > (SELECT rank FROM (SELECT *, RANK() OVER (order by created_at desc) rank FROM newsletter_subscribers WHERE email = ?)) LIMIT 25', self.params.last_email_id)
+    db.query('SELECT * FROM (SELECT *, RANK() OVER (order by created_at desc) rank FROM "newsletter_subscribers" order by created_at desc) t WHERE rank > (SELECT rank FROM (SELECT *, RANK() OVER (order by created_at desc) rank FROM newsletter_subscribers WHERE email = ?)) LIMIT 25', self.params.last_email_id)
     or NewslettersModal:select('ORDER BY created_at DESC LIMIT 25', self.params.id)
 
   if empty(page) then
