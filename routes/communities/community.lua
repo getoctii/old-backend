@@ -1,4 +1,4 @@
-local Communities = require 'models.communities'
+local CommunitiesModel = require 'models.communities'
 local Members = require 'models.members'
 local Users = require 'models.users'
 local helpers = require 'lapis.application'
@@ -11,7 +11,7 @@ local empty = require 'array'.is_empty
 local json = require 'cjson'
 local http = require 'resty.http'
 local preload = require 'lapis.db.model'.preload
-
+local ChannelsModel = require 'models.channels'
 local Community = {}
 
 function Community:GET()
@@ -19,7 +19,7 @@ function Community:GET()
     { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
   })
 
-  local community = helpers.assert_error(Communities:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
+  local community = helpers.assert_error(CommunitiesModel:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
   helpers.assert_error(contains(map(community:get_members(), function(member)
     return member.user_id
   end), self.user.id), { 403, 'MissingPermissions' })
@@ -38,7 +38,8 @@ function Community:GET()
       icon = community.icon,
       large = community.large,
       channels = channels,
-      owner_id = community.owner_id
+      owner_id = community.owner_id,
+      system_channel_id = community.system_channel_id
     }
   }
 end
@@ -48,13 +49,14 @@ function Community:DELETE()
     { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
   })
   -- TODO: NOT ATOMIC BUT OK
-  local community = helpers.assert_error(Communities:find({ id = self.params.id }), 'CommunityNotFound')
+  local community = helpers.assert_error(CommunitiesModel:find({ id = self.params.id }), 'CommunityNotFound')
   helpers.assert_error(community.owner_id == self.user.id, { 403, 'MissingPermissions' })
   preload(community, 'members')
 
   for _, row in ipairs(community:get_members()) do
     broadcast('user:' .. row.user_id, 'DELETED_MEMBER', {
-      id = row.id
+      id = row.id,
+      community_id = community.id
     })
   end
 
@@ -76,10 +78,11 @@ function Community:PATCH()
     { 'id', exists = true, is_uuid = true, 'InvalidUUID' },
     { 'icon', exists = true, optional = true, matches_regexp = '^https:\\/\\/file\\.coffee\\/u\\/[a-zA-Z0-9_-]{7,14}\\.(png|jpeg|jpg|gif)$', 'InvalidAvatar' },
     { 'name', exists = true, optional = true, min_length = 2, max_length = 16, 'CommunityNameInvalid' },
-    { 'owner_id', exists = true, optional = true, is_uuid = true, 'UUIDInvalid' }
+    { 'owner_id', exists = true, optional = true, is_uuid = true, 'InvalidOwnerUUID' },
+    { 'system_channel_id', exists = true, optional = true, 'InvalidChannelUUID'}
   })
 
-  local community = helpers.assert_error(Communities:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
+  local community = helpers.assert_error(CommunitiesModel:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
   helpers.assert_error(community.owner_id == self.user.id, { 403, 'MissingPermissions' })
 
   local patch = {}
@@ -100,6 +103,16 @@ function Community:PATCH()
     helpers.assert_error(Users:find({ id = self.params.owner_id }), { 404, 'UserNotFound' })
     helpers.assert_error(Members:find({ user_id = self.params.owner_id, community_id = self.params.id }), { 404, 'UserNotFound' })
     patch.owner_id = self.params.owner_id
+  end
+
+  if self.params.system_channel_id then
+    if self.params.system_channel_id ~= json.null then
+      local channel = helpers.assert_error(ChannelsModel:find({ id = self.params.system_channel_id }), { 404, 'ChannelNotFound' })
+      helpers.assert_error(channel.community_id == community.id, { 404, 'ChannelNotFound' })
+      patch.system_channel_id = self.params.system_channel_id
+    else
+      patch.system_channel_id = db.NULL
+    end
   end
 
   helpers.assert_error(not empty(patch), { 400, 'InvalidPatch'})

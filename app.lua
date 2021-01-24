@@ -7,8 +7,7 @@ local jwt = require 'resty.jwt'
 local validators = require 'resty.jwt-validators'
 local raven = require 'raven'
 local rand = require 'openssl.rand'
-local Users = require 'models.users'
-local helpers = require 'lapis.application'
+local UsersModel = require 'models.users'
 
 math.randomseed(math.floor(assert(rand.uniform(2^31 - 1))))
 
@@ -56,7 +55,7 @@ app:before_filter(function(self)
     })
 
     if token.verified == true then
-      local user = Users:find({ id = token.payload.sub })
+      local user = UsersModel:find({ id = token.payload.sub })
       if user then
         if not user.disabled then
           self.user = user

@@ -1,5 +1,6 @@
 [scripts]
 start = "lapis server"
+dev = "nodemon --exec 'docker-compose up --build' -e lua"
 [package]
 version = "0.1.0"
 name = "client-gatway"
