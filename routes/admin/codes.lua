@@ -19,7 +19,7 @@ function Codes:GET()
   -- local page = pager:get_page(self.params.created_at)
 
   local page = self.params.last_code_id and
-    db.query('SELECT * FROM (SELECT *, ROW_NUMBER() OVER (order by created_at desc) rank FROM "codes" order by created_at desc) t WHERE rank > (SELECT rank FROM (SELECT *, ROW_NUMBER() OVER (order by created_at desc) rank FROM codes WHERE id = ?) t2) LIMIT 25', self.params.last_code_id)
+    db.query('SELECT * FROM (SELECT *, ROW_NUMBER() OVER (order by created_at desc) rank FROM "codes" order by created_at desc) t WHERE rank > (SELECT rank FROM (SELECT *, ROW_NUMBER() OVER (order by created_at desc) rank FROM codes) t2 WHERE id = ?) LIMIT 25', self.params.last_code_id)
     or CodesModel:select('ORDER BY created_at DESC LIMIT 25')
 
   if empty(page) then
