@@ -10,7 +10,7 @@ function Newsletters:GET()
   helpers.assert_error(self.user.discriminator == 0, { 403, 'NotAllowed' })
 
   local page = self.params.last_email_id and
-    db.query('SELECT * FROM (SELECT *, RANK() OVER (order by created_at desc) rank FROM "newsletter_subscribers" order by created_at desc) t WHERE rank > (SELECT rank FROM (SELECT *, RANK() OVER (order by created_at desc) rank FROM newsletter_subscribers WHERE email = ?) t2) LIMIT 25', self.params.last_email_id)
+    db.query('SELECT * FROM (SELECT *, ROW_NUMBER() OVER (order by created_at desc) rank FROM "newsletter_subscribers" order by created_at desc) t WHERE rank > (SELECT rank FROM (SELECT *, ROW_NUMBER() OVER (order by created_at desc) rank FROM newsletter_subscribers WHERE email = ?) t2) LIMIT 25', self.params.last_email_id)
     or NewslettersModal:select('ORDER BY created_at DESC LIMIT 25')
 
   if empty(page) then

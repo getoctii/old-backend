@@ -22,7 +22,7 @@ function Members:GET()
   end), self.user.id), { 403, 'MissingPermissions' })
 
   local page = self.params.last_member_id and
-    db.query('SELECT * FROM (SELECT *, RANK() OVER (order by created_at desc) rank FROM "members" WHERE "community_id" = ? order by created_at desc) t WHERE rank > (SELECT rank FROM (SELECT *, RANK() OVER (order by created_at desc) rank FROM members WHERE "community_id" = ?) t2 WHERE id = ?) LIMIT 25', self.params.id, self.params.id, self.params.last_member_id)
+    db.query('SELECT * FROM (SELECT *, ROW_NUMBER() OVER (order by created_at desc) rank FROM "members" WHERE "community_id" = ? order by created_at desc) t WHERE rank > (SELECT rank FROM (SELECT *, ROW_NUMBER() OVER (order by created_at desc) rank FROM members WHERE "community_id" = ?) t2 WHERE id = ?) LIMIT 25', self.params.id, self.params.id, self.params.last_member_id)
     or MembersModel:select('WHERE community_id = ? ORDER BY created_at DESC LIMIT 25', self.params.id)
 
   local members = map(page, function(row)

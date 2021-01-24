@@ -35,7 +35,7 @@ function Messages:GET()
   end
 
   local page = self.params.last_message_id and
-    db.query('SELECT * FROM (SELECT *, RANK() OVER (order by created_at desc) rank FROM "messages" WHERE "channel_id" = ? order by created_at desc) t WHERE rank > (SELECT rank FROM (SELECT *, RANK() OVER (order by created_at desc) rank FROM messages WHERE "channel_id" = ?) t2 WHERE id = ?) LIMIT 25', self.params.id, self.params.id, self.params.last_message_id)
+    db.query('SELECT * FROM (SELECT *, ROW_NUMBER() OVER (order by created_at desc) rank FROM "messages" WHERE "channel_id" = ? order by created_at desc) t WHERE rank > (SELECT rank FROM (SELECT *, ROW_NUMBER() OVER (order by created_at desc) rank FROM messages WHERE "channel_id" = ?) t2 WHERE id = ?) LIMIT 25', self.params.id, self.params.id, self.params.last_message_id)
     or MessagesModel:select('WHERE channel_id = ? ORDER BY created_at DESC LIMIT 25', self.params.id)
 
   local messages = map(page, function(row)
