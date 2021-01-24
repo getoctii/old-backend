@@ -9,16 +9,9 @@ local db = require 'lapis.db'
 function Newsletters:GET()
   helpers.assert_error(self.user.discriminator == 0, { 403, 'NotAllowed' })
 
-  -- local pager = OrderedPaginator(NewslettersModal, 'created_at', {
-  --   per_page = 25,
-  --   order = 'desc'
-  -- })
-
-  -- local page = pager:get_page(self.params.created_at)
-
   local page = self.params.last_email_id and
     db.query('SELECT * FROM (SELECT *, RANK() OVER (order by created_at desc) rank FROM "newsletter_subscribers" order by created_at desc) t WHERE rank > (SELECT rank FROM (SELECT *, RANK() OVER (order by created_at desc) rank FROM newsletter_subscribers WHERE email = ?)) LIMIT 25', self.params.last_email_id)
-    or NewslettersModal:select('ORDER BY created_at DESC LIMIT 25', self.params.id)
+    or NewslettersModal:select('ORDER BY created_at DESC LIMIT 25')
 
   if empty(page) then
     page = json.empty_array

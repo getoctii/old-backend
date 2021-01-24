@@ -20,7 +20,7 @@ function Codes:GET()
 
   local page = self.params.last_code_id and
     db.query('SELECT * FROM (SELECT *, RANK() OVER (order by created_at desc) rank FROM "codes" order by created_at desc) t WHERE rank > (SELECT rank FROM (SELECT *, RANK() OVER (order by created_at desc) rank FROM codes WHERE id = ?) t2) LIMIT 25', self.params.last_code_id)
-    or CodesModel:select('ORDER BY created_at DESC LIMIT 25', self.params.id)
+    or CodesModel:select('ORDER BY created_at DESC LIMIT 25')
 
   if empty(page) then
     page = json.empty_array
