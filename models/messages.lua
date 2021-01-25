@@ -1,4 +1,5 @@
-local Model = require('lapis.db.model').Model
+local model = require('lapis.db.model')
+local Model, enum = model.Model, model.enum
 
 local Messages = Model:extend('messages', {
   timestamp = true,
@@ -7,5 +8,13 @@ local Messages = Model:extend('messages', {
     { 'channel', belongs_to = 'channels' }
   }
 })
+
+Messages.types = enum {
+  normal = 1,
+  pinned = 2,
+  member_added = 3,
+  member_removed = 4,
+  administrator = 5
+}
 
 return Messages

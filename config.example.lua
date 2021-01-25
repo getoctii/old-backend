@@ -13,6 +13,10 @@
 --     private = 'keys/private.pem'
 --   },
 --   code_cache = 'off',
+--   default_profile_pictures = {
+--      'img1',
+--      'img2'
+--   }
 --   ssl_certificate = '/etc/ssl/cert.pem',
 --   port = 8086,
 --   pushpin = 'http://pushpin:5561',

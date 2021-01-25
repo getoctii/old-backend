@@ -1,12 +1,13 @@
 local helpers = require 'lapis.application'
 local validate = require 'lapis.validate'
-local Communities = require 'models.communities'
+local CommunitiesModel = require 'models.communities'
 local preload = require 'lapis.db.model'.preload
-
+local MembersModel = require 'models.members'
 local map = require 'array'.map
 local contains = require 'array'.includes
 local empty = require 'array'.is_empty
 local json = require 'cjson'
+local db = require 'lapis.db'
 
 local Members = {}
 
@@ -15,32 +16,19 @@ function Members:GET()
     { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
   })
 
-  local community = helpers.assert_error(Communities:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
+  local community = helpers.assert_error(CommunitiesModel:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
   helpers.assert_error(contains(map(community:get_members(), function(member)
     return member.user_id
-  end), self.user_id), { 403, 'MissingPermissions' })
+  end), self.user.id), { 403, 'MissingPermissions' })
 
-  local pager = community:get_members_paginated({
-    per_page = 25,
-    ordered = {
-      'created_at'
-    },
-    order = 'desc'
-  })
-
-  local page = pager:get_page(self.params.created_at)
-  preload(page, 'user')
+  local page = self.params.last_member_id and
+    db.query('SELECT * FROM (SELECT *, ROW_NUMBER() OVER (order by created_at desc) rank FROM "members" WHERE "community_id" = ? order by created_at desc) t WHERE rank > (SELECT rank FROM (SELECT *, ROW_NUMBER() OVER (order by created_at desc) rank FROM members WHERE "community_id" = ?) t2 WHERE id = ?) LIMIT 25', self.params.id, self.params.id, self.params.last_member_id)
+    or MembersModel:select('WHERE community_id = ? ORDER BY created_at DESC LIMIT 25', self.params.id)
 
   local members = map(page, function(row)
-    local member = row:get_user()
     return {
       id = row.id,
-      user = {
-        id = member.id,
-        username = member.username,
-        avatar = member.avatar,
-        discriminator = member.discriminator
-      },
+      user_id = row.user_id,
       created_at = row.created_at,
       updated_at = row.updated_at
     }

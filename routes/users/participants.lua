@@ -15,7 +15,7 @@ function Participants:GET()
     { 'id', exists = true, is_uuid = true, 'InvalidUUID'}
   })
 
-  helpers.assert_error(self.params.id == self.user_id, { 403, 'InvalidUser' })
+  helpers.assert_error(self.params.id == self.user.id, { 403, 'InvalidUser' })
 
   local participants = helpers.assert_error(Users:find({ id = self.params.id }), { 404, 'UserNotFound' }):get_participants()
   preload(participants, { conversation = { 'participants', 'channel'} })
@@ -31,13 +31,15 @@ function Participants:GET()
       },
       order = 'desc'
     })
+    local message = pager:get_page()[1] or {}
     return {
       id = row.id,
       conversation = {
         id = conversation.id,
         channel_id = conversation.channel_id,
         -- TODO: This might be a bit inefficent, refactor.
-        last_message_id = (pager:get_page()[1] or {}).id,
+        last_message_id = message.id,
+        last_message_date = message.created_at,
         participants = map(all_participants, function(row)
           return row.user_id
         end)

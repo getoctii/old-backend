@@ -12,9 +12,9 @@ function Accept:POST()
   })
 
   local session = helpers.assert_error(VoiceSessions:find({ id = self.params.id }), { 404, 'SessionNotFound' })
-  helpers.assert_error(session.recipient_id == self.user_id, { 403, 'NotAllowed' })
+  helpers.assert_error(session.recipient_id == self.user.id, { 403, 'NotAllowed' })
 
-  broadcast('user:' .. session.user_id, 'ACCPETED_VOICE_SESSION', {
+  broadcast('user:' .. session.user_id, 'ACCEPTED_VOICE_SESSION', {
     id = session.id,
     peer_id = self.params.peer_id
   })

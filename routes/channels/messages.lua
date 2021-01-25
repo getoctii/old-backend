@@ -9,11 +9,12 @@ local preload = require 'lapis.db.model'.preload
 local empty = require 'array'.is_empty
 local json = require 'cjson'
 local MessagesModel = require 'models.messages'
-local ReadIndicators = require 'models.read'
+local ReadIndicatorsModel = require 'models.read'
 local Mentions = require 'models.mentions'
 local Users = require 'models.users'
 local push = require 'util.push'
 local db = require 'lapis.db'
+local OrderedPaginator = require 'lapis.db.pagination'.OrderedPaginator
 
 local Messages = {}
 
@@ -26,34 +27,22 @@ function Messages:GET()
   if not channel.community_id then
     helpers.assert_error(contains(map(channel:get_conversation():get_participants(), function(participant)
       return participant.user_id
-    end), self.user_id), { 403, 'MissingPermissions' })
+    end), self.user.id), { 403, 'MissingPermissions' })
   else
     helpers.assert_error(contains(map(channel:get_community():get_members(), function(member)
       return member.user_id
-    end), self.user_id), { 403, 'MissingPermissions' })
+    end), self.user.id), { 403, 'MissingPermissions' })
   end
 
-  local pager = channel:get_messages_paginated({
-    per_page = 25,
-    ordered = {
-      'created_at'
-    },
-    order = 'desc'
-  })
-
-  local page = pager:get_page(self.params.created_at)
-  preload(page, 'author')
+  local page = self.params.last_message_id and
+    db.query('SELECT * FROM (SELECT *, ROW_NUMBER() OVER (order by created_at desc) rank FROM "messages" WHERE "channel_id" = ? order by created_at desc) t WHERE rank > (SELECT rank FROM (SELECT *, ROW_NUMBER() OVER (order by created_at desc) rank FROM messages WHERE "channel_id" = ?) t2 WHERE id = ?) LIMIT 25', self.params.id, self.params.id, self.params.last_message_id)
+    or MessagesModel:select('WHERE channel_id = ? ORDER BY created_at DESC LIMIT 25', self.params.id)
 
   local messages = map(page, function(row)
-    local author = row:get_author()
     return {
       id = row.id,
-      author = {
-        id = author.id,
-        username = author.username,
-        avatar = author.avatar,
-        discriminator = author.discriminator
-      },
+      author_id = row.author_id,
+      type = row.type,
       created_at = row.created_at,
       updated_at = row.updated_at,
       content = row.content
@@ -79,24 +68,26 @@ function Messages:POST()
   if not channel.community_id then
     helpers.assert_error(contains(map(channel:get_conversation():get_participants(), function(participant)
       return participant.user_id
-    end), self.user_id), { 403, 'MissingPermissions' })
+    end), self.user.id), { 403, 'MissingPermissions' })
   else
     helpers.assert_error(contains(map(channel:get_community():get_members(), function(member)
       return member.user_id
-    end), self.user_id), { 403, 'MissingPermissions' })
+    end), self.user.id), { 403, 'MissingPermissions' })
   end
 
   local row = MessagesModel:create({
     id = uuid(),
-    author_id = self.user_id,
+    author_id = self.user.id,
     content = self.params.content,
-    channel_id = channel.id
+    channel_id = channel.id,
+    type = 1
   })
 
   local author = row:get_author()
 
   local message = {
     id = row.id,
+    type = row.type,
     created_at = row.created_at,
     updated_at = row.updated_at,
     content = row.content
@@ -104,6 +95,7 @@ function Messages:POST()
 
   local message_event = {
     id = row.id,
+    type = row.type,
     created_at = row.created_at,
     updated_at = row.updated_at,
     content = row.content,
@@ -125,11 +117,11 @@ function Messages:POST()
 
   broadcast('channel:' .. channel.id, 'NEW_MESSAGE', message_event)
 
-  local read = ReadIndicators:find({ user_id = self.user_id, channel_id = channel.id })
+  local read = ReadIndicatorsModel:find({ user_id = self.user.id, channel_id = channel.id })
 
   if not read then
-    assert(ReadIndicators:create({
-      user_id = self.user_id,
+    assert(ReadIndicatorsModel:create({
+      user_id = self.user.id,
       channel_id = channel.id,
       last_read_id = message.id
     }))
@@ -193,7 +185,9 @@ function Messages:POST()
     end
   end
 
-  push({ payloads = notifications })
+  if not empty(notifications) then
+    push({ payloads = notifications })
+  end
 
   return {
     json = message

@@ -15,8 +15,8 @@ function Read:GET()
     { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
   })
 
-  helpers.assert_error(self.params.id == self.user_id, { 403, 'InvalidUser' })
-  local user = helpers.assert_error(Users:find({ id = self.user_id }), { 404, 'UserNotFound' }) -- TODO: currently we don't have a check on auth if the user exists, we should do that soon. For now we can do this
+  helpers.assert_error(self.params.id == self.user.id, { 403, 'InvalidUser' })
+  local user = helpers.assert_error(Users:find({ id = self.user.id }), { 404, 'UserNotFound' }) -- TODO: currently we don't have a check on auth if the user exists, we should do that soon. For now we can do this
   local members = user:get_members()
   local participants = user:get_participants()
 
@@ -33,7 +33,7 @@ function Read:GET()
   local read_indicators_raw = ReadIndicators:find_all(channel_ids, {
     key = 'channel_id',
     where = {
-      user_id = self.user_id
+      user_id = self.user.id
     }
   })
 

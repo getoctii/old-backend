@@ -1,3 +1,4 @@
+local db = require 'lapis.db'
 local schema = require 'lapis.db.schema'
 local types = schema.types
 
@@ -172,6 +173,29 @@ return {
       { 'name', types.text },
       { 'color', types.text { null = true } },
       { 'permissions', types.integer { array = true, default = '{}' } }
+    })
+  end,
+  [1610681439] = function()
+    schema.add_column('newsletter_subscribers', 'created_at', types.time { default = 'NOW()'} )
+    schema.add_column('newsletter_subscribers', 'updated_at', types.time { default = 'NOW()'} )
+  end,
+  [1611178536] = function()
+    schema.add_column('codes', 'created_at', types.time {default = 'NOW()'} )
+    schema.add_column('codes', 'updated_at', types.time {default = 'NOW()'} )
+  end,
+  [1611282439] = function()
+    schema.add_column('messages', 'type', types.integer { default = 1 } )
+    schema.add_column('communities', 'system_channel_id', 'uuid')
+  end,
+  [1611287258] = function ()
+    db.insert('users', {
+      id = '30eeda0f-8969-4811-a118-7cefa01098a3',
+      username = 'system',
+      discriminator = 0,
+      avatar = 'https://file.coffee/u/bat4HJ36LT.png',
+      email = '',
+      password = '',
+      disabled = true
     })
   end
 }

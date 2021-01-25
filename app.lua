@@ -1,10 +1,15 @@
 package.path = package.path .. ';./?/init.lua'
 local lapis = require 'lapis'
+local validate = require 'lapis.validate'
 local config = require 'lapis.config'.get()
 
 local jwt = require 'resty.jwt'
 local validators = require 'resty.jwt-validators'
 local raven = require 'raven'
+local rand = require 'openssl.rand'
+local UsersModel = require 'models.users'
+
+math.randomseed(math.floor(assert(rand.uniform(2^31 - 1))))
 
 local app = lapis.Application()
 app.include = function(self, a)
@@ -14,6 +19,11 @@ end
 -- Validators
 require 'util.validators.uuid'
 require 'util.validators.matches_regexp'
+
+function validate.validate_functions.exists(input)
+  return not not input, '%s must be provided'
+end
+
 local rvn = raven.new {
   sender = require('raven.senders.ngx').new {
     dsn = 'https://15652eb7625a4485bbabde18e37fed37@o271654.ingest.sentry.io/5453638'
@@ -45,7 +55,26 @@ app:before_filter(function(self)
     })
 
     if token.verified == true then
-      self.user_id = token.payload.sub
+      local user = UsersModel:find({ id = token.payload.sub })
+      if user then
+        if not user.disabled then
+          self.user = user
+        else
+          self:write({
+            status = 403,
+            json = {
+              errors = { 'DisabledUser' }
+            }
+          })
+        end
+      else
+        self:write({
+          status = 404,
+          json = {
+            errors = { 'UserNotFound' }
+          }
+        })
+      end
     else
       self:write({
         status = 403,
@@ -87,6 +116,8 @@ elseif config._name == 'development' then
   end
 end
 
+
+
 function app:handle_404()
   return { status = 404, json = {
     errors = {
@@ -105,6 +136,6 @@ app:include('routes.conversations')
 app:include('routes.messages')
 app:include('routes.voice')
 app:include('routes.groups')
-
+app:include('routes.admin')
 
 return app

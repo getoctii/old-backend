@@ -11,10 +11,10 @@ function Notifications:POST()
     { 'platform', exists = true, one_of = { 'ios' }, 'InvalidPlatform' }
   })
 
-  helpers.assert_error(self.params.id == self.user_id, { 403, 'InvalidUser' })
+  helpers.assert_error(self.params.id == self.user.id, { 403, 'InvalidUser' })
 
   NotifcationTokens:create({
-    user_id = self.user_id,
+    user_id = self.user.id,
     platform = self.params.platform,
     token = self.params.token
   })

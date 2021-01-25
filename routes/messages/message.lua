@@ -20,11 +20,11 @@ function Message:GET()
   if not channel.community_id then
     helpers.assert_error(contains(map(channel:get_conversation():get_participants(), function(participant)
       return participant.user_id
-    end), self.user_id), { 403, 'MissingPermissions' })
+    end), self.user.id), { 403, 'MissingPermissions' })
   else
     helpers.assert_error(contains(map(channel:get_community():get_members(), function(member)
       return member.user_id
-    end), self.user_id), { 403, 'MissingPermissions' })
+    end), self.user.id), { 403, 'MissingPermissions' })
   end
 
   return {
@@ -50,19 +50,17 @@ function Message:PATCH()
   if not channel.community_id then
     helpers.assert_error(contains(map(channel:get_conversation():get_participants(), function(participant)
       return participant.user_id
-    end), self.user_id), { 403, 'MissingPermissions' })
+    end), self.user.id), { 403, 'MissingPermissions' })
   else
     helpers.assert_error(contains(map(channel:get_community():get_members(), function(member)
       return member.user_id
-    end), self.user_id), { 403, 'MissingPermissions' })
+    end), self.user.id), { 403, 'MissingPermissions' })
   end
-  helpers.assert_error(message:get_author().id == self.user_id, { 403, 'MissingPermissions' })
+  helpers.assert_error(message:get_author().id == self.user.id, { 403, 'MissingPermissions' })
   message:update({
     content = self.params.content
   })
-
   message:refresh()
-
   local message_event = {
     id = message.id,
     channel_id = message.channel_id,
@@ -89,14 +87,14 @@ function Message:DELETE()
   if not channel.community_id then
     helpers.assert_error(contains(map(channel:get_conversation():get_participants(), function(participant)
       return participant.user_id
-    end), self.user_id), { 403, 'MissingPermissions' })
+    end), self.user.id), { 403, 'MissingPermissions' })
   else
     helpers.assert_error(contains(map(channel:get_community():get_members(), function(member)
       return member.user_id
-    end), self.user_id), { 403, 'MissingPermissions' })
+    end), self.user.id), { 403, 'MissingPermissions' })
   end
 
-  helpers.assert_error(message:get_author().id == self.user_id, { 403, 'MissingPermissions' })
+  helpers.assert_error(message:get_author().id == self.user.id, { 403, 'MissingPermissions' })
 
   -- assert(db.delete('read', { last_read_id = message.id }))
   assert(db.delete('mentions', { message_id = message.id }))
