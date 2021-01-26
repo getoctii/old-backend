@@ -40,7 +40,7 @@ function Groups:POST()
   })
 
     local community = helpers.assert_error(Communities:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
-    helpers.assert_error(community.owner_id == self.user_id, { 403, 'MissingPermissions' })
+    helpers.assert_error(community.owner_id == self.user.id, { 403, 'MissingPermissions' })
 
 
     if self.params.permissions ~= nil then
@@ -51,7 +51,7 @@ function Groups:POST()
       id = uuid(),
       name = self.params.name,
       community_id = community.id,
-      permissions = self.params.permissions and db.array(Set.values(self.params.permissions)) or nil
+      permissions = self.params.permissions and db.array(Set.values(Set(self.params.permissions))) or nil
     })
 
     broadcast('community:' .. community.id, 'NEW_GROUP', {

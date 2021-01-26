@@ -137,5 +137,6 @@ app:include('routes.messages')
 app:include('routes.voice')
 app:include('routes.groups')
 app:include('routes.admin')
+app:include('routes.members')
 
 return app

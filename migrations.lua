@@ -197,5 +197,13 @@ return {
       password = '',
       disabled = true
     })
+  end,
+  [1611550703] = function()
+    schema.create_table('group_members', {
+      { 'member_id', uuid },
+      { 'group_id', uuid },
+
+      'PRIMARY KEY (member_id, group_id)'
+    })
   end
 }

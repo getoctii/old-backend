@@ -4,7 +4,8 @@ local Members = Model:extend('members', {
   timestamp = true,
   relations = {
     { 'user', belongs_to = 'users' },
-    { 'community', belongs_to = 'communities' }
+    { 'community', belongs_to = 'communities' },
+    { 'group_members', has_many = 'group_members' }
   }
 })
 
