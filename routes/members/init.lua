@@ -9,5 +9,6 @@ app.name = "members."
 app.path = "/members"
 
 app:match('groups', '/:id/:group_id', guard(json_params(respond_to(require 'routes.members.groups' ))))
+app:match('member', '/:id', guard(json_params(respond_to(require 'routes.members.member'))))
 
 return app

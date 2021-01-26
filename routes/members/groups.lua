@@ -4,6 +4,7 @@ local GroupMembersModel = require 'models.group_members'
 local helpers = require 'lapis.application'
 local db = require 'lapis.db'
 local validate = require 'lapis.validate'
+local broadcast = require 'util.broadcast'
 
 local Groups = {}
 
@@ -24,6 +25,12 @@ function Groups:POST()
     group_id = self.params.group_id
   })
 
+  broadcast('community:' .. community.id, 'NEW_MEMBER_GROUP', {
+    member_id = member.id,
+    group_id = self.params.group_id,
+    community_id = community.id
+  })
+
   return {
     status = 204,
     layout = false
@@ -42,7 +49,13 @@ function Groups:DELETE()
   local group = helpers.assert_error(GroupsModel:find(self.params.group_id), { 404, 'GroupNotFound'})
   helpers.assert_error(group.community_id == community.id, { 404, 'GroupNotFound' })
 
-  db.delete('groups_members', { member_id = member.id, group_id = self.params.group_id })
+  db.delete('group_members', { member_id = member.id, group_id = self.params.group_id })
+
+  broadcast('community:' .. community.id, 'DELETED_MEMBER_GROUP', {
+    member_id = member.id,
+    group_id = self.params.group_id,
+    community_id = community.id
+  })
 
   return {
     status = 204,
