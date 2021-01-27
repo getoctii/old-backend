@@ -208,5 +208,8 @@ return {
   end,
   [1611632743] = function()
     schema.add_column('groups', 'order', types.integer { default = 1 })
+  end,
+  [1611775713] = function()
+    schema.add_column('communities', 'base_permissions', types.integer { array = true, default = '{}' })
   end
 }

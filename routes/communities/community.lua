@@ -12,7 +12,11 @@ local json = require 'cjson'
 local http = require 'resty.http'
 local preload = require 'lapis.db.model'.preload
 local ChannelsModel = require 'models.channels'
+local Set = require 'pl.Set'
+local C = require 'pl.comprehension'.new()
 local Community = {}
+
+local permission_set = Set(C 'x for x=1,17' ())
 
 function Community:GET()
   validate.assert_valid(self.params, {
@@ -39,7 +43,8 @@ function Community:GET()
       large = community.large,
       channels = channels,
       owner_id = community.owner_id,
-      system_channel_id = community.system_channel_id
+      system_channel_id = community.system_channel_id,
+      base_permissions = community.base_permissions
     }
   }
 end
@@ -79,7 +84,8 @@ function Community:PATCH()
     { 'icon', exists = true, optional = true, matches_regexp = '^https:\\/\\/file\\.coffee\\/u\\/[a-zA-Z0-9_-]{7,14}\\.(png|jpeg|jpg|gif)$', 'InvalidAvatar' },
     { 'name', exists = true, optional = true, min_length = 2, max_length = 16, 'CommunityNameInvalid' },
     { 'owner_id', exists = true, optional = true, is_uuid = true, 'InvalidOwnerUUID' },
-    { 'system_channel_id', exists = true, optional = true, 'InvalidChannelUUID'}
+    { 'system_channel_id', exists = true, optional = true, 'InvalidChannelUUID'},
+    { 'base_permissions', exists = true, optional = true, 'InvalidPermissions' }
   })
 
   local community = helpers.assert_error(CommunitiesModel:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
@@ -113,6 +119,11 @@ function Community:PATCH()
     else
       patch.system_channel_id = db.NULL
     end
+  end
+
+  if self.params.base_permissions then
+    helpers.assert_error(type((self.params.base_permissions) == 'table') and ((Set(self.params.permibase_permissionsssions) + permission_set) == permission_set), { 400, 'InvalidPermissions' })
+    patch.base_permissions = db.array(Set.values(Set(self.params.base_permissions)))
   end
 
   helpers.assert_error(not empty(patch), { 400, 'InvalidPatch'})
