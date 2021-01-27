@@ -8,6 +8,9 @@ local broadcast = require 'util.broadcast'
 local resubscribe = require 'util.resubscribe'
 local empty = require 'array'.is_empty
 local Read = require 'models.read'
+local MembersModel = require 'models.members'
+local GroupsModel = require 'models.groups'
+local engine = require 'util.permissions.engine'
 
 local Channel = {}
 
@@ -22,9 +25,11 @@ function Channel:GET()
       return participant.user_id
     end), self.user.id), { 403, 'MissingPermissions' })
   else
-    helpers.assert_error(contains(map(channel:get_community():get_members(), function(member)
-      return member.user_id
-    end), self.user.id), { 403, 'MissingPermissions' })
+    local member = helpers.assert_error(MembersModel:find({
+      community_id = channel.community_id,
+      user_id = self.user.id
+    }), { 404, 'CommunityNotFound' })
+    helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.READ_MESSAGES }), { 403, 'MissingPermissions' })
   end
 
   local read = Read:find({ user_id = self.user.id, channel_id = channel.id })
@@ -60,7 +65,11 @@ function Channel:DELETE()
   if not channel.community_id then
     helpers.yield_error({ 400, 'InvalidChannel' })
   else
-    helpers.assert_error(channel:get_community().owner_id == self.user.id, { 403, 'MissingPermissions' })
+    local member = helpers.assert_error(MembersModel:find({
+      community_id = channel.community_id,
+      user_id = self.user.id
+    }), { 404, 'CommunityNotFound' })
+    helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.MANAGE_CHANNELS }), { 403, 'MissingPermissions' })
   end
 
   assert(db.delete('channels', {
@@ -78,7 +87,6 @@ function Channel:DELETE()
   return {
     layout = false
   }
-
 end
 
 function Channel:PATCH()
@@ -93,7 +101,11 @@ function Channel:PATCH()
   if not channel.community_id then
     helpers.yield_error({ 400, 'InvalidChannel' })
   else
-    helpers.assert_error(channel:get_community().owner_id == self.user.id, { 403, 'MissingPermissions' })
+    local member = helpers.assert_error(MembersModel:find({
+      community_id = channel.community_id,
+      user_id = self.user.id
+    }), { 404, 'CommunityNotFound' })
+    helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.MANAGE_CHANNELS }), { 403, 'MissingPermissions' })
   end
 
   local patch = {}

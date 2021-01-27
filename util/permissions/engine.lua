@@ -10,8 +10,7 @@ function engine.sum(permission_sets)
   end, Set())
 end
 
-function engine.has_community_permissions(member_id, permissions)
-  local member = MembersModel:find(member_id)
+function engine.has_community_permissions(member, permissions)
   local community = MembersModel:get_community()
 
   if member.user_id == community.owner_id then
@@ -25,11 +24,11 @@ function engine.has_community_permissions(member_id, permissions)
     return group_member:get_group()
   end)
 
-  local total_permissions = community.base_permissions + engine.sum(array.map(groups, function(group)
+  local total_permissions = Set(community.base_permissions) + engine.sum(array.map(groups, function(group)
     return Set(group.permissions)
   end))
 
-  return permissions < total_permissions
+  return Set(permissions) < total_permissions
 end
 
 return engine
