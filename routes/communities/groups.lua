@@ -86,6 +86,7 @@ function Groups:PATCH()
   helpers.assert_error(community.owner_id == self.user.id, { 403, 'MissingPermissions' })
 
   if self.params.order then
+    helpers.assert_error(Set(self.params.order) == Set(map(community:get_groups(), function(row) return row.id end)), { 400, 'InvalidOrder' })
     for i, v in ipairs(self.params.order) do
       local group = helpers.assert_error(GroupsModel:find({ id = v }), { 404, 'GroupNotFound'})
       helpers.assert_error(community.id == group.community_id,  {404, 'GroupNotFound' })
