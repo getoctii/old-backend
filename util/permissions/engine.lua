@@ -11,7 +11,7 @@ function engine.sum(permission_sets)
 end
 
 function engine.has_community_permissions(member, permissions)
-  local community = MembersModel:get_community()
+  local community = member:get_community()
 
   if member.user_id == community.owner_id then
     return true
