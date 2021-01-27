@@ -44,7 +44,7 @@ function Community:GET()
       channels = channels,
       owner_id = community.owner_id,
       system_channel_id = community.system_channel_id,
-      base_permissions = community.base_permissions
+      base_permissions = empty(community.base_permissions) and json.empty_array or community.base_permissions
     }
   }
 end
