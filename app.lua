@@ -16,6 +16,8 @@ app.include = function(self, a)
 	self.__class.include(self, a, nil, self)
 end
 
+-- TODO: Handle JSON validation, not sure if lapis handles types.
+
 -- Validators
 require 'util.validators.uuid'
 require 'util.validators.matches_regexp'

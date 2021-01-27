@@ -60,7 +60,7 @@ function Group:PATCH()
     id = group.id,
     name = group.name,
     color = group.color,
-    permissions = is_empty(group.permissions) and json.empty_array or group.permissions
+    permissions = is_empty(group.permissions) and json.empty_array or group.permissions,
   }
 
   broadcast('community:' .. group.community_id, 'UPDATED_GROUP', group_event)
@@ -77,6 +77,7 @@ function Group:DELETE()
   local group = helpers.assert_error(Groups:find({ id = self.params.id }), { 404, 'GroupNotFound' })
   helpers.assert_error(group:get_community().owner_id == self.user.id, { 403, 'MissingPermissions' })
   assert(db.delete('groups', { id = group.id }))
+  assert(db.delete('group_members', { group_id = group.id }))
 
   broadcast('community:' .. group.community_id, 'DELETED_GROUP', {
     id = group.id,

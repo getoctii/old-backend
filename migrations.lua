@@ -205,5 +205,8 @@ return {
 
       'PRIMARY KEY (member_id, group_id)'
     })
+  end,
+  [1611632743] = function()
+    schema.add_column('groups', 'order', types.integer { default = 1 })
   end
 }
