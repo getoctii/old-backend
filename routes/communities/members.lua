@@ -4,7 +4,6 @@ local CommunitiesModel = require 'models.communities'
 local preload = require 'lapis.db.model'.preload
 local MembersModel = require 'models.members'
 local map = require 'array'.map
-local contains = require 'array'.includes
 local empty = require 'array'.is_empty
 local json = require 'cjson'
 local db = require 'lapis.db'
@@ -17,9 +16,10 @@ function Members:GET()
   })
 
   local community = helpers.assert_error(CommunitiesModel:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
-  helpers.assert_error(contains(map(community:get_members(), function(member)
-    return member.user_id
-  end), self.user.id), { 403, 'MissingPermissions' })
+  helpers.assert_error(MembersModel:find({
+    community_id = community.id,
+    user_id = self.user.id
+  }), { 404, 'CommunityNotFound' })
 
   local page = self.params.last_member_id and
     db.query('SELECT * FROM (SELECT *, ROW_NUMBER() OVER (order by created_at desc) rank FROM "members" WHERE "community_id" = ? order by created_at desc) t WHERE rank > (SELECT rank FROM (SELECT *, ROW_NUMBER() OVER (order by created_at desc) rank FROM members WHERE "community_id" = ?) t2 WHERE id = ?) LIMIT 25', self.params.id, self.params.id, self.params.last_member_id)

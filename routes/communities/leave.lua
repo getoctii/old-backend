@@ -26,9 +26,10 @@ function Leave:POST()
   })
 
   local community = helpers.assert_error(CommunitiesModel:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
-  helpers.assert_error(contains(map(community:get_members(), function(member)
-    return member.user_id
-  end), self.user.id), { 403, 'MissingPermissions' })
+  helpers.assert_error(MembersModel:find({
+    community_id = community.id,
+    user_id = self.user.id
+  }), { 404, 'CommunityNotFound' })
   helpers.assert_error(community.owner_id ~= self.user.id, { 403, 'MissingPermissions' })
 
   local member = MembersModel:find({ user_id = self.user.id, community_id = community.id })

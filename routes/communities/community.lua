@@ -12,6 +12,9 @@ local json = require 'cjson'
 local http = require 'resty.http'
 local preload = require 'lapis.db.model'.preload
 local ChannelsModel = require 'models.channels'
+local MembersModel = require 'models.members'
+local engine = require 'util.permissions.engine'
+local GroupsModel = require 'models.groups'
 local Set = require 'pl.Set'
 local C = require 'pl.comprehension'.new()
 local Community = {}
@@ -24,9 +27,10 @@ function Community:GET()
   })
 
   local community = helpers.assert_error(CommunitiesModel:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
-  helpers.assert_error(contains(map(community:get_members(), function(member)
-    return member.user_id
-  end), self.user.id), { 403, 'MissingPermissions' })
+  helpers.assert_error(MembersModel:find({
+    community_id = community.id,
+    user_id = self.user.id
+  }), { 404, 'CommunityNotFound' })
   local channels = map(community:get_channels(), function(row)
     return row.id
   end)
@@ -55,7 +59,13 @@ function Community:DELETE()
   })
   -- TODO: NOT ATOMIC BUT OK
   local community = helpers.assert_error(CommunitiesModel:find({ id = self.params.id }), 'CommunityNotFound')
-  helpers.assert_error(community.owner_id == self.user.id, { 403, 'MissingPermissions' })
+  local member = helpers.assert_error(MembersModel:find({
+    community_id = community.id,
+    user_id = self.user.id
+  }), { 404, 'CommunityNotFound' })
+
+  helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.OWNER }), { 403, 'MissingPermissions' })
+
   preload(community, 'members')
 
   for _, row in ipairs(community:get_members()) do
@@ -89,15 +99,20 @@ function Community:PATCH()
   })
 
   local community = helpers.assert_error(CommunitiesModel:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
-  helpers.assert_error(community.owner_id == self.user.id, { 403, 'MissingPermissions' })
+  local member = helpers.assert_error(MembersModel:find({
+    community_id = community.id,
+    user_id = self.user.id
+  }), { 404, 'CommunityNotFound' })
 
   local patch = {}
 
   if self.params.name then
+    helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.MANAGE_COMMUNITY }), { 403, 'MissingPermissions' })
     patch.name = self.params.name
   end
 
   if self.params.icon then
+    helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.MANAGE_COMMUNITY }), { 403, 'MissingPermissions' })
     local httpc = assert(http.new())
     local status = assert(httpc:request_uri(self.params.icon, { method = 'HEAD' })).status
 
@@ -106,12 +121,14 @@ function Community:PATCH()
   end
 
   if self.params.owner_id then
+    helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.OWNER }), { 403, 'MissingPermissions' })
     helpers.assert_error(Users:find({ id = self.params.owner_id }), { 404, 'UserNotFound' })
     helpers.assert_error(Members:find({ user_id = self.params.owner_id, community_id = self.params.id }), { 404, 'UserNotFound' })
     patch.owner_id = self.params.owner_id
   end
 
   if self.params.system_channel_id then
+    helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.MANAGE_COMMUNITY }), { 403, 'MissingPermissions' })
     if self.params.system_channel_id ~= json.null then
       local channel = helpers.assert_error(ChannelsModel:find({ id = self.params.system_channel_id }), { 404, 'ChannelNotFound' })
       helpers.assert_error(channel.community_id == community.id, { 404, 'ChannelNotFound' })
@@ -122,6 +139,7 @@ function Community:PATCH()
   end
 
   if self.params.base_permissions then
+    helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.MANAGE_PERMISSIONS }), { 403, 'MissingPermissions' })
     helpers.assert_error(type((self.params.base_permissions) == 'table') and ((Set(self.params.permibase_permissionsssions) + permission_set) == permission_set), { 400, 'InvalidPermissions' })
     patch.base_permissions = db.array(Set.values(Set(self.params.base_permissions)))
   end

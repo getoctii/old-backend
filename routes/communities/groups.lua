@@ -10,6 +10,8 @@ local json = require 'cjson'
 local Set = require 'pl.Set'
 local C = require 'pl.comprehension'.new()
 local db = require 'lapis.db'
+local MembersModel = require 'models.members'
+local engine = require 'util.permissions.engine'
 
 local permission_set = Set(C 'x for x=1,17' ())
 
@@ -21,6 +23,11 @@ function Groups:GET()
   })
 
   local community = helpers.assert_error(Communities:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
+  helpers.assert_error(MembersModel:find({
+    community_id = community.id,
+    user_id = self.user.id
+  }), { 404, 'CommunityNotFound' })
+
   local groups = community:get_groups()
 
   table.sort(groups, function(a, b)
@@ -46,13 +53,18 @@ function Groups:POST()
   })
 
     local community = helpers.assert_error(Communities:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
-    helpers.assert_error(community.owner_id == self.user.id, { 403, 'MissingPermissions' })
+
+    local member = helpers.assert_error(MembersModel:find({
+      community_id = community.id,
+      user_id = self.user.id
+    }), { 404, 'CommunityNotFound' })
+    helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.MANAGE_PERMISSIONS }), { 403, 'MissingPermissions' })
 
 
     if self.params.permissions ~= nil then
       helpers.assert_error(type((self.params.permissions) == 'table') and ((Set(self.params.permissions) + permission_set) == permission_set), { 400, 'InvalidPermissions' })
     end
-    inspect(self.params.permissions)
+
     local group = GroupsModel:create({
       id = uuid(),
       name = self.params.name,
@@ -83,7 +95,12 @@ function Groups:PATCH()
   })
 
   local community = helpers.assert_error(Communities:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
-  helpers.assert_error(community.owner_id == self.user.id, { 403, 'MissingPermissions' })
+
+  local member = helpers.assert_error(MembersModel:find({
+    community_id = community.id,
+    user_id = self.user.id
+  }), { 404, 'CommunityNotFound' })
+  helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.MANAGE_PERMISSIONS }), { 403, 'MissingPermissions' })
 
   if self.params.order then
     helpers.assert_error(Set(self.params.order) == Set(map(community:get_groups(), function(row) return row.id end)), { 400, 'InvalidOrder' })

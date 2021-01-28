@@ -6,6 +6,9 @@ local empty = require 'array'.is_empty
 local json = require 'cjson'
 local InvitesModel = require 'models.invites'
 local uuid = require 'util.uuid'
+local MembersModel = require 'models.members'
+local GroupsModel = require 'models.groups'
+local engine = require 'util.permissions.engine'
 
 local Invites = {}
 
@@ -15,7 +18,12 @@ function Invites:GET()
   })
 
   local community = helpers.assert_error(Communities:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
-  helpers.assert_error(community.owner_id == self.user.id, { 403, 'MissingPermissions' })
+
+  local member = helpers.assert_error(MembersModel:find({
+    community_id = community.id,
+    user_id = self.user.id
+  }), { 404, 'CommunityNotFound' })
+  helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.MANAGE_INVITES }), { 403, 'MissingPermissions' })
 
   local invites = map(community:get_invites(), function(row)
     return {
@@ -43,7 +51,12 @@ function Invites:POST()
   })
 
   local community = helpers.assert_error(Communities:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
-  helpers.assert_error(community.owner_id == self.user.id, { 403, 'MissingPermissions' })
+
+  local member = helpers.assert_error(MembersModel:find({
+    community_id = community.id,
+    user_id = self.user.id
+  }), { 404, 'CommunityNotFound' })
+  helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.MANAGE_INVITES }), { 403, 'MissingPermissions' })
 
   local invite = InvitesModel:create({
     id = uuid(),
