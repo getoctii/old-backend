@@ -11,6 +11,7 @@ local json = require 'cjson'
 local MembersModel = require 'models.members'
 local GroupsModel = require 'models.groups'
 local engine = require 'util.permissions.engine'
+local Set = require 'pl.Set'
 
 local Channels = {}
 
@@ -24,7 +25,7 @@ function Channels:GET()
     community_id = community.id,
     user_id = self.user.id
   }), { 404, 'CommunityNotFound' })
-  helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.READ_MESSAGES }), { 403, 'MissingPermissions' })
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.READ_MESSAGES })), { 403, 'MissingPermissions' })
 
   local channels = map(community:get_channels(), function(row)
     return {
@@ -55,7 +56,7 @@ function Channels:POST()
     community_id = community.id,
     user_id = self.user.id
   }), { 404, 'CommunityNotFound' })
-  helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.MANAGE_CHANNELS }), { 403, 'MissingPermissions' })
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS })), { 403, 'MissingPermissions' })
 
   local channel = ChannelsModel:create({
     id = uuid(),

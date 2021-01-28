@@ -64,7 +64,7 @@ function Community:DELETE()
     user_id = self.user.id
   }), { 404, 'CommunityNotFound' })
 
-  helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.OWNER }), { 403, 'MissingPermissions' })
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.OWNER })), { 403, 'MissingPermissions' })
 
   preload(community, 'members')
 
@@ -107,12 +107,12 @@ function Community:PATCH()
   local patch = {}
 
   if self.params.name then
-    helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.MANAGE_COMMUNITY }), { 403, 'MissingPermissions' })
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_COMMUNITY })), { 403, 'MissingPermissions' })
     patch.name = self.params.name
   end
 
   if self.params.icon then
-    helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.MANAGE_COMMUNITY }), { 403, 'MissingPermissions' })
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_COMMUNITY })), { 403, 'MissingPermissions' })
     local httpc = assert(http.new())
     local status = assert(httpc:request_uri(self.params.icon, { method = 'HEAD' })).status
 
@@ -121,14 +121,14 @@ function Community:PATCH()
   end
 
   if self.params.owner_id then
-    helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.OWNER }), { 403, 'MissingPermissions' })
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.OWNER })), { 403, 'MissingPermissions' })
     helpers.assert_error(Users:find({ id = self.params.owner_id }), { 404, 'UserNotFound' })
     helpers.assert_error(Members:find({ user_id = self.params.owner_id, community_id = self.params.id }), { 404, 'UserNotFound' })
     patch.owner_id = self.params.owner_id
   end
 
   if self.params.system_channel_id then
-    helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.MANAGE_COMMUNITY }), { 403, 'MissingPermissions' })
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_COMMUNITY })), { 403, 'MissingPermissions' })
     if self.params.system_channel_id ~= json.null then
       local channel = helpers.assert_error(ChannelsModel:find({ id = self.params.system_channel_id }), { 404, 'ChannelNotFound' })
       helpers.assert_error(channel.community_id == community.id, { 404, 'ChannelNotFound' })
@@ -139,9 +139,9 @@ function Community:PATCH()
   end
 
   if self.params.base_permissions then
-    helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.MANAGE_PERMISSIONS }), { 403, 'MissingPermissions' })
-    helpers.assert_error(engine.has_community_permissions(member, self.params.base_permissions), { 403, 'MissingPermissions' })
-    helpers.assert_error(type((self.params.base_permissions) == 'table') and ((Set(self.params.permibase_permissionsssions) + permission_set) == permission_set), { 400, 'InvalidPermissions' })
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_PERMISSIONS })), { 403, 'MissingPermissions' })
+    helpers.assert_error(engine.can_update_permissions(member, Set(community.base_permissions), Set(self.params.base_permissions)), { 403, 'MissingPermissions' })
+    helpers.assert_error(type((self.params.base_permissions) == 'table') and ((Set(self.params.base_permissions) + permission_set) == permission_set), { 400, 'InvalidPermissions' })
     patch.base_permissions = empty(self.values.permissions) and db.raw('array[]::integer[]') or db.array(Set.values(Set(self.params.base_permissions)))
   end
 

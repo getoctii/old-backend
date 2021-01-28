@@ -7,6 +7,7 @@ local db = require 'lapis.db'
 local GroupsModel = require 'models.groups'
 local engine = require 'util.permissions.engine'
 local MembersModel = require 'models.members'
+local Set = require 'pl.Set'
 
 local Messages = require 'models.messages'
 
@@ -29,7 +30,7 @@ function Message:GET()
       community_id = channel.community_id,
       user_id = self.user.id
     }), { 404, 'MessageNotFound' })
-    helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.READ_MESSAGES }), { 403, 'MissingPermissions' })
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.READ_MESSAGES })), { 403, 'MissingPermissions' })
   end
 
   return {
@@ -61,7 +62,7 @@ function Message:PATCH()
       community_id = channel.community_id,
       user_id = self.user.id
     }), { 404, 'MessageNotFound' })
-    helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.SEND_MESSAGES }), { 403, 'MissingPermissions' })
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.SEND_MESSAGES })), { 403, 'MissingPermissions' })
   end
   helpers.assert_error(message:get_author().id == self.user.id, { 403, 'MissingPermissions' })
   message:update({
@@ -100,7 +101,7 @@ function Message:DELETE()
       community_id = channel.community_id,
       user_id = self.user.id
     }), { 404, 'MessageNotFound' })
-    helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.SEND_MESSAGES }), { 403, 'MissingPermissions' })
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.SEND_MESSAGES })), { 403, 'MissingPermissions' })
   end
 
   helpers.assert_error(message:get_author().id == self.user.id, { 403, 'MissingPermissions' })

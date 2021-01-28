@@ -16,6 +16,7 @@ local db = require 'lapis.db'
 local MembersModel = require 'models.members'
 local GroupsModel = require 'models.groups'
 local engine = require 'util.permissions.engine'
+local Set = require 'pl.Set'
 
 local Messages = {}
 
@@ -34,7 +35,7 @@ function Messages:GET()
       community_id = channel.community_id,
       user_id = self.user.id
     }), { 404, 'ChannelNotFound' })
-    helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.READ_MESSAGES }), { 403, 'MissingPermissions' })
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.READ_MESSAGES })), { 403, 'MissingPermissions' })
   end
 
   local page = self.params.last_message_id and
@@ -77,7 +78,7 @@ function Messages:POST()
       community_id = channel.community_id,
       user_id = self.user.id
     }), { 404, 'ChannelNotFound' })
-    helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.SEND_MESSAGES }), { 403, 'MissingPermissions' })
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.SEND_MESSAGES })), { 403, 'MissingPermissions' })
   end
 
   local row = MessagesModel:create({
@@ -138,7 +139,7 @@ function Messages:POST()
 
   db.query('UPDATE mentions SET read = true FROM messages WHERE mentions.message_id = messages.id AND messages.channel_id = ?', channel.id)
 
-  if (not channel.community_id) or engine.has_community_permissions(MembersModel:find({ community_id = channel.community_id, user_id = self.user.id }), { GroupsModel.permissions.MENTION_MEMBERS }) then
+  if (not channel.community_id) or engine.has_community_permissions(MembersModel:find({ community_id = channel.community_id, user_id = self.user.id }), Set({ GroupsModel.permissions.MENTION_MEMBERS })) then
     local mentioned_users = {}
 
     -- TODO: Cleanup

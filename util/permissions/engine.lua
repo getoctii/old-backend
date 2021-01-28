@@ -1,5 +1,4 @@
 local Set = require 'pl.Set'
-local MembersModel = require 'models.members'
 local array = require 'array'
 local preload = require 'lapis.db.model'.preload
 local engine = {}
@@ -10,12 +9,8 @@ function engine.sum(permission_sets)
   end, Set())
 end
 
-function engine.has_community_permissions(member, permissions)
+function engine.retrieve_permissions(member)
   local community = member:get_community()
-
-  if member.user_id == community.owner_id then
-    return true
-  end
 
   local group_members = member:get_group_members()
   preload(group_members, 'group')
@@ -28,7 +23,19 @@ function engine.has_community_permissions(member, permissions)
     return Set(group.permissions)
   end))
 
-  return Set(permissions) < total_permissions
+  return total_permissions
+end
+
+function engine.has_community_permissions(member, permissions)
+  local community = member:get_community()
+
+  if member.user_id == community.owner_id then
+    return true
+  end
+
+  local total_permissions = engine.retrieve_permissions(member)
+
+  return permissions < total_permissions
 end
 
 function engine.get_highest_order(member)
@@ -42,6 +49,22 @@ function engine.get_highest_order(member)
   return array.reduce(group_orders, function(a, b)
     return b > a and b or a
   end, 0)
+end
+
+function engine.can_update_permissions(member, old, new)
+  local community = member:get_community()
+
+  if member.user_id == community.owner_id then
+    return true
+  end
+
+  local removed = old - new
+  local added = new - old
+  local total_changes = removed + added
+
+  local member_permissions = engine.retrieve_permissions(member)
+
+  return total_changes < member_permissions
 end
 
 return engine

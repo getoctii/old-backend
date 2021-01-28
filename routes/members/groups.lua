@@ -6,6 +6,7 @@ local db = require 'lapis.db'
 local validate = require 'lapis.validate'
 local broadcast = require 'util.broadcast'
 local engine = require 'util.permissions.engine'
+local Set = require 'pl.Set'
 
 local Groups = {}
 
@@ -24,7 +25,7 @@ function Groups:POST()
     community_id = group.community_id,
     user_id = self.user.id
   }), { 404, 'MemberNotFound' })
-  helpers.assert_error(engine.has_community_permissions(current_member, { GroupsModel.permissions.MANAGE_PERMISSIONS }), { 403, 'MissingPermissions' })
+  helpers.assert_error(engine.has_community_permissions(current_member, Set({ GroupsModel.permissions.MANAGE_PERMISSIONS })), { 403, 'MissingPermissions' })
 
 
   GroupMembersModel:create({
@@ -60,7 +61,7 @@ function Groups:DELETE()
     community_id = group.community_id,
     user_id = self.user.id
   }), { 404, 'MemberNotFound' })
-  helpers.assert_error(engine.has_community_permissions(current_member, { GroupsModel.permissions.MANAGE_PERMISSIONS }), { 403, 'MissingPermissions' })
+  helpers.assert_error(engine.has_community_permissions(current_member, Set({ GroupsModel.permissions.MANAGE_PERMISSIONS })), { 403, 'MissingPermissions' })
 
   db.delete('group_members', { member_id = member.id, group_id = self.params.group_id })
 

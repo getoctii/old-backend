@@ -11,6 +11,7 @@ local Read = require 'models.read'
 local MembersModel = require 'models.members'
 local GroupsModel = require 'models.groups'
 local engine = require 'util.permissions.engine'
+local Set = require 'pl.Set'
 
 local Channel = {}
 
@@ -29,7 +30,7 @@ function Channel:GET()
       community_id = channel.community_id,
       user_id = self.user.id
     }), { 404, 'ChannelNotFound' })
-    helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.READ_MESSAGES }), { 403, 'MissingPermissions' })
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.READ_MESSAGES })), { 403, 'MissingPermissions' })
   end
 
   local read = Read:find({ user_id = self.user.id, channel_id = channel.id })
@@ -69,7 +70,7 @@ function Channel:DELETE()
       community_id = channel.community_id,
       user_id = self.user.id
     }), { 404, 'ChannelNotFound' })
-    helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.MANAGE_CHANNELS }), { 403, 'MissingPermissions' })
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS })), { 403, 'MissingPermissions' })
   end
 
   assert(db.delete('channels', {
@@ -105,7 +106,7 @@ function Channel:PATCH()
       community_id = channel.community_id,
       user_id = self.user.id
     }), { 404, 'ChannelNotFound' })
-    helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.MANAGE_CHANNELS }), { 403, 'MissingPermissions' })
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS })), { 403, 'MissingPermissions' })
   end
 
   local patch = {}

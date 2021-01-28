@@ -9,6 +9,7 @@ local uuid = require 'util.uuid'
 local MembersModel = require 'models.members'
 local GroupsModel = require 'models.groups'
 local engine = require 'util.permissions.engine'
+local Set = require 'pl.Set'
 
 local Invites = {}
 
@@ -23,7 +24,7 @@ function Invites:GET()
     community_id = community.id,
     user_id = self.user.id
   }), { 404, 'CommunityNotFound' })
-  helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.MANAGE_INVITES }), { 403, 'MissingPermissions' })
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_INVITES })), { 403, 'MissingPermissions' })
 
   local invites = map(community:get_invites(), function(row)
     return {
@@ -56,7 +57,7 @@ function Invites:POST()
     community_id = community.id,
     user_id = self.user.id
   }), { 404, 'CommunityNotFound' })
-  helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.MANAGE_INVITES }), { 403, 'MissingPermissions' })
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_INVITES })), { 403, 'MissingPermissions' })
 
   local invite = InvitesModel:create({
     id = uuid(),

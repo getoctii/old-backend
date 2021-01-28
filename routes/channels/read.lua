@@ -8,6 +8,7 @@ local db = require 'lapis.db'
 local MembersModel = require 'models.members'
 local GroupsModel = require 'models.groups'
 local engine = require 'util.permissions.engine'
+local Set = require 'pl.Set'
 
 local Read = {}
 
@@ -27,7 +28,7 @@ function Read:POST()
       community_id = channel.community_id,
       user_id = self.user.id
     }), { 404, 'ChannelNotFound' })
-    helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.READ_MESSAGES }), { 403, 'MissingPermissions' })
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.READ_MESSAGES })), { 403, 'MissingPermissions' })
   end
 
   local read = ReadIndicators:find({ user_id = self.user.id, channel_id = channel.id })
