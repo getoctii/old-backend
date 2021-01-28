@@ -45,9 +45,6 @@ function Group:PATCH()
     { 'color', exists = true, is_color = true, optional = true, 'InvalidColor' },
     { 'permissions', exists = true, optional = true, 'InvalidPermissions' }
   })
-  if self.params.permissions ~= nil then
-    helpers.assert_error(type((self.params.permissions) == 'table') and ((Set(self.params.permissions) + permission_set) == permission_set), { 400, 'InvalidPermissions' })
-  end
 
   local group = helpers.assert_error(Groups:find({ id = self.params.id }), { 404, 'GroupNotFound' })
 
@@ -56,6 +53,11 @@ function Group:PATCH()
     user_id = self.user.id
   }), { 404, 'GroupNotFound' })
   helpers.assert_error(engine.has_community_permissions(member, { Groups.permissions.MANAGE_PERMISSIONS }), { 403, 'MissingPermissions' })
+
+  if self.params.permissions ~= nil then
+    helpers.assert_error(type((self.params.permissions) == 'table') and ((Set(self.params.permissions) + permission_set) == permission_set), { 400, 'InvalidPermissions' })
+    helpers.assert_error(engine.has_community_permissions(member, self.params.permissions), { 403, 'MissingPermissions' })
+  end
 
   group:update({
     name = self.params.name,

@@ -59,9 +59,9 @@ function Groups:POST()
     }), { 404, 'CommunityNotFound' })
     helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.MANAGE_PERMISSIONS }), { 403, 'MissingPermissions' })
 
-
     if self.params.permissions ~= nil then
       helpers.assert_error(type((self.params.permissions) == 'table') and ((Set(self.params.permissions) + permission_set) == permission_set), { 400, 'InvalidPermissions' })
+      helpers.assert_error(engine.has_community_permissions(member, self.params.permissions), { 403, 'MissingPermissions' })
     end
 
     local group = GroupsModel:create({
