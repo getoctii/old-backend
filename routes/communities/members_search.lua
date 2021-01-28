@@ -27,6 +27,10 @@ function MembersSearch:GET()
   preload(filtered, 'user')
 
   local members = map(filtered, function(row)
+    local groups = map(row:get_group_members(), function(group_member)
+      return group_member.group_id
+    end)
+
     local member = row:get_user()
     return {
       id = row.id,
@@ -37,7 +41,8 @@ function MembersSearch:GET()
         discriminator = member.discriminator
       },
       created_at = row.created_at,
-      updated_at = row.updated_at
+      updated_at = row.updated_at,
+      groups = empty(groups) and json.empty_array or groups
     }
   end)
 
