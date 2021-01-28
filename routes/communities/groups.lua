@@ -73,7 +73,7 @@ function Groups:POST()
 
     broadcast('community:' .. community.id, 'NEW_GROUP', {
       id = group.id,
-      community_id = group.community_iod
+      community_id = group.community_id
     })
 
     return {

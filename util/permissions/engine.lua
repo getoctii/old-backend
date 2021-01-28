@@ -31,4 +31,17 @@ function engine.has_community_permissions(member, permissions)
   return Set(permissions) < total_permissions
 end
 
+function engine.get_highest_order(member)
+  local group_members = member:get_group_members()
+  preload(group_members, 'group')
+
+  local group_orders = array.map(group_members, function(group_member)
+    return group_member:get_group().order
+  end)
+
+  return array.reduce(group_orders, function(a, b)
+    return b > a and b or a
+  end, 0)
+end
+
 return engine
