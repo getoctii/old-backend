@@ -65,7 +65,7 @@ function Group:PATCH()
   group:update({
     name = self.params.name,
     color = self.params.color,
-    permissions = self.params.permissions and (empty(self.values.permissions) and db.raw('array[]::integer[]') or db.array(Set.values(Set(self.params.permissions)))) or nil
+    permissions = self.params.permissions and (empty(self.params.permissions) and db.raw('array[]::integer[]') or db.array(Set.values(Set(self.params.permissions)))) or nil
   })
 
   group:refresh()

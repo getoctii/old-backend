@@ -86,7 +86,7 @@ function Groups:POST()
       id = uuid(),
       name = self.params.name,
       community_id = community.id,
-      permissions = self.params.permissions and (empty(self.values.permissions) and db.raw('array[]::integer[]') or db.array(Set.values(Set(self.params.permissions)))) or nil
+      permissions = self.params.permissions and (empty(self.params.permissions) and db.raw('array[]::integer[]') or db.array(Set.values(Set(self.params.permissions)))) or nil
     })
 
     reorder_groups({ group.id, unpack(map(groups, function(row)
