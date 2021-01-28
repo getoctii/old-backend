@@ -24,7 +24,7 @@ function Groups:POST()
     community_id = group.community_id,
     user_id = self.user.id
   }), { 404, 'MemberNotFound' })
-  helpers.assert_error(engine.has_community_permissions(member, { Groups.permissions.MANAGE_PERMISSIONS }), { 403, 'MissingPermissions' })
+  helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.MANAGE_PERMISSIONS }), { 403, 'MissingPermissions' })
 
 
   GroupMembersModel:create({
@@ -34,6 +34,7 @@ function Groups:POST()
 
   broadcast('community:' .. community.id, 'NEW_GROUP_MEMBER', {
     member_id = member.id,
+    user_id = member.user_id,
     group_id = self.params.group_id,
     community_id = community.id
   })
@@ -65,6 +66,7 @@ function Groups:DELETE()
 
   broadcast('community:' .. community.id, 'DELETED_GROUP_MEMBER', {
     member_id = member.id,
+    user_id = member.user_id,
     group_id = self.params.group_id,
     community_id = community.id
   })
