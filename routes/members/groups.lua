@@ -59,7 +59,7 @@ function Groups:DELETE()
     community_id = group.community_id,
     user_id = self.user.id
   }), { 404, 'MemberNotFound' })
-  helpers.assert_error(engine.has_community_permissions(member, { Groups.permissions.MANAGE_PERMISSIONS }), { 403, 'MissingPermissions' })
+  helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.MANAGE_PERMISSIONS }), { 403, 'MissingPermissions' })
 
   db.delete('group_members', { member_id = member.id, group_id = self.params.group_id })
 
