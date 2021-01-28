@@ -84,10 +84,6 @@ function Groups:POST()
     }
 end
 
--- e tris, is trying to build a pc
--- tf the languahe server is dying
--- def not related to u running that ML
--- is the returned order sorted?
 function Groups:PATCH()
   validate.assert_valid(self.params, {
     { 'order', exists = true, optional = true, 'InvalidOrder' }

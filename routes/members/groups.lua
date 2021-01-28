@@ -20,11 +20,11 @@ function Groups:POST()
   local group = helpers.assert_error(GroupsModel:find(self.params.group_id), { 404, 'GroupNotFound'})
   helpers.assert_error(group.community_id == community.id, { 404, 'GroupNotFound' })
 
-  helpers.assert_error(MembersModel:find({
+  local current_member = helpers.assert_error(MembersModel:find({
     community_id = group.community_id,
     user_id = self.user.id
   }), { 404, 'MemberNotFound' })
-  helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.MANAGE_PERMISSIONS }), { 403, 'MissingPermissions' })
+  helpers.assert_error(engine.has_community_permissions(current_member, { GroupsModel.permissions.MANAGE_PERMISSIONS }), { 403, 'MissingPermissions' })
 
 
   GroupMembersModel:create({
@@ -56,11 +56,11 @@ function Groups:DELETE()
   local group = helpers.assert_error(GroupsModel:find(self.params.group_id), { 404, 'GroupNotFound'})
   helpers.assert_error(group.community_id == community.id, { 404, 'GroupNotFound' })
 
-  helpers.assert_error(MembersModel:find({
+  local current_member = helpers.assert_error(MembersModel:find({
     community_id = group.community_id,
     user_id = self.user.id
   }), { 404, 'MemberNotFound' })
-  helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.MANAGE_PERMISSIONS }), { 403, 'MissingPermissions' })
+  helpers.assert_error(engine.has_community_permissions(current_member, { GroupsModel.permissions.MANAGE_PERMISSIONS }), { 403, 'MissingPermissions' })
 
   db.delete('group_members', { member_id = member.id, group_id = self.params.group_id })
 
