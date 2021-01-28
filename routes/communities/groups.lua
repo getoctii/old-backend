@@ -16,6 +16,7 @@ local engine = require 'util.permissions.engine'
 local permission_set = Set(C 'x for x=1,17' ())
 
 local Groups = {}
+
 function Groups:GET()
   validate.assert_valid(self.params, {
     { 'id', exists = true, is_uuid = true, 'InvalidUUID'}
@@ -68,7 +69,7 @@ function Groups:POST()
       id = uuid(),
       name = self.params.name,
       community_id = community.id,
-      permissions = self.params.permissions and db.array(Set.values(Set(self.params.permissions))) or nil
+      permissions = self.params.permissions and (empty(self.values.permissions) and db.raw('array[]::integer[]') or db.array(Set.values(Set(self.params.permissions)))) or nil
     })
 
     broadcast('community:' .. community.id, 'NEW_GROUP', {
@@ -96,7 +97,7 @@ function Groups:PATCH()
     user_id = self.user.id
   }), { 404, 'CommunityNotFound' })
   helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.MANAGE_PERMISSIONS }), { 403, 'MissingPermissions' })
-
+  -- Enforce heirachy on reorder
   if self.params.order then
     helpers.assert_error(Set(self.params.order) == Set(map(community:get_groups(), function(row) return row.id end)), { 400, 'InvalidOrder' })
     for i, v in ipairs(self.params.order) do

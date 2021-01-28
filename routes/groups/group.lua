@@ -10,6 +10,7 @@ local broadcast = require 'util.broadcast'
 local MembersModel = require 'models.members'
 local CommunitiesModel = require 'models.communities'
 local engine = require 'util.permissions.engine'
+local empty = require 'array'.is_empty
 
 local permission_set = Set(C 'x for x=1,17' ())
 
@@ -64,7 +65,7 @@ function Group:PATCH()
   group:update({
     name = self.params.name,
     color = self.params.color,
-    permissions = self.params.permissions and db.array(Set.values(Set(self.params.permissions))) or nil
+    permissions = self.params.permissions and (empty(self.values.permissions) and db.raw('array[]::integer[]') or db.array(Set.values(Set(self.params.permissions)))) or nil
   })
 
   group:refresh()
