@@ -1,14 +1,10 @@
 local validate = require 'lapis.validate'
 local helpers = require 'lapis.application'
 local CommunitiesModel = require 'models.communities'
-local contains = require 'array'.includes
-local map = require 'array'.map
 local MembersModel = require 'models.members'
 local broadcast = require 'util.broadcast'
 local resubscribe = require 'util.resubscribe'
 local db = require 'lapis.db'
-local MessagesModel = require 'models.messages'
-local uuid = require 'util.uuid'
 
 local leaveMessages = {
   ' left the community :(',

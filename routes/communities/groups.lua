@@ -15,6 +15,22 @@ local engine = require 'util.permissions.engine'
 
 local permission_set = Set(C 'x for x=1,17' ())
 
+-- TODO: Non-atomic, is there some pure SQL way of doing this
+local function reorder_groups(order)
+  for i, v in ipairs(order) do
+    local group = GroupsModel:find({ id = v })
+    group:update({
+      order = i
+    })
+  end
+end
+
+local function sort_groups(groups)
+  table.sort(groups, function(a, b)
+    return a.order < b.order
+  end)
+end
+
 local Groups = {}
 
 function Groups:GET()
@@ -28,11 +44,9 @@ function Groups:GET()
     user_id = self.user.id
   }), { 404, 'CommunityNotFound' })
 
+  -- TODO: Maybe sort in SQL?
   local groups = community:get_groups()
-
-  table.sort(groups, function(a, b)
-    return a.order < b.order
-  end)
+  sort_groups(groups)
 
   local mapped_groups = map(groups, function(row)
     return {
@@ -65,12 +79,19 @@ function Groups:POST()
       helpers.assert_error(engine.has_community_permissions(member, Set(self.params.permissions)), { 403, 'MissingPermissions' })
     end
 
+    local groups = community:get_groups()
+    sort_groups(groups)
+
     local group = GroupsModel:create({
       id = uuid(),
       name = self.params.name,
       community_id = community.id,
       permissions = self.params.permissions and (empty(self.values.permissions) and db.raw('array[]::integer[]') or db.array(Set.values(Set(self.params.permissions)))) or nil
     })
+
+    reorder_groups({ group.id, unpack(map(groups, function(row)
+      return row.id
+    end))})
 
     broadcast('community:' .. community.id, 'NEW_GROUP', {
       id = group.id,
@@ -100,14 +121,7 @@ function Groups:PATCH()
   -- Enforce heirachy on reorder
   if self.params.order then
     helpers.assert_error(Set(self.params.order) == Set(map(community:get_groups(), function(row) return row.id end)), { 400, 'InvalidOrder' })
-    for i, v in ipairs(self.params.order) do
-      local group = helpers.assert_error(GroupsModel:find({ id = v }), { 404, 'GroupNotFound'})
-      helpers.assert_error(community.id == group.community_id,  {404, 'GroupNotFound' })
-
-      group:update({
-        order = i
-      })
-    end
+    reorder_groups(self.params.order)
   end
 
   return {
