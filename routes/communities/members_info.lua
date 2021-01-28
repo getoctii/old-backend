@@ -4,7 +4,7 @@ local CommunitiesModel = require 'models.communities'
 local MembersModel = require 'models.members'
 local empty = require 'array'.is_empty
 local json = require 'cjson'
-
+local map = require 'array'.map
 local Members = {}
 
 function Members:GET()
