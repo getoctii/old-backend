@@ -6,6 +6,9 @@ local uuid = require 'util.uuid'
 local GroupsModel = require 'models.groups'
 local map = require 'array'.map
 local empty = require 'array'.is_empty
+local filter = require 'array'.filter
+local slice = require 'array'.slice
+local every = require 'array'.every
 local json = require 'cjson'
 local Set = require 'pl.Set'
 local C = require 'pl.comprehension'.new()
@@ -23,6 +26,13 @@ local function reorder_groups(order)
       order = i
     })
   end
+end
+
+local function array_equal(a1, a2)
+  if #a1 ~= #a2 then return false end
+  return every(a1, function(element, index)
+    return element == a2[index]
+  end)
 end
 
 local function sort_groups(groups)
@@ -118,9 +128,22 @@ function Groups:PATCH()
     user_id = self.user.id
   }), { 404, 'CommunityNotFound' })
   helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_PERMISSIONS })), { 403, 'MissingPermissions' })
-  -- Enforce heirachy on reorder
+
   if self.params.order then
     helpers.assert_error(Set(self.params.order) == Set(map(community:get_groups(), function(row) return row.id end)), { 400, 'InvalidOrder' })
+
+    local groups = community:get_groups()
+    sort_groups(groups)
+
+    local highest_order = engine.get_highest_order(member)
+    local protected_groups = map(filter(groups, function(group)
+      return group.order >= highest_order
+    end), function (group)
+      return group.id
+    end)
+
+    helpers.assert_error(array_equal(slice(self.params.order, #self.params.order - #protected_groups), protected_groups), { 403, 'MissingPermissions' })
+
     reorder_groups(self.params.order)
   end
 
