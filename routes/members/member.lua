@@ -14,7 +14,11 @@ function Member:GET()
 
   local member = helpers.assert_error(MembersModel:find({ id = self.params.id }), 'MemberNotFound')
 
-  
+  helpers.assert_error(MembersModel:find({
+    community_id = member.community_id,
+    user_id = self.user.id
+  }), { 404, 'MemberNotFound' })
+
   local groups = member:get_group_members()
 
   return {

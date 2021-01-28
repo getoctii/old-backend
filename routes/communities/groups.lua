@@ -16,7 +16,6 @@ local engine = require 'util.permissions.engine'
 local permission_set = Set(C 'x for x=1,17' ())
 
 local Groups = {}
-local inspect = require 'inspect'
 function Groups:GET()
   validate.assert_valid(self.params, {
     { 'id', exists = true, is_uuid = true, 'InvalidUUID'}

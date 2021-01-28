@@ -5,6 +5,7 @@ local helpers = require 'lapis.application'
 local db = require 'lapis.db'
 local validate = require 'lapis.validate'
 local broadcast = require 'util.broadcast'
+local engine = require 'util.permissions.engine'
 
 local Groups = {}
 
@@ -16,16 +17,22 @@ function Groups:POST()
 
   local member = helpers.assert_error(MembersModel:find(self.params.id), { 404, 'MemberNotFound' })
   local community = member:get_community()
-  helpers.assert_error(community.owner_id == self.user.id, { 403, 'MissingPermissions' })
   local group = helpers.assert_error(GroupsModel:find(self.params.group_id), { 404, 'GroupNotFound'})
   helpers.assert_error(group.community_id == community.id, { 404, 'GroupNotFound' })
+
+  helpers.assert_error(MembersModel:find({
+    community_id = group.community_id,
+    user_id = self.user.id
+  }), { 404, 'MemberNotFound' })
+  helpers.assert_error(engine.has_community_permissions(member, { Groups.permissions.MANAGE_PERMISSIONS }), { 403, 'MissingPermissions' })
+
 
   GroupMembersModel:create({
     member_id = member.id,
     group_id = self.params.group_id
   })
 
-  broadcast('community:' .. community.id, 'NEW_MEMBER_GROUP', {
+  broadcast('community:' .. community.id, 'NEW_GROUP_MEMBER', {
     member_id = member.id,
     group_id = self.params.group_id,
     community_id = community.id
@@ -45,13 +52,18 @@ function Groups:DELETE()
 
   local member = helpers.assert_error(MembersModel:find(self.params.id), { 404, 'MemberNotFound' })
   local community = member:get_community()
-  helpers.assert_error(community.owner_id == self.user.id, { 403, 'MissingPermissions' })
   local group = helpers.assert_error(GroupsModel:find(self.params.group_id), { 404, 'GroupNotFound'})
   helpers.assert_error(group.community_id == community.id, { 404, 'GroupNotFound' })
 
+  helpers.assert_error(MembersModel:find({
+    community_id = group.community_id,
+    user_id = self.user.id
+  }), { 404, 'MemberNotFound' })
+  helpers.assert_error(engine.has_community_permissions(member, { Groups.permissions.MANAGE_PERMISSIONS }), { 403, 'MissingPermissions' })
+
   db.delete('group_members', { member_id = member.id, group_id = self.params.group_id })
 
-  broadcast('community:' .. community.id, 'DELETED_MEMBER_GROUP', {
+  broadcast('community:' .. community.id, 'DELETED_GROUP_MEMBER', {
     member_id = member.id,
     group_id = self.params.group_id,
     community_id = community.id

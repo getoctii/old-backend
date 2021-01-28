@@ -26,7 +26,7 @@ function Typing:POST()
     local member = helpers.assert_error(MembersModel:find({
       community_id = channel.community_id,
       user_id = self.user.id
-    }), { 404, 'CommunityNotFound' })
+    }), { 404, 'ChannelNotFound' })
     helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.SEND_MESSAGES }), { 403, 'MissingPermissions' })
   end
 

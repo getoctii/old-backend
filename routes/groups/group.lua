@@ -10,6 +10,8 @@ local C = require 'pl.comprehension'.new()
 local db = require 'lapis.db'
 local inspect = require 'inspect'
 local broadcast = require 'util.broadcast'
+local MembersModel = require 'models.members'
+local engine = require 'util.permissions.engine'
 
 local permission_set = Set(C 'x for x=1,17' ())
 
@@ -21,9 +23,10 @@ function Group:GET()
   })
 
   local group = helpers.assert_error(Groups:find({ id = self.params.id }), { 404, 'GroupNotFound' })
-  helpers.assert_error(contains(map(group:get_community():get_members(), function(member)
-    return member.user_id
-  end), self.user.id), { 403, 'MissingPermissions' })
+  helpers.assert_error(MembersModel:find({
+    community_id = group.community_id,
+    user_id = self.user.id
+  }), { 404, 'GroupNotFound' })
 
   return {
     json = {
@@ -47,7 +50,12 @@ function Group:PATCH()
   end
 
   local group = helpers.assert_error(Groups:find({ id = self.params.id }), { 404, 'GroupNotFound' })
-  helpers.assert_error(group:get_community().owner_id == self.user.id, { 403, 'MissingPermissions' })
+
+  local member = helpers.assert_error(MembersModel:find({
+    community_id = group.community_id,
+    user_id = self.user.id
+  }), { 404, 'GroupNotFound' })
+  helpers.assert_error(engine.has_community_permissions(member, { Groups.permissions.MANAGE_PERMISSIONS }), { 403, 'MissingPermissions' })
 
   group:update({
     name = self.params.name,
@@ -74,8 +82,15 @@ function Group:DELETE()
   validate.assert_valid(self.params, {
     { 'id', exists = true, is_uuid = true, 'InvaildUUID' }
   })
+
   local group = helpers.assert_error(Groups:find({ id = self.params.id }), { 404, 'GroupNotFound' })
-  helpers.assert_error(group:get_community().owner_id == self.user.id, { 403, 'MissingPermissions' })
+
+  local member = helpers.assert_error(MembersModel:find({
+    community_id = group.community_id,
+    user_id = self.user.id
+  }), { 404, 'GroupNotFound' })
+  helpers.assert_error(engine.has_community_permissions(member, { Groups.permissions.MANAGE_PERMISSIONS }), { 403, 'MissingPermissions' })
+
   assert(db.delete('groups', { id = group.id }))
   assert(db.delete('group_members', { group_id = group.id }))
 

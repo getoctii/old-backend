@@ -28,7 +28,7 @@ function Channel:GET()
     local member = helpers.assert_error(MembersModel:find({
       community_id = channel.community_id,
       user_id = self.user.id
-    }), { 404, 'CommunityNotFound' })
+    }), { 404, 'ChannelNotFound' })
     helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.READ_MESSAGES }), { 403, 'MissingPermissions' })
   end
 
@@ -68,7 +68,7 @@ function Channel:DELETE()
     local member = helpers.assert_error(MembersModel:find({
       community_id = channel.community_id,
       user_id = self.user.id
-    }), { 404, 'CommunityNotFound' })
+    }), { 404, 'ChannelNotFound' })
     helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.MANAGE_CHANNELS }), { 403, 'MissingPermissions' })
   end
 
@@ -104,7 +104,7 @@ function Channel:PATCH()
     local member = helpers.assert_error(MembersModel:find({
       community_id = channel.community_id,
       user_id = self.user.id
-    }), { 404, 'CommunityNotFound' })
+    }), { 404, 'ChannelNotFound' })
     helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.MANAGE_CHANNELS }), { 403, 'MissingPermissions' })
   end
 
