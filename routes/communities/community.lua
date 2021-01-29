@@ -95,7 +95,7 @@ function Community:PATCH()
     { 'name', exists = true, optional = true, min_length = 2, max_length = 16, 'CommunityNameInvalid' },
     { 'owner_id', exists = true, optional = true, is_uuid = true, 'InvalidOwnerUUID' },
     { 'system_channel_id', exists = true, optional = true, 'InvalidChannelUUID'},
-    { 'base_permissions', exists = true, optional = true, 'InvalidPermissions' }
+    { 'base_permissions', exists = true, optional = true, is_array = true, 'InvalidPermissions' }
   })
 
   local community = helpers.assert_error(CommunitiesModel:find({ id = self.params.id }), { 404, 'CommunityNotFound' })

@@ -42,7 +42,7 @@ function Group:PATCH()
     { 'id', exists = true, is_uuid = true, 'InvalidUUID' },
     { 'name', exists = true, matches_regexp = '^[a-zA-Z0-9_\\-]+$', min_length = 2, max_length = 30, optional = true, 'InvalidName' },
     { 'color', exists = true, is_color = true, optional = true, 'InvalidColor' },
-    { 'permissions', exists = true, optional = true, 'InvalidPermissions' }
+    { 'permissions', exists = true, optional = true, is_array = true, 'InvalidPermissions' }
   })
 
   local group = helpers.assert_error(Groups:find({ id = self.params.id }), { 404, 'GroupNotFound' })

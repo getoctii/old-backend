@@ -73,7 +73,7 @@ function Groups:POST()
   validate.assert_valid(self.params, {
     { 'id', exists = true, is_uuid = true, 'InvalidUUID'},
     { 'name', exists = true, matches_regexp = '^[a-zA-Z0-9_\\-]+$', min_length = 2, max_length = 30, 'GroupNameInvalid' },
-    { 'permissions', exists = true, optional = true, 'InvalidPermissions' }
+    { 'permissions', exists = true, optional = true, is_array = true, 'InvalidPermissions' }
   })
 
     local community = helpers.assert_error(Communities:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
@@ -118,7 +118,7 @@ end
 
 function Groups:PATCH()
   validate.assert_valid(self.params, {
-    { 'order', exists = true, optional = true, 'InvalidOrder' }
+    { 'order', exists = true, optional = true, is_array = true, 'InvalidOrder' }
   })
 
   local community = helpers.assert_error(Communities:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
