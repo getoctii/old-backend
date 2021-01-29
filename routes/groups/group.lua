@@ -32,7 +32,8 @@ function Group:GET()
       id = group.id,
       name = group.name,
       color = group.color,
-      permissions = is_empty(group.permissions) and json.empty_array or group.permissions
+      permissions = is_empty(group.permissions) and json.empty_array or group.permissions,
+      order = group.order
     }
   }
 end
