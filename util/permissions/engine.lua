@@ -1,6 +1,7 @@
 local Set = require 'pl.Set'
 local array = require 'array'
 local preload = require 'lapis.db.model'.preload
+local GroupsModel = require 'models.groups'
 local engine = {}
 
 function engine.sum(permission_sets)
@@ -34,6 +35,10 @@ function engine.has_community_permissions(member, permissions)
   end
 
   local total_permissions = engine.retrieve_permissions(member)
+
+  if total_permissions[GroupsModel.permissions.ADMINISTRATOR] or total_permissions[GroupsModel.permissions.OWNER] then
+    return true
+  end
 
   return permissions < total_permissions
 end
