@@ -69,6 +69,10 @@ function engine.can_update_permissions(member, old, new)
 
   local member_permissions = engine.retrieve_permissions(member)
 
+  if member_permissions[GroupsModel.permissions.ADMINISTRATOR] or member_permissions[GroupsModel.permissions.OWNER] then
+    return true
+  end
+
   return total_changes < member_permissions
 end
 
