@@ -7,6 +7,7 @@ local validate = require 'lapis.validate'
 local broadcast = require 'util.broadcast'
 local engine = require 'util.permissions.engine'
 local Set = require 'pl.Set'
+local resubscribe = require 'util.resubscribe'
 
 local Groups = {}
 
@@ -40,6 +41,8 @@ function Groups:POST()
     community_id = community.id
   })
 
+  resubscribe('user:' .. member.user_id)
+
   return {
     status = 204,
     layout = false
@@ -71,6 +74,8 @@ function Groups:DELETE()
     group_id = self.params.group_id,
     community_id = community.id
   })
+
+  resubscribe('user:' .. member.user_id)
 
   return {
     status = 204,

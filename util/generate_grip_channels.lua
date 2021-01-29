@@ -8,6 +8,7 @@ local GroupsModel = require 'models.groups'
 return function(user)
   local members = user:get_members()
   preload(members, { community = 'channels' })
+  preload(members, 'group_members')
 
   local communities = map(members, function(row) return row:get_community() end)
   local grip_communities = map(communities, function (row) return 'community:' .. row.id end)
@@ -18,6 +19,13 @@ return function(user)
       return {}
     end
   end))
+
+  local grip_groups = flatten(map(members, function(member)
+    return map(member:get_group_members(), function(group_member)
+      return 'group:' .. group_member.group_id
+    end)
+  end))
+
   local grip_community_channels = map(community_channels, function(row) return 'channel:' .. row.id end)
 
   local participants = user:get_participants()
@@ -29,7 +37,7 @@ return function(user)
   local conversation_channels = map(participants, function(row) return row:get_conversation():get_channel() end)
   local grip_conversation_channels = map(conversation_channels, function(row) return 'channel:' .. row.id end)
 
-  local all_grip_channels = flatten({grip_community_channels, grip_conversation_channels, grip_communities, grip_conversations, {'user:' .. user.id}})
+  local all_grip_channels = flatten({grip_community_channels, grip_conversation_channels, grip_communities, grip_conversations, grip_groups, {'user:' .. user.id}})
 
   return all_grip_channels
 end

@@ -11,6 +11,7 @@ local MembersModel = require 'models.members'
 local CommunitiesModel = require 'models.communities'
 local engine = require 'util.permissions.engine'
 local empty = require 'array'.is_empty
+local resubscribe = require 'util.resubscribe'
 
 local permission_set = Set(C 'x for x=1,17' ())
 
@@ -79,7 +80,9 @@ function Group:PATCH()
     community_id = group.community_id
   }
 
+  resubscribe('group:' .. group.id)
   broadcast('community:' .. group.community_id, 'UPDATED_GROUP', group_event)
+
   return {
     status = 204,
     layout = false
@@ -103,6 +106,8 @@ function Group:DELETE()
 
   assert(db.delete('groups', { id = group.id }))
   assert(db.delete('group_members', { group_id = group.id }))
+
+  resubscribe('group:' .. group.id)
 
   broadcast('community:' .. group.community_id, 'DELETED_GROUP', {
     id = group.id,

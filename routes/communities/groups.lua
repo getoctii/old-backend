@@ -15,6 +15,7 @@ local C = require 'pl.comprehension'.new()
 local db = require 'lapis.db'
 local MembersModel = require 'models.members'
 local engine = require 'util.permissions.engine'
+local resubscribe = require 'util.resubscribe'
 
 local permission_set = Set(C 'x for x=1,17' ())
 
@@ -147,6 +148,14 @@ function Groups:PATCH()
     end
 
     reorder_groups(self.params.order)
+
+    -- lmao lag
+    resubscribe('community:' .. community.id)
+
+    broadcast('community:' .. community.id, 'REORDERED_GROUPS', {
+      community_id = community.id,
+      order = self.params.order
+    })
   end
 
   return {

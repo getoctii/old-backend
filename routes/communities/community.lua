@@ -17,6 +17,7 @@ local engine = require 'util.permissions.engine'
 local GroupsModel = require 'models.groups'
 local Set = require 'pl.Set'
 local C = require 'pl.comprehension'.new()
+local resubscribe = require 'util.resubscribe'
 local Community = {}
 
 local permission_set = Set(C 'x for x=1,17' ())
@@ -147,6 +148,10 @@ function Community:PATCH()
 
   helpers.assert_error(not empty(patch), { 400, 'InvalidPatch'})
   community:update(patch)
+
+  if self.params.base_permissions then
+    resubscribe('community:' .. community.id)
+  end
 
   return {
     status = 204,
