@@ -56,7 +56,7 @@ function Group:PATCH()
   local community = CommunitiesModel:find(group.community_id)
 
   helpers.assert_error(engine.has_community_permissions(member, Set({ Groups.permissions.MANAGE_PERMISSIONS })), { 403, 'MissingPermissions' })
-  helpers.assert_error(engine.has_community_permissions(member, Set({ MembersModel.permissions.owner })) or (engine.get_highest_order(member) > group.order) , { 403, 'MissingPermissions' })
+  helpers.assert_error(engine.has_community_permissions(member, Set({ Groups.permissions.OWNER })) or (engine.get_highest_order(member) > group.order) , { 403, 'MissingPermissions' })
 
   if self.params.permissions ~= nil then
     helpers.assert_error(engine.can_update_permissions(member, Set(community.base_permissions), Set(self.params.permissions)), { 403, 'MissingPermissions' })
@@ -99,7 +99,7 @@ function Group:DELETE()
   }), { 404, 'GroupNotFound' })
 
   helpers.assert_error(engine.has_community_permissions(member, Set({ Groups.permissions.MANAGE_PERMISSIONS })), { 403, 'MissingPermissions' })
-  helpers.assert_error(engine.has_community_permissions(member, Set({ MembersModel.permissions.owner })) or (engine.get_highest_order(member) > group.order) , { 403, 'MissingPermissions' })
+  helpers.assert_error(engine.has_community_permissions(member, Set({ Groups.permissions.OWNER })) or (engine.get_highest_order(member) > group.order) , { 403, 'MissingPermissions' })
 
   assert(db.delete('groups', { id = group.id }))
   assert(db.delete('group_members', { group_id = group.id }))
