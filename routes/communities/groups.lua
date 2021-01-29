@@ -132,7 +132,7 @@ function Groups:PATCH()
   if self.params.order then
     helpers.assert_error(Set(self.params.order) == Set(map(community:get_groups(), function(row) return row.id end)), { 400, 'InvalidOrder' })
 
-    if not engine.has_community_permissions(member, Set({ MembersModel.permissions.owner })) then
+    if not engine.has_community_permissions(member, Set({ GroupsModel.permissions.OWNER })) then
       local groups = community:get_groups()
       sort_groups(groups)
 
