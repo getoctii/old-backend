@@ -60,9 +60,7 @@ function Groups:GET()
   sort_groups(groups)
 
   local mapped_groups = map(groups, function(row)
-    return {
-      id = row.id
-    }
+    return row.id
   end)
 
   return {
