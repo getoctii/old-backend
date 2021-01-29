@@ -21,6 +21,7 @@ end
 -- Validators
 require 'util.validators.uuid'
 require 'util.validators.matches_regexp'
+require 'util.validators.is_array'
 
 function validate.validate_functions.exists(input)
   return not not input, '%s must be provided'
