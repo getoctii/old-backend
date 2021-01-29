@@ -101,11 +101,11 @@ function Message:DELETE()
       community_id = channel.community_id,
       user_id = self.user.id
     }), { 404, 'MessageNotFound' })
-    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.SEND_MESSAGES })), { 403, 'MissingPermissions' })
+    if not engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_MESSAGES })) then
+      helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.SEND_MESSAGES })), { 403, 'MissingPermissions' })
+      helpers.assert_error(message:get_author().id == self.user.id, { 403, 'MissingPermissions' })
+    end
   end
-
-  helpers.assert_error(message:get_author().id == self.user.id, { 403, 'MissingPermissions' })
-
   -- assert(db.delete('read', { last_read_id = message.id }))
   assert(db.delete('mentions', { message_id = message.id }))
   assert(db.delete('messages', { id = message.id }))
