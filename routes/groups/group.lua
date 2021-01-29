@@ -98,8 +98,6 @@ function Group:DELETE()
     user_id = self.user.id
   }), { 404, 'GroupNotFound' })
 
-  local community = CommunitiesModel:find(group.community_id)
-
   helpers.assert_error(engine.has_community_permissions(member, Set({ Groups.permissions.MANAGE_PERMISSIONS })), { 403, 'MissingPermissions' })
   helpers.assert_error(engine.has_community_permissions(member, Set({ MembersModel.permissions.owner })) or (engine.get_highest_order(member) > group.order) , { 403, 'MissingPermissions' })
 
