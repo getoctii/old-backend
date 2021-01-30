@@ -140,7 +140,7 @@ function Community:PATCH()
   end
 
   if self.params.base_permissions then
-    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_PERMISSIONS })), { 403, 'MissingPermissions' })
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_GROUPS })), { 403, 'MissingPermissions' })
     helpers.assert_error(engine.can_update_permissions(member, Set(community.base_permissions), Set(self.params.base_permissions)), { 403, 'MissingPermissions' })
     helpers.assert_error(type((self.params.base_permissions) == 'table') and ((Set(self.params.base_permissions) + permission_set) == permission_set), { 400, 'InvalidPermissions' })
     patch.base_permissions = empty(self.params.base_permissions) and db.raw('array[]::integer[]') or db.array(Set.values(Set(self.params.base_permissions)))
