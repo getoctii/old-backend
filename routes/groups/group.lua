@@ -128,13 +128,19 @@ function Group:DELETE()
 
   local groups = member:get_community():get_groups()
   sort_groups(groups)
-  reorder_groups(map(groups, function(row)
+  local group_ids = map(groups, function(row)
     return row.id
-  end))
+  end)
+  reorder_groups(group_ids)
 
   broadcast('community:' .. group.community_id, 'DELETED_GROUP', {
     id = group.id,
     community_id = group.community_id
+  })
+
+  broadcast('community:' .. member.community_id, 'REORDERED_GROUPS', {
+    community_id = member.community_id,
+    order = group_ids
   })
 
   return {
