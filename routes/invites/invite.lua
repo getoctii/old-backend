@@ -2,6 +2,10 @@ local validate = require 'lapis.validate'
 local helpers = require 'lapis.application'
 local Invites = require 'models.invites'
 local db = require 'lapis.db'
+local GroupsModel = require 'models.groups'
+local engine = require 'util.permissions.engine'
+local MembersModel = require 'models.members'
+local Set = require 'pl.Set'
 
 local Invite = {}
 
@@ -38,7 +42,12 @@ function Invite:DELETE()
   })
 
   local invite = helpers.assert_error(Invites:find({ id = self.params.id }), 'InviteNotFound')
-  helpers.assert_error(invite:get_community().owner_id == self.user.id, { 403, 'MissingPermissions' })
+
+  local member = helpers.assert_error(MembersModel:find({
+    community_id = invite.community_id,
+    user_id = self.user.id
+  }), { 404, 'InviteNotFound' })
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_INVITES })), { 403, 'MissingPermissions' })
 
   assert(db.delete('invites', {
     id = invite.id

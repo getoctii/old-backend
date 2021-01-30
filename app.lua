@@ -16,9 +16,12 @@ app.include = function(self, a)
 	self.__class.include(self, a, nil, self)
 end
 
+-- TODO: Handle JSON validation, not sure if lapis handles types.
+
 -- Validators
 require 'util.validators.uuid'
 require 'util.validators.matches_regexp'
+require 'util.validators.is_array'
 
 function validate.validate_functions.exists(input)
   return not not input, '%s must be provided'
@@ -135,6 +138,8 @@ app:include('routes.invites')
 app:include('routes.conversations')
 app:include('routes.messages')
 app:include('routes.voice')
+app:include('routes.groups')
 app:include('routes.admin')
+app:include('routes.members')
 
 return app

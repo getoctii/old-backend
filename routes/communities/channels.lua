@@ -5,10 +5,13 @@ local ChannelsModel = require 'models.channels'
 local uuid = require 'util.uuid'
 local broadcast = require 'util.broadcast'
 local resubscribe = require 'util.resubscribe'
-local contains = require 'array'.includes
 local map = require 'array'.map
 local empty = require 'array'.is_empty
 local json = require 'cjson'
+local MembersModel = require 'models.members'
+local GroupsModel = require 'models.groups'
+local engine = require 'util.permissions.engine'
+local Set = require 'pl.Set'
 
 local Channels = {}
 
@@ -17,9 +20,13 @@ function Channels:GET()
     { 'id', exists = true, is_uuid = true, 'InvalidUUID'}
   })
   local community = helpers.assert_error(CommunitiesModel:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
-  helpers.assert_error(contains(map(community:get_members(), function(member)
-    return member.user_id
-  end), self.user.id), { 403, 'MissingPermissions' })
+
+  local member = helpers.assert_error(MembersModel:find({
+    community_id = community.id,
+    user_id = self.user.id
+  }), { 404, 'CommunityNotFound' })
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.READ_MESSAGES })), { 403, 'MissingPermissions' })
+
   local channels = map(community:get_channels(), function(row)
     return {
       id = row.id,
@@ -44,7 +51,12 @@ function Channels:POST()
   })
 
   local community = helpers.assert_error(CommunitiesModel:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
-  helpers.assert_error(community.owner_id == self.user.id, { 403, 'MissingPermissions' })
+
+  local member = helpers.assert_error(MembersModel:find({
+    community_id = community.id,
+    user_id = self.user.id
+  }), { 404, 'CommunityNotFound' })
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS })), { 403, 'MissingPermissions' })
 
   local channel = ChannelsModel:create({
     id = uuid(),

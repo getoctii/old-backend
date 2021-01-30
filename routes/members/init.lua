@@ -5,9 +5,10 @@ local json_params = require 'lapis.application'.json_params
 
 local app = lapis.Application()
 app.__base = app
-app.name = "events."
-app.path = "/events"
+app.name = "members."
+app.path = "/members"
 
-app:match('subscribe', '/subscribe/:id', json_params(guard(respond_to(require 'routes.events.subscribe' )))) -- TODO: innpin when?
+app:match('groups', '/:id/:group_id', guard(json_params(respond_to(require 'routes.members.groups' ))))
+app:match('member', '/:id', guard(json_params(respond_to(require 'routes.members.member'))))
 
 return app

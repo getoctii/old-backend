@@ -2,10 +2,12 @@ local db = require 'lapis.db'
 local schema = require 'lapis.db.schema'
 local types = schema.types
 
+local uuid = 'uuid NOT NULL'
+
 return {
   [1588207587] = function()
     schema.create_table('users', {
-      { 'id', 'uuid NOT NULL' },
+      { 'id', uuid },
       { 'username', types.text },
       { 'avatar', types.text },
       { 'password', types.text },
@@ -16,10 +18,10 @@ return {
     })
 
     schema.create_table('messages', {
-      { 'id', 'uuid NOT NULL' },
-      { 'author_id', 'uuid NOT NULL' },
+      { 'id', uuid },
+      { 'author_id', uuid },
       { 'content', types.text },
-      { 'channel_id', 'uuid NOT NULL' },
+      { 'channel_id', uuid },
       { 'created_at', types.time },
       { 'updated_at', types.time },
 
@@ -27,7 +29,7 @@ return {
     })
 
     schema.create_table('communities', {
-      { 'id', 'uuid NOT NULL' },
+      { 'id', uuid },
       { 'icon', types.text },
       { 'name', types.text },
       { 'large', types.boolean },
@@ -36,10 +38,10 @@ return {
     })
 
     schema.create_table('invites', {
-      { 'id', 'uuid NOT NULL' },
-      { 'code', 'uuid NOT NULL' },
-      { 'community_id', 'uuid NOT NULL' },
-      { 'author_id', 'uuid NOT NULL' },
+      { 'id', uuid },
+      { 'code', uuid },
+      { 'community_id', uuid },
+      { 'author_id', uuid },
       { 'created_at', types.time },
       { 'updated_at', types.time },
       { 'uses', types.integer },
@@ -48,7 +50,7 @@ return {
     })
 
     schema.create_table('channels', {
-      { 'id', 'uuid NOT NULL' },
+      { 'id', uuid },
       { 'name', types.text },
       { 'community_id', 'uuid' },
 
@@ -56,36 +58,36 @@ return {
     })
 
     schema.create_table('members', {
-      { 'id', 'uuid NOT NULL' },
-      { 'user_id', 'uuid NOT NULL' },
-      { 'community_id', 'uuid NOT NULL' },
+      { 'id', uuid },
+      { 'user_id', uuid },
+      { 'community_id', uuid },
 
       'PRIMARY KEY (id)'
     })
   end,
   [1597624597] = function()
     schema.create_table('conversations', {
-      { 'id', 'uuid NOT NULL' },
-      { 'channel_id', 'uuid NOT NULL'}
+      { 'id', uuid },
+      { 'channel_id', uuid}
     })
 
     schema.create_table('participants', {
-      { 'id', 'uuid NOT NULL' },
-      { 'conversation_id', 'uuid NOT NULL'},
-      { 'user_id', 'uuid NOT NULL' }
+      { 'id', uuid },
+      { 'conversation_id', uuid},
+      { 'user_id', uuid }
     })
   end,
   [1598154490] = function()
     schema.create_table('codes', {
-      { 'id', 'uuid NOT NULL' },
+      { 'id', uuid },
       { 'used', types.boolean }
     })
   end,
   [1598571122] = function()
     schema.create_table('relationships', {
-      { 'id', 'uuid NOT NULL' },
-      { 'user_id', 'uuid NOT NULL' },
-      { 'recipient_id', 'uuid NOT NULL' },
+      { 'id', uuid },
+      { 'user_id', uuid },
+      { 'recipient_id', uuid },
       { 'accepted', types.boolean }
     })
   end,
@@ -93,13 +95,13 @@ return {
     schema.add_column('users', 'status', 'text')
   end,
   [1600578423] = function()
-    schema.add_column('communities', 'owner_id', 'uuid NOT NULL')
+    schema.add_column('communities', 'owner_id', uuid)
   end,
   [1601356257] = function()
     schema.create_table('voice_sessions', {
-      { 'id', 'uuid NOT NULL' },
-      { 'user_id', 'uuid NOT NULL' },
-      { 'recipient_id', 'uuid NOT NULL' }
+      { 'id', uuid },
+      { 'user_id', uuid },
+      { 'recipient_id', uuid }
     })
   end,
   [1601514092] = function()
@@ -130,18 +132,18 @@ return {
   end,
   [1604996163] = function()
     schema.create_table('read', {
-      { 'user_id', 'uuid NOT NULL' },
-      { 'channel_id', 'uuid NOT NULL' },
-      { 'last_read_id', 'uuid NOT NULL' },
+      { 'user_id', uuid },
+      { 'channel_id', uuid },
+      { 'last_read_id', uuid },
 
       'PRIMARY KEY (user_id, channel_id)'
     })
   end,
   [1606976331] = function()
     schema.create_table('mentions', {
-      { 'id', 'uuid NOT NULL' },
-      { 'message_id', 'uuid NOT NULL' },
-      { 'user_id', 'uuid NOT NULL' },
+      { 'id', uuid },
+      { 'message_id', uuid },
+      { 'user_id', uuid },
 
       'PRIMARY KEY (id)'
     })
@@ -157,11 +159,20 @@ return {
   end,
   [1609557118] = function()
     schema.create_table('notification_tokens', {
-      { 'user_id', 'uuid NOT NULL' },
+      { 'user_id', uuid },
       { 'platform', types.text },
       { 'token', types.text },
 
       'PRIMARY KEY (user_id, platform, token)'
+    })
+  end,
+  [1609806303] = function()
+    schema.create_table('groups', {
+      { 'id',  uuid },
+      { 'community_id', uuid },
+      { 'name', types.text },
+      { 'color', types.text { null = true } },
+      { 'permissions', types.integer { array = true, default = '{}' } }
     })
   end,
   [1610681439] = function()
@@ -186,5 +197,19 @@ return {
       password = '',
       disabled = true
     })
+  end,
+  [1611550703] = function()
+    schema.create_table('group_members', {
+      { 'member_id', uuid },
+      { 'group_id', uuid },
+
+      'PRIMARY KEY (member_id, group_id)'
+    })
+  end,
+  [1611632743] = function()
+    schema.add_column('groups', 'order', types.integer { default = 1 })
+  end,
+  [1611775713] = function()
+    schema.add_column('communities', 'base_permissions', types.integer { array = true, default = '{}' })
   end
 }

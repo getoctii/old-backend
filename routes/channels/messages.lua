@@ -5,7 +5,6 @@ local map = require 'array'.map
 local uuid = require 'util.uuid'
 local broadcast = require 'util.broadcast'
 local Channels = require 'models.channels'
-local preload = require 'lapis.db.model'.preload
 local empty = require 'array'.is_empty
 local json = require 'cjson'
 local MessagesModel = require 'models.messages'
@@ -14,7 +13,10 @@ local Mentions = require 'models.mentions'
 local Users = require 'models.users'
 local push = require 'util.push'
 local db = require 'lapis.db'
-local OrderedPaginator = require 'lapis.db.pagination'.OrderedPaginator
+local MembersModel = require 'models.members'
+local GroupsModel = require 'models.groups'
+local engine = require 'util.permissions.engine'
+local Set = require 'pl.Set'
 
 local Messages = {}
 
@@ -29,9 +31,11 @@ function Messages:GET()
       return participant.user_id
     end), self.user.id), { 403, 'MissingPermissions' })
   else
-    helpers.assert_error(contains(map(channel:get_community():get_members(), function(member)
-      return member.user_id
-    end), self.user.id), { 403, 'MissingPermissions' })
+    local member = helpers.assert_error(MembersModel:find({
+      community_id = channel.community_id,
+      user_id = self.user.id
+    }), { 404, 'ChannelNotFound' })
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.READ_MESSAGES })), { 403, 'MissingPermissions' })
   end
 
   local page = self.params.last_message_id and
@@ -70,9 +74,11 @@ function Messages:POST()
       return participant.user_id
     end), self.user.id), { 403, 'MissingPermissions' })
   else
-    helpers.assert_error(contains(map(channel:get_community():get_members(), function(member)
-      return member.user_id
-    end), self.user.id), { 403, 'MissingPermissions' })
+    local member = helpers.assert_error(MembersModel:find({
+      community_id = channel.community_id,
+      user_id = self.user.id
+    }), { 404, 'ChannelNotFound' })
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.SEND_MESSAGES })), { 403, 'MissingPermissions' })
   end
 
   local row = MessagesModel:create({
@@ -133,60 +139,62 @@ function Messages:POST()
 
   db.query('UPDATE mentions SET read = true FROM messages WHERE mentions.message_id = messages.id AND messages.channel_id = ?', channel.id)
 
-  local mentioned_users = {}
+  if (not channel.community_id) or engine.has_community_permissions(MembersModel:find({ community_id = channel.community_id, user_id = self.user.id }), Set({ GroupsModel.permissions.MENTION_MEMBERS })) then
+    local mentioned_users = {}
 
-  -- TODO: Cleanup
-  for match in ngx.re.gmatch(message.content, '<@([A-Za-z0-9-]+?)>') do
-    local user_id = match[1]
-    if (not channel.community_id and
-      contains(map(channel:get_conversation():get_participants(), function(participant) return participant.user_id end), user_id))
-      or contains(map(channel:get_community():get_members(), function(member) return member.user_id end), user_id) then
-        mentioned_users[user_id] = true
-    end
-  end
-
-  local parsed_content = ngx.re.gsub(message_event.content,'<@([A-Za-z0-9-]+?)>', function(match)
-    return '@' .. ((Users:find(match[1]) or {}).username or 'unknown')
-  end)
-
-  local notifications = {}
-
-  for user_id in pairs(mentioned_users) do
-    Mentions:create({
-      id = uuid(),
-      user_id = user_id,
-      message_id = message.id,
-      read = false
-    })
-
-    broadcast('user:' .. user_id, 'NEW_MENTION', {
-      id = uuid(),
-      user_id = user_id,
-      message_id = message.id,
-      read = false,
-      channel_id = channel.id
-    })
-
-    local user = Users:find(user_id)
-    if (user.state ~= Users.states.dnd) and ((not user.last_ping) or ((os.time() - user.last_ping) > 180)) then
-      local tokens = user:get_notification_tokens()
-
-      for _, token in ipairs(tokens) do
-        table.insert(notifications, {
-          platform = token.platform,
-          token = token.token,
-          payload = {
-            title = message_event.community_name and message_event.community_name or message_event.author.username,
-            subtitle = message_event.channel_name and ('#' .. message_event.channel_name) or '',
-            body = (message_event.community_name and (message_event.author.username .. ': ') or '') .. parsed_content
-          }
-        })
+    -- TODO: Cleanup
+    for match in ngx.re.gmatch(message.content, '<@([A-Za-z0-9-]+?)>') do
+      local user_id = match[1]
+      if (not channel.community_id and
+        contains(map(channel:get_conversation():get_participants(), function(participant) return participant.user_id end), user_id))
+        or contains(map(channel:get_community():get_members(), function(member) return member.user_id end), user_id) then
+          mentioned_users[user_id] = true
       end
     end
-  end
 
-  if not empty(notifications) then
-    push({ payloads = notifications })
+    local parsed_content = ngx.re.gsub(message_event.content,'<@([A-Za-z0-9-]+?)>', function(match)
+      return '@' .. ((Users:find(match[1]) or {}).username or 'unknown')
+    end)
+
+    local notifications = {}
+
+    for user_id in pairs(mentioned_users) do
+      Mentions:create({
+        id = uuid(),
+        user_id = user_id,
+        message_id = message.id,
+        read = false
+      })
+
+      broadcast('user:' .. user_id, 'NEW_MENTION', {
+        id = uuid(),
+        user_id = user_id,
+        message_id = message.id,
+        read = false,
+        channel_id = channel.id
+      })
+
+      local user = Users:find(user_id)
+      if (user.state ~= Users.states.dnd) and ((not user.last_ping) or ((os.time() - user.last_ping) > 180)) then
+        local tokens = user:get_notification_tokens()
+
+        for _, token in ipairs(tokens) do
+          table.insert(notifications, {
+            platform = token.platform,
+            token = token.token,
+            payload = {
+              title = message_event.community_name and message_event.community_name or message_event.author.username,
+              subtitle = message_event.channel_name and ('#' .. message_event.channel_name) or '',
+              body = (message_event.community_name and (message_event.author.username .. ': ') or '') .. parsed_content
+            }
+          })
+        end
+      end
+    end
+
+    if not empty(notifications) then
+      push({ payloads = notifications })
+    end
   end
 
   return {
