@@ -12,8 +12,25 @@ local CommunitiesModel = require 'models.communities'
 local engine = require 'util.permissions.engine'
 local empty = require 'array'.is_empty
 local resubscribe = require 'util.resubscribe'
+local map = require 'array'.map
+local GroupsModel = require 'models.groups'
 
 local permission_set = Set(C 'x for x=1,17' ())
+
+local function reorder_groups(order)
+  for i, v in ipairs(order) do
+    local group = GroupsModel:find({ id = v })
+    group:update({
+      order = i
+    })
+  end
+end
+
+local function sort_groups(groups)
+  table.sort(groups, function(a, b)
+    return a.order < b.order
+  end)
+end
 
 local Group = {}
 
@@ -108,6 +125,12 @@ function Group:DELETE()
   assert(db.delete('group_members', { group_id = group.id }))
 
   resubscribe('group:' .. group.id)
+
+  local groups = member:get_community():get_groups()
+  sort_groups(groups)
+  reorder_groups(map(groups, function(row)
+    return row.id
+  end))
 
   broadcast('community:' .. group.community_id, 'DELETED_GROUP', {
     id = group.id,
