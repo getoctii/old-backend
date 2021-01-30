@@ -98,9 +98,9 @@ function Groups:POST()
       permissions = self.params.permissions and (empty(self.params.permissions) and db.raw('array[]::integer[]') or db.array(Set.values(Set(self.params.permissions)))) or nil
     })
 
-    reorder_groups({ unpack(map(groups, function(row)
+    reorder_groups({ group.id, unpack(map(groups, function(row)
       return row.id
-    end)), group.id })
+    end)) })
 
     broadcast('community:' .. community.id, 'NEW_GROUP', {
       id = group.id,
@@ -134,7 +134,6 @@ function Groups:PATCH()
     if not engine.has_community_permissions(member, Set({ GroupsModel.permissions.OWNER })) then
       local groups = community:get_groups()
       sort_groups(groups)
-
       local highest_order = engine.get_highest_order(member)
       local protected_groups = map(filter(groups, function(group)
         return group.order >= highest_order
@@ -142,7 +141,9 @@ function Groups:PATCH()
         return group.id
       end)
 
-      helpers.assert_error(array_equal(slice(self.params.order, #self.params.order - #protected_groups), protected_groups), { 403, 'MissingPermissions' })
+      if #protected_groups > 0 then
+        helpers.assert_error(array_equal(slice(self.params.order, (#self.params.order - #protected_groups) + 1), protected_groups), { 403, 'MissingPermissions' })
+      end
     end
 
     reorder_groups(self.params.order)
