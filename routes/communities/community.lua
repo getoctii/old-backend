@@ -153,6 +153,29 @@ function Community:PATCH()
     resubscribe('community:' .. community.id)
   end
 
+  map(community:get_channels(), function(row)
+    return row.id
+  end)
+
+  local channels = map(community:get_channels(), function(row)
+    return row.id
+  end)
+
+  if empty(channels) then
+    channels = json.empty_array
+  end
+
+  broadcast('community:' .. community.id, 'UPDATED_COMMUNITY', {
+    id = community.id,
+    name = community.name,
+    icon = community.icon,
+    large = community.large,
+    channels = channels,
+    owner_id = community.owner_id,
+    system_channel_id = community.system_channel_id,
+    base_permissions = empty(community.base_permissions) and json.empty_array or community.base_permissions
+  })
+
   return {
     status = 204,
     layout = false
