@@ -4,6 +4,7 @@ local MembersModel = require 'models.members'
 local empty = require 'array'.is_empty
 local json = require 'cjson'
 local map = require 'array'.map
+local engine = require 'util.permissions.engine'
 
 local Member = {}
 
@@ -20,6 +21,7 @@ function Member:GET()
   }), { 404, 'MemberNotFound' })
 
   local groups = member:get_group_members()
+  local permissions = engine.retrieve_permissions(member)
 
   return {
     json = {
@@ -29,7 +31,9 @@ function Member:GET()
       updated_at = member.updated_at,
       groups = empty(groups) and json.empty_array or map(groups, function(group_member)
         return group_member.group_id
-      end)
+      end),
+      highest_order = engine.get_highest_order(member),
+      permissions = empty(permissions) and json.empty_array or permissions
     }
   }
 end
