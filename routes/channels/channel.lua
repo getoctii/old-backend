@@ -52,6 +52,7 @@ function Channel:GET()
       color = channel.color,
       read = (read or {}).last_read_id,
       last_message_id = (pager:get_page()[1] or {}).id,
+      order = channel.order
     }
   }
 end

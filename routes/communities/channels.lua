@@ -15,6 +15,21 @@ local Set = require 'pl.Set'
 
 local Channels = {}
 
+local function sort_channels(channels)
+  table.sort(channels, function(a, b)
+    return a.order < b.order
+  end)
+end
+
+local function reorder_channels(order)
+  for i, v in ipairs(order) do
+    local channel = ChannelsModel:find({ id = v })
+    channel:update({
+      order = i
+    })
+  end
+end
+
 function Channels:GET()
   validate.assert_valid(self.params, {
     { 'id', exists = true, is_uuid = true, 'InvalidUUID'}
@@ -32,13 +47,17 @@ function Channels:GET()
       id = row.id,
       name = row.name,
       description = row.description,
-      color = row.color
+      color = row.color,
+      order = row.order
     }
   end)
+
+  sort_channels(channels)
 
   if empty(channels) then
     channels = json.empty_array
   end
+
   return {
     json = channels
   }
@@ -66,7 +85,7 @@ function Channels:POST()
 
   broadcast('community:' .. community.id, 'NEW_CHANNEL', {
     id = channel.id,
-    name = channel.name,
+    name = channel.name, -- SECURITY: REMOVE NAME, AT LEAST FOR THOSE WHO DON'T HAVE PERMS
     community_id = channel.community_id
   })
 
@@ -77,6 +96,36 @@ function Channels:POST()
       id = channel.id,
       name = channel.name
     }
+  }
+end
+
+function Channels:PATCH()
+  validate.assert_valid(self.params, {
+    { 'order', exists = true, optional = true, is_array = true, 'InvalidOrder' }
+  })
+
+  local community = helpers.assert_error(CommunitiesModel:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
+
+  local member = helpers.assert_error(MembersModel:find({
+    community_id = community.id,
+    user_id = self.user.id
+  }), { 404, 'CommunityNotFound' })
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS })), { 403, 'MissingPermissions' })
+
+  if self.params.order then
+    helpers.assert_error(Set(self.params.order) == Set(map(community:get_channels(), function(row) return row.id end)), { 400, 'InvalidOrder' })
+
+    reorder_channels(self.params.order)
+
+    broadcast('community:' .. community.id, 'REORDERED_CHANNELS', {
+      community_id = community.id,
+      order = self.params.order
+    })
+  end
+
+  return {
+    status = 204,
+    layout = false
   }
 end
 

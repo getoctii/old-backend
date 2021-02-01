@@ -211,5 +211,8 @@ return {
   end,
   [1611775713] = function()
     schema.add_column('communities', 'base_permissions', types.integer { array = true, default = '{}' })
-  end
+  end,
+  [1612142220] = function()
+    schema.add_column('channels', 'order', types.integer { default = 1 })
+  end,
 }
