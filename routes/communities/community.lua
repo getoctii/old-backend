@@ -22,6 +22,12 @@ local Community = {}
 
 local permission_set = Set(C 'x for x=1,17' ())
 
+local function sort_channels(channels)
+  table.sort(channels, function(a, b)
+    return a.order < b.order
+  end)
+end
+
 function Community:GET()
   validate.assert_valid(self.params, {
     { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
@@ -32,7 +38,11 @@ function Community:GET()
     community_id = community.id,
     user_id = self.user.id
   }), { 404, 'CommunityNotFound' })
-  local channels = map(community:get_channels(), function(row)
+  local channels = community:get_channels()
+
+  sort_channels(channels)
+
+  channels = map(channels, function(row)
     return row.id
   end)
 
@@ -153,11 +163,11 @@ function Community:PATCH()
     resubscribe('community:' .. community.id)
   end
 
-  map(community:get_channels(), function(row)
-    return row.id
-  end)
+  local channels = community:get_channels()
 
-  local channels = map(community:get_channels(), function(row)
+  sort_channels(channels)
+
+  channels = map(channels, function(row)
     return row.id
   end)
 
