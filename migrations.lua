@@ -215,4 +215,8 @@ return {
   [1612142220] = function()
     schema.add_column('channels', 'order', types.integer { default = 1 })
   end,
+  [1612233317] = function()
+    schema.add_column('channels', 'type', types.integer { default = 1 })
+    schema.add_column('channels', 'category_id', 'uuid')
+  end
 }

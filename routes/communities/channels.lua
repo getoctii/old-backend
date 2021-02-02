@@ -48,7 +48,8 @@ function Channels:GET()
       name = row.name,
       description = row.description,
       color = row.color,
-      order = row.order
+      order = row.order,
+      type = row.type
     }
   end)
 
@@ -66,7 +67,8 @@ end
 function Channels:POST()
   validate.assert_valid(self.params, {
     { 'id', exists = true, is_uuid = true, 'InvalidUUID'},
-    { 'name', exists = true, matches_regexp = '^[a-zA-Z0-9_\\-]+$', min_length = 2, max_length = 30, 'ChannelNameInvalid'}
+    { 'name', exists = true, matches_regexp = '^[a-zA-Z0-9_\\-]+$', min_length = 2, max_length = 30, 'ChannelNameInvalid'},
+    { 'type', exists = true, optional = true }
   })
 
   local community = helpers.assert_error(CommunitiesModel:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
@@ -80,13 +82,15 @@ function Channels:POST()
   local channel = ChannelsModel:create({
     id = uuid(),
     name = self.params.name,
-    community_id = community.id
+    community_id = community.id,
+    type = self.params.type and self.params.type or 1
   })
 
   broadcast('community:' .. community.id, 'NEW_CHANNEL', {
     id = channel.id,
     name = channel.name, -- SECURITY: REMOVE NAME, AT LEAST FOR THOSE WHO DON'T HAVE PERMS
-    community_id = channel.community_id
+    community_id = channel.community_id,
+    type = channel.type
   })
 
   resubscribe('community:' .. community.id)
@@ -94,7 +98,8 @@ function Channels:POST()
   return {
     json = {
       id = channel.id,
-      name = channel.name
+      name = channel.name,
+      type = channel.type
     }
   }
 end

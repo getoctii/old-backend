@@ -52,7 +52,8 @@ function Channel:GET()
       color = channel.color,
       read = (read or {}).last_read_id,
       last_message_id = (pager:get_page()[1] or {}).id,
-      order = channel.order
+      order = channel.order,
+      type = channel.type
     }
   }
 end
@@ -123,7 +124,7 @@ function Channel:PATCH()
   if self.params.color then
     patch.color = self.params.color
   end
-
+  
   helpers.assert_error(not empty(patch), { 400, 'InvalidPatch' })
   channel:update(patch)
 
