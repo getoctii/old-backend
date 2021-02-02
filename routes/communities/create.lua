@@ -7,6 +7,7 @@ local http = require 'resty.http'
 local helpers = require 'lapis.application'
 local uuid = require 'util.uuid'
 local Groups = require 'models.groups'
+local db = require 'lapis.db'
 
 local Create = {}
 
@@ -27,7 +28,7 @@ function Create:POST()
     icon = self.params.icon,
     large = true,
     owner_id = self.user.id,
-    base_permissions = { Groups.permissions.READ_MESSAGES, Groups.permissions.SEND_MESSAGES }
+    base_permissions = db.array({ Groups.permissions.READ_MESSAGES, Groups.permissions.SEND_MESSAGES })
   }))
 
   local member = assert(Members:create({
