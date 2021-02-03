@@ -215,4 +215,7 @@ return {
   [1612142220] = function()
     schema.add_column('channels', 'order', types.integer { default = 1 })
   end,
+  [1612380833] = function()
+    db.query('ALTER TABLE users ADD CONSTRAINT email_constraint UNIQUE (email)')
+  end
 }
