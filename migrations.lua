@@ -219,6 +219,6 @@ return {
     db.query('ALTER TABLE users ADD CONSTRAINT email_constraint UNIQUE (email)')
   end,
   [1612390290] = function()
-    db.query('ALTER TABLE users ADD CONSTRAINT member_constraint UNIQUE (user_id, community_id)')
+    db.query('ALTER TABLE members ADD CONSTRAINT member_constraint UNIQUE (user_id, community_id)')
   end
 }
