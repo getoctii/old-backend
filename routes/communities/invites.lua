@@ -57,7 +57,7 @@ function Invites:POST()
     community_id = community.id,
     user_id = self.user.id
   }), { 404, 'CommunityNotFound' })
-  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_INVITES })), { 403, 'MissingPermissions' })
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.CREATE_INVITES })), { 403, 'MissingPermissions' })
 
   local invite = InvitesModel:create({
     id = uuid(),
