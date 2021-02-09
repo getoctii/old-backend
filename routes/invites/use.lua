@@ -19,10 +19,10 @@ function Use:POST()
     { 'code', exists = true, is_uuid = true, 'InvalidCode' }
   })
 
-  local invite = helpers.assert_error(InvitesModel:find({ code = self.params.code }), 'InviteNotFound')
+  local invite = helpers.assert_error(InvitesModel:find({ code = self.params.code }), { 404, 'InviteNotFound' })
   helpers.assert_error(not MembersModel:find({ community_id = invite.community_id, user_id = self.user.id }), { 400, 'AlreadyInCommunity' })
 
-  local community = invite:get_community()
+  local community = helpers.assert_error(invite:get_community(), { 404, 'InviteNotFound' })
 
   local member = assert(MembersModel:create({
     id = uuid(),
