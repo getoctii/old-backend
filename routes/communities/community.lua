@@ -90,9 +90,12 @@ function Community:DELETE()
     id = self.params.id
   }))
   -- community:delete() TODO: Causes error, let's file an issue.
-  assert(db.delete('members', 'community_id = ?', self.params.id))
-  assert(db.delete('channels', 'community_id = ?', self.params.id))
-  -- TODO: Delete messages as well.
+  assert(db.delete('members', { community_id = self.params.id }))
+  assert(db.delete('channels', { community_id = self.params.id }))
+  assert(db.delete('groups', { community_id = self.params.id }))
+  assert(db.delete('invites', { community_id = self.params.id }))
+
+  -- TODO: Delete associated objects.
 
   -- TODO: Inefficient, but /shrug
 
