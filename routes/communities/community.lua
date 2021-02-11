@@ -4,7 +4,6 @@ local Users = require 'models.users'
 local helpers = require 'lapis.application'
 local validate = require 'lapis.validate'
 local db = require 'lapis.db'
-local contains = require 'array'.includes
 local map = require 'array'.map
 local broadcast = require 'util.broadcast'
 local empty = require 'array'.is_empty

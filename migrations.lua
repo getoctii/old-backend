@@ -220,5 +220,11 @@ return {
   end,
   [1612390290] = function()
     db.query('ALTER TABLE members ADD CONSTRAINT member_constraint UNIQUE (user_id, community_id)')
+  end,
+  [1612746591] = function()
+    schema.drop_column('relationships', 'accepted')
+    schema.drop_column('relationships', 'id')
+    schema.add_column('relationships', 'type', types.integer)
+    db.query('ALTER TABLE relationships ADD PRIMARY KEY (user_id, recipient_id)')
   end
 }

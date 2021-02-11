@@ -4,16 +4,15 @@ local Conversations = require 'models.conversations'
 local contains = require 'array'.includes
 local map = require 'array'.map
 local Users = require 'models.users'
-local Channels = require 'models.channels'
 local uuid = require 'util.uuid'
 local Participants = require 'models.participants'
 local resubscribe = require 'util.resubscribe'
 local broadcast = require 'util.broadcast'
 local db = require 'lapis.db'
-local preload = require 'lapis.db.model'.preload
 local MessagesModel = require 'models.messages'
 local joinMessages = require 'util.messages'.joinMessages
 local leaveMessages = require 'util.messages'.leaveMessages
+local are_friends = require 'util.are_friends'
 
 local Conversation = {}
 
@@ -49,6 +48,7 @@ function Conversation:POST()
   helpers.assert_error(self.params.recipient ~= self.user.id, { 422, 'InvalidRecipient' }) -- TODO: add as validation
 
   local recipient = helpers.assert_error(Users:find({ id = self.params.recipient }), { 404, 'RecipientNotFound' })
+  helpers.assert_error(are_friends(self.user.id, recipient.id), { 422, 'NotFriends' })
 
   local user_ids = map(conversation:get_participants(), function(row) return row.user_id end)
 
