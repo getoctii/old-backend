@@ -215,7 +215,19 @@ return {
   [1612142220] = function()
     schema.add_column('channels', 'order', types.integer { default = 1 })
   end,
-  [1612233317] = function()
+  [1612380833] = function()
+    db.query('ALTER TABLE users ADD CONSTRAINT email_constraint UNIQUE (email)')
+  end,
+  [1612390290] = function()
+    db.query('ALTER TABLE members ADD CONSTRAINT member_constraint UNIQUE (user_id, community_id)')
+  end,
+  [1612746591] = function()
+    schema.drop_column('relationships', 'accepted')
+    schema.drop_column('relationships', 'id')
+    schema.add_column('relationships', 'type', types.integer)
+    db.query('ALTER TABLE relationships ADD PRIMARY KEY (user_id, recipient_id)')
+  end,
+  [1613172821] = function()
     schema.add_column('channels', 'type', types.integer { default = 1 })
     schema.add_column('channels', 'category_id', 'uuid')
   end

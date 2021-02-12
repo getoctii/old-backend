@@ -6,6 +6,8 @@ local broadcast = require 'util.broadcast'
 local http = require 'resty.http'
 local helpers = require 'lapis.application'
 local uuid = require 'util.uuid'
+local Groups = require 'models.groups'
+local db = require 'lapis.db'
 
 local Create = {}
 
@@ -25,7 +27,8 @@ function Create:POST()
     name = self.params.name, -- TODO: Differenciate between query params and form
     icon = self.params.icon,
     large = true,
-    owner_id = self.user.id
+    owner_id = self.user.id,
+    base_permissions = db.array({ Groups.permissions.READ_MESSAGES, Groups.permissions.SEND_MESSAGES })
   }))
 
   local member = assert(Members:create({

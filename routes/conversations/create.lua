@@ -8,6 +8,7 @@ local Conversations = require 'models.conversations'
 local db = require 'lapis.db'
 local resubscribe = require 'util.resubscribe'
 local broadcast = require 'util.broadcast'
+local are_friends = require 'util.are_friends'
 
 local Create = {}
 
@@ -20,6 +21,8 @@ function Create:POST() -- TODO: Damn, we make a lot of queries here. Let's consi
 
   local recipient = helpers.assert_error(Users:find({ id = self.params.recipient }), { 404, 'RecipientNotFound' })
   -- helpers.assert_error(not db.select('A.conversation_id, A.user_id, B.user_id FROM participants A, participants B WHERE A.conversation_id = B.conversation_id AND (A.user_id = ? OR A.user_id = ?) AND (B.user_id = ? OR B.user_id = ?);', self.user.id, recipient.id, self.user.id, recipient.id), { 422, 'AlreadyExists' })
+
+  helpers.assert_error(are_friends(self.user.id, recipient.id), { 422, 'NotFriends' })
 
   local channel = Channels:create({
     id = uuid(),

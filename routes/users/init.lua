@@ -18,5 +18,6 @@ app:match('newsletter', '/newsletter', guard(json_params(respond_to(require 'rou
 app:match('read', '/:id/read', guard(json_params(respond_to(require 'routes.users.read' ))))
 app:match('mentions', '/:id/mentions', guard(json_params(respond_to(require 'routes.users.mentions'))))
 app:match('notifications', '/:id/notifications', guard(json_params(respond_to(require 'routes.users.notifications'))))
+app:match('relationships', '/:id/relationships', guard(json_params(respond_to(require 'routes.users.relationships'))))
 
 return app
