@@ -13,7 +13,8 @@ local Channels = Model:extend('channels', {
 Channels.types = enum {
   TEXT = 1,
   CATEGORY = 2,
-  CUSTOM = 3
+  VOICE = 3,
+  CUSTOM = 4
 }
 
 return Channels

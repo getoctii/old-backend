@@ -42,7 +42,6 @@ function Channel:GET()
     order = 'desc'
   })
 
-
   return {
     json = {
       id = channel.id,
@@ -97,10 +96,11 @@ function Channel:PATCH()
     { 'id', exists = true, is_uuid = true, 'InvalidUUID' },
     { 'name', exists = true, optional = true, matches_regexp = '^[a-zA-Z0-9_\\-]+$', min_length = 2, max_length = 30, 'ChannelNameInvalid' },
     { 'description', exists = true, optional = true, max_length = 140, 'InvalidDescription' },
-    { 'color', exists = true, optional = true, is_color = true, 'InvalidColor' }
+    { 'color', exists = true, optional = true, is_color = true, 'InvalidColor' },
+    { 'category', exists = true, optional = true, is_uuid = true, 'InvalidCategoryUUID' }
   })
 
-  local channel = helpers.assert_error(ChannelsModel:find({ id = self.params.id }), { 404, 'ChannelsNotFound' })
+  local channel = helpers.assert_error(ChannelsModel:find({ id = self.params.id }), { 404, 'ChannelNotFound' })
   if not channel.community_id then
     helpers.yield_error({ 400, 'InvalidChannel' })
   else
@@ -117,12 +117,20 @@ function Channel:PATCH()
     patch.name = self.params.name
   end
 
-  if self.params.description then
+  if self.params.description and channel.type == 1 then
     patch.description = self.params.description
   end
 
-  if self.params.color then
+  if self.params.color and channel.type == 1  then
     patch.color = self.params.color
+  end
+
+  if self.params.category and channel.type == 1 then
+    local category = helpers.assert_error(ChannelsModel:find({ id = self.params.category }), { 404, 'CategoryNotFound' })
+    if not category.community_id or category.community_id ~= channel.community_id or channel.type ~= 2 then
+      helpers.yield_error({ 400, 'InvalidCategory' })
+    end
+    patch.category_id = self.params.category
   end
   
   helpers.assert_error(not empty(patch), { 400, 'InvalidPatch' })

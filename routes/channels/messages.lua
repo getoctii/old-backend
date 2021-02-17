@@ -26,6 +26,8 @@ function Messages:GET()
   })
 
   local channel = helpers.assert_error(Channels:find({ id = self.params.id }), { 404, 'ChannelNotFound' })
+  helpers.assert_error(channel.type == 1, { 400, 'ChannelNotText' })
+
   if not channel.community_id then
     helpers.assert_error(contains(map(channel:get_conversation():get_participants(), function(participant)
       return participant.user_id
@@ -68,7 +70,7 @@ function Messages:POST()
     { 'content', exists = true, min_length = 1, max_length = 2000, 'InvalidMessage'}
   })
   local channel = helpers.assert_error(Channels:find({ id = self.params.id }), { 404, 'ChannelNotFound' })
-
+  helpers.assert_error(channel.type == 1, { 400, 'ChannelNotText' })
   if not channel.community_id then
     helpers.assert_error(contains(map(channel:get_conversation():get_participants(), function(participant)
       return participant.user_id

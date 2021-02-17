@@ -49,7 +49,8 @@ function Channels:GET()
       description = row.description,
       color = row.color,
       order = row.order,
-      type = row.type
+      type = row.type,
+      category_id = row.category_id
     }
   end)
 
