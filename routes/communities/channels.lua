@@ -5,6 +5,7 @@ local ChannelsModel = require 'models.channels'
 local uuid = require 'util.uuid'
 local broadcast = require 'util.broadcast'
 local resubscribe = require 'util.resubscribe'
+local array = require 'array'
 local map = require 'array'.map
 local empty = require 'array'.is_empty
 local json = require 'cjson'
@@ -119,7 +120,11 @@ function Channels:PATCH()
   helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS })), { 403, 'MissingPermissions' })
 
   if self.params.order then
-    helpers.assert_error(Set(self.params.order) == Set(map(community:get_channels(), function(row) return row.id end)), { 400, 'InvalidOrder' })
+    helpers.assert_error(Set(self.params.order) == Set(map(array.filter(community:get_channels(), function(row)
+      return not row.parent_id
+    end), function(row)
+      return row.id
+    end)), { 400, 'InvalidOrder' })
 
     reorder_channels(self.params.order)
 
