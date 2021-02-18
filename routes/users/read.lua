@@ -16,9 +16,8 @@ function Read:GET()
   })
 
   helpers.assert_error(self.params.id == self.user.id, { 403, 'InvalidUser' })
-  local user = helpers.assert_error(Users:find({ id = self.user.id }), { 404, 'UserNotFound' }) -- TODO: currently we don't have a check on auth if the user exists, we should do that soon. For now we can do this
-  local members = user:get_members()
-  local participants = user:get_participants()
+  local members = self.user:get_members()
+  local participants = self.user:get_participants()
 
   preload(members, { community = 'channels' })
   preload(participants, { conversation = 'channel' })
