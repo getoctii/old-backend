@@ -1,9 +1,7 @@
 local validate = require 'lapis.validate'
 local helpers = require 'lapis.application'
 local Channels = require 'models.channels'
-local contains = require 'array'.includes
 local map = require 'array'.map
-local db = require 'lapis.db'
 local MembersModel = require 'models.members'
 local GroupsModel = require 'models.groups'
 local engine = require 'util.permissions.engine'
@@ -11,9 +9,19 @@ local Set = require 'pl.Set'
 
 local Reorder = {}
 
+local function reorder_channels(order)
+  for i, v in ipairs(order) do
+    local channel = Channels:find({ id = v })
+    channel:update({
+      order = i
+    })
+  end
+end
+
 function Reorder:POST()
   validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
+    { 'id', exists = true, is_uuid = true, 'InvalidUUID' },
+    { 'order', exists = true, is_array = true, 'InvalidOrder' }
   })
 
   local channel = helpers.assert_error(Channels:find({ id = self.params.id }), { 404, 'ChannelNotFound' })
@@ -24,7 +32,10 @@ function Reorder:POST()
     user_id = self.user.id
   }), { 404, 'ChannelNotFound' })
 
-  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.READ_MESSAGES })), { 403, 'MissingPermissions' })
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS })), { 403, 'MissingPermissions' })
+  helpers.assert_error(Set(self.params.order) == Set(map(channel:get_children(), function(row) return row.id end)), { 400, 'InvalidOrder' })
+
+  reorder_channels(self.params.order)
 
   return {
     layout = false,
