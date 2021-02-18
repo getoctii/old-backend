@@ -126,10 +126,9 @@ function Channel:PATCH()
   end
 
   if self.params.parent and channel.type == 1 then
+    helpers.assert_error(channel.community_id, { 400, 'InvalidChannel' })
     local parent = helpers.assert_error(ChannelsModel:find({ id = self.params.parent }), { 404, 'CategoryNotFound' })
-    if not parent.community_id or parent.community_id ~= channel.community_id or channel.type ~= 2 then
-      helpers.yield_error({ 400, 'InvalidCategory' })
-    end
+    helpers.assert_error(parent.community_id == channel.community_id and parent.type == ChannelsModel.types.CATEGORY, { 400, 'InvalidParent'} )
     patch.parent_id = self.params.parent
   end
 
