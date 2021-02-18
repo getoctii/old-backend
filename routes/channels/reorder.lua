@@ -6,17 +6,9 @@ local MembersModel = require 'models.members'
 local GroupsModel = require 'models.groups'
 local engine = require 'util.permissions.engine'
 local Set = require 'pl.Set'
+local reorder_channels = require 'util.reorder_channels'
 
 local Reorder = {}
-
-local function reorder_channels(order)
-  for i, v in ipairs(order) do
-    local channel = Channels:find({ id = v })
-    channel:update({
-      order = i
-    })
-  end
-end
 
 function Reorder:POST()
   validate.assert_valid(self.params, {

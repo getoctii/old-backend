@@ -12,6 +12,9 @@ local MembersModel = require 'models.members'
 local GroupsModel = require 'models.groups'
 local engine = require 'util.permissions.engine'
 local Set = require 'pl.Set'
+local json = require 'cjson'
+local reorder_channels = require 'util.reorder_channels'
+local array = require 'array'
 
 local Channel = {}
 
@@ -98,7 +101,8 @@ function Channel:PATCH()
     { 'name', exists = true, optional = true, matches_regexp = '^[a-zA-Z0-9_\\-]+$', min_length = 2, max_length = 30, 'ChannelNameInvalid' },
     { 'description', exists = true, optional = true, max_length = 140, 'InvalidDescription' },
     { 'color', exists = true, optional = true, is_color = true, 'InvalidColor' },
-    { 'parent', exists = true, optional = true, is_uuid = true, 'InvalidParentUUID' }
+    { 'parent', exists = true, optional = true, is_uuid = true, 'InvalidParentUUID' },
+    { 'parent_order', exists = true, optional = true, is_uuid = true, 'InvalidParentUUID' }
   })
 
   local channel = helpers.assert_error(ChannelsModel:find({ id = self.params.id }), { 404, 'ChannelNotFound' })
@@ -126,11 +130,44 @@ function Channel:PATCH()
     patch.color = self.params.color
   end
 
-  if self.params.parent and channel.type == 1 then
-    helpers.assert_error(channel.community_id, { 400, 'InvalidChannel' })
-    local parent = helpers.assert_error(ChannelsModel:find({ id = self.params.parent }), { 404, 'CategoryNotFound' })
-    helpers.assert_error(parent.community_id == channel.community_id and parent.type == ChannelsModel.types.CATEGORY, { 400, 'InvalidParent'} )
-    patch.parent_id = self.params.parent
+  if self.params.parent then
+    helpers.assert_error(channel.type == 1 and channel.community_id, { 400, 'InvalidChannel' })
+    helpers.assert_error(self.params.parent_order, { 400, 'InvalidParentOrder' })
+
+    if self.params.parent == json.null then
+      helpers.assert_error(Set(self.params.order) == (Set(map(array.filter(channel:get_community():get_channels(), function(row)
+        return not row.parent_id
+      end), function(row)
+        return row.id
+      end)) + Set({ channel.id })), { 400, 'InvalidParentOrder' })
+
+      if channel.parent_id then
+        local children = map(channel:get_parent():get_children(), function(row) return row.id end)
+        reorder_channels(array.without(children, channel.id))
+      end
+
+      reorder_channels(self.params.parent_order)
+
+      patch.parent_id = db.NULL
+    else
+      local parent = helpers.assert_error(ChannelsModel:find({ id = self.params.parent }), { 404, 'CategoryNotFound' })
+      helpers.assert_error(parent.community_id == channel.community_id and parent.type == ChannelsModel.types.CATEGORY, { 400, 'InvalidParent'} )
+      helpers.assert_error(Set(self.params.order) == (Set(map(parent:get_children(), function(row) return row.id end)) + Set({ channel.id })), { 400, 'InvalidParentOrder' })
+
+      if channel.parent_id then
+        local children = map(channel:get_parent():get_children(), function(row) return row.id end)
+        reorder_channels(array.without(children, channel.id))
+      else
+        local children = map(array.filter(channel:get_community():get_channels(), function(row)
+          return not row.parent_id
+        end), function(row) return row.id end)
+        reorder_channels(array.without(children, channel.id))
+      end
+
+      reorder_channels(self.params.parent_order)
+
+      patch.parent_id = self.params.parent
+    end
   end
 
   helpers.assert_error(not empty(patch), { 400, 'InvalidPatch' })
