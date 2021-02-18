@@ -51,7 +51,7 @@ function Channels:GET()
       color = row.color,
       order = row.order,
       type = row.type,
-      category_id = row.category_id
+      parent_id = row.parent_id
     }
   end)
 

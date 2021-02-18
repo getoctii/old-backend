@@ -52,7 +52,8 @@ function Channel:GET()
       read = (read or {}).last_read_id,
       last_message_id = (pager:get_page()[1] or {}).id,
       order = channel.order,
-      type = channel.type
+      type = channel.type,
+      parent_id = channel.parent_id
     }
   }
 end
