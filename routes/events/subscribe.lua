@@ -15,11 +15,10 @@ function Subscribe:GET()
   })
 
   helpers.assert_error(self.user.id == self.params.id, { 403, 'NotAllowed' })
-  local user = helpers.assert_error(Users:find({ id = self.user.id }), { 404, 'UserNotFound' }) -- TODO: currently we don't have a check on auth if the user exists, we should do that soon. For now we can do this
 
-  local all_grip_channels = generate_grip_channels(user)
+  local all_grip_channels = generate_grip_channels(self.user)
 
-  user:update {
+  self.user:update {
     last_ping = os.time()
   }
 
@@ -45,7 +44,7 @@ function Subscribe:GET()
       ['Grip-Channel'] = table.concat(all_grip_channels, ','),
       ['Content-Type'] = 'text/event-stream',
       ['Grip-Keep-Alive'] = '\\n; format=cstring; timeout=30',
-      ['Grip-Link'] = string.format('</events/subscribe/%s?authorization=%s>; rel=next', user.id, self.req.headers.Authorization or self.params.authorization) -- TODO: Make this wayyy less hacky
+      ['Grip-Link'] = string.format('</events/subscribe/%s?authorization=%s>; rel=next', self.user.id, self.req.headers.Authorization or self.params.authorization) -- TODO: Make this wayyy less hacky
     }
   }
 end
