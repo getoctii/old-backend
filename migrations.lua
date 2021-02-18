@@ -229,6 +229,6 @@ return {
   end,
   [1613172821] = function()
     schema.add_column('channels', 'type', types.integer { default = 1 })
-    schema.add_column('channels', 'category_id', 'uuid')
+    schema.add_column('channels', 'parent_id', 'uuid')
   end
 }

@@ -18,14 +18,13 @@ function Reorder:POST()
 
   local channel = helpers.assert_error(Channels:find({ id = self.params.id }), { 404, 'ChannelNotFound' })
   helpers.assert_error(channel.type == 2, { 400, 'ChannelNotCategory' })
-  helpers.assert_error(channel.community_id, { 400, 'CommunityNotFound' })
-  
+
   local member = helpers.assert_error(MembersModel:find({
     community_id = channel.community_id,
     user_id = self.user.id
   }), { 404, 'ChannelNotFound' })
-  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.READ_MESSAGES })), { 403, 'MissingPermissions' })
 
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.READ_MESSAGES })), { 403, 'MissingPermissions' })
 
   return {
     layout = false,

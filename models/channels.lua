@@ -6,7 +6,7 @@ local Channels = Model:extend('channels', {
     { 'messages', has_many = 'messages' },
     { 'community', belongs_to = 'communities' },
     { 'conversation', has_one = 'conversations' },
-    { 'category', belongs_to = 'channels' }
+    { 'parent', belongs_to = 'channels' }
   }
 })
 
