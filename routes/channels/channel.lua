@@ -15,7 +15,6 @@ local Set = require 'pl.Set'
 local json = require 'cjson'
 local reorder_channels = require 'util.reorder_channels'
 local array = require 'array'
-
 local Channel = {}
 
 function Channel:GET()
@@ -139,7 +138,7 @@ function Channel:PATCH()
     helpers.assert_error(self.params.parent_order, { 400, 'InvalidParentOrder' })
 
     if self.params.parent == json.null then
-      helpers.assert_error(Set(self.params.order) == (Set(map(array.filter(channel:get_community():get_channels(), function(row)
+      helpers.assert_error(Set(self.params.parent_order) == (Set(map(array.filter(channel:get_community():get_channels(), function(row)
         return not row.parent_id
       end), function(row)
         return row.id
