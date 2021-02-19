@@ -61,7 +61,6 @@ function Channel:GET()
   }
 end
 
--- TODO: Handle edge case where user tries to delete DM channel.
 function Channel:DELETE()
   validate.assert_valid(self.params, {
     { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
