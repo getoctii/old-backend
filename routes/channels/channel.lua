@@ -106,7 +106,7 @@ function Channel:PATCH()
     { 'name', exists = true, optional = true, matches_regexp = '^[a-zA-Z0-9_\\-]+$', min_length = 2, max_length = 30, 'ChannelNameInvalid' },
     { 'description', exists = true, optional = true, max_length = 140, 'InvalidDescription' },
     { 'color', exists = true, optional = true, is_color = true, 'InvalidColor' },
-    { 'parent', exists = true, optional = true, is_uuid = true, 'InvalidParentUUID' },
+    { 'parent', exists = true, optional = true, 'InvalidParentUUID' },
     { 'parent_order', exists = true, optional = true, is_array = true, 'InvalidParentUUID' }
   })
 
