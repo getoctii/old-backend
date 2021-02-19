@@ -143,7 +143,7 @@ function Channel:PATCH()
 
       if channel.parent_id then
         local children = map(channel:get_parent():get_children(), function(row) return row.id end)
-        reorder_channels(array.without(children, channel.id))
+        reorder_channels(array.without(children, { channel.id }))
       end
 
       reorder_channels(self.params.parent_order)
@@ -156,12 +156,12 @@ function Channel:PATCH()
 
       if channel.parent_id then
         local children = map(channel:get_parent():get_children(), function(row) return row.id end)
-        reorder_channels(array.without(children, channel.id))
+        reorder_channels(array.without(children, { channel.id }))
       else
         local children = map(array.filter(channel:get_community():get_channels(), function(row)
           return not row.parent_id
         end), function(row) return row.id end)
-        reorder_channels(array.without(children, channel.id))
+        reorder_channels(array.without(children, { channel.id }))
       end
 
       reorder_channels(self.params.parent_order)
