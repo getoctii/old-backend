@@ -102,7 +102,7 @@ function Channel:PATCH()
     { 'description', exists = true, optional = true, max_length = 140, 'InvalidDescription' },
     { 'color', exists = true, optional = true, is_color = true, 'InvalidColor' },
     { 'parent', exists = true, optional = true, is_uuid = true, 'InvalidParentUUID' },
-    { 'parent_order', exists = true, optional = true, is_uuid = true, 'InvalidParentUUID' }
+    { 'parent_order', exists = true, optional = true, is_array = true, 'InvalidParentUUID' }
   })
 
   local channel = helpers.assert_error(ChannelsModel:find({ id = self.params.id }), { 404, 'ChannelNotFound' })
@@ -152,7 +152,7 @@ function Channel:PATCH()
     else
       local parent = helpers.assert_error(ChannelsModel:find({ id = self.params.parent }), { 404, 'CategoryNotFound' })
       helpers.assert_error(parent.community_id == channel.community_id and parent.type == ChannelsModel.types.CATEGORY, { 400, 'InvalidParent'} )
-      helpers.assert_error(Set(self.params.order) == (Set(map(parent:get_children(), function(row) return row.id end)) + Set({ channel.id })), { 400, 'InvalidParentOrder' })
+      helpers.assert_error(Set(self.params.parent_order) == (Set(map(parent:get_children(), function(row) return row.id end)) + Set({ channel.id })), { 400, 'InvalidParentOrder' })
 
       if channel.parent_id then
         local children = map(channel:get_parent():get_children(), function(row) return row.id end)
