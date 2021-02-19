@@ -83,6 +83,11 @@ function Channel:DELETE()
   }))
   assert(db.delete('messages', 'channel_id = ?', self.params.id))
 
+  local children = map(array.filter(channel:get_community():get_channels(), function(row)
+    return not row.parent_id
+  end), function(row) return row.id end)
+  reorder_channels(array.without(children, { channel.id }))
+
   broadcast('community:' .. channel.community_id, 'DELETED_CHANNEL', {
     id = channel.id,
     community_id = channel.community_id
