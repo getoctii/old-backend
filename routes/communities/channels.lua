@@ -81,12 +81,20 @@ function Channels:POST()
   }), { 404, 'CommunityNotFound' })
   helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS })), { 403, 'MissingPermissions' })
 
+ local channel_ids = map(array.filter(community:get_channels(), function(row)
+    return not row.parent_id
+  end), function(row)
+    return row.id
+  end)
+
   local channel = ChannelsModel:create({
     id = uuid(),
     name = self.params.name,
     community_id = community.id,
     type = self.params.type and self.params.type or 1
   })
+
+  reorder_channels(array.concat({ channel.id }, channel_ids))
 
   broadcast('community:' .. community.id, 'NEW_CHANNEL', {
     id = channel.id,
