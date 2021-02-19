@@ -37,13 +37,13 @@ function Create:POST() -- TODO: Damn, we make a lot of queries here. Let's consi
 
   local from = assert(Participants:create({
     id = assert(uuid()),
-    user_id = self.user.id, -- TODO: check that acc exists
+    user_id = self.user.id,
     conversation_id = conversation.id
   }))
 
   local to = assert(Participants:create({
     id = assert(uuid()),
-    user_id = recipient.id, -- TODO: check that acc exists
+    user_id = recipient.id,
     conversation_id = conversation.id
   }))
 
