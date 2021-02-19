@@ -226,5 +226,15 @@ return {
     schema.drop_column('relationships', 'id')
     schema.add_column('relationships', 'type', types.integer)
     db.query('ALTER TABLE relationships ADD PRIMARY KEY (user_id, recipient_id)')
+  end,
+  [1613172821] = function()
+    schema.add_column('channels', 'type', types.integer { default = 1 })
+    schema.add_column('channels', 'parent_id', 'uuid')
+  end,
+  [1613703708] = function()
+    db.query('ALTER TABLE invites ALTER COLUMN code TYPE text')
+  end,
+  [1613704965] = function()
+    db.query('ALTER TABLE invites ADD CONSTRAINT code_constraint UNIQUE (code)')
   end
 }

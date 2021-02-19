@@ -5,6 +5,7 @@ local ChannelsModel = require 'models.channels'
 local uuid = require 'util.uuid'
 local broadcast = require 'util.broadcast'
 local resubscribe = require 'util.resubscribe'
+local array = require 'array'
 local map = require 'array'.map
 local empty = require 'array'.is_empty
 local json = require 'cjson'
@@ -48,7 +49,9 @@ function Channels:GET()
       name = row.name,
       description = row.description,
       color = row.color,
-      order = row.order
+      order = row.order,
+      type = row.type,
+      parent_id = row.parent_id
     }
   end)
 
@@ -66,7 +69,8 @@ end
 function Channels:POST()
   validate.assert_valid(self.params, {
     { 'id', exists = true, is_uuid = true, 'InvalidUUID'},
-    { 'name', exists = true, matches_regexp = '^[a-zA-Z0-9_\\-]+$', min_length = 2, max_length = 30, 'ChannelNameInvalid'}
+    { 'name', exists = true, matches_regexp = '^[a-zA-Z0-9_\\-]+$', min_length = 2, max_length = 30, 'ChannelNameInvalid'},
+    { 'type', exists = true, optional = true }
   })
 
   local community = helpers.assert_error(CommunitiesModel:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
@@ -80,13 +84,15 @@ function Channels:POST()
   local channel = ChannelsModel:create({
     id = uuid(),
     name = self.params.name,
-    community_id = community.id
+    community_id = community.id,
+    type = self.params.type and self.params.type or 1
   })
 
   broadcast('community:' .. community.id, 'NEW_CHANNEL', {
     id = channel.id,
     name = channel.name, -- SECURITY: REMOVE NAME, AT LEAST FOR THOSE WHO DON'T HAVE PERMS
-    community_id = channel.community_id
+    community_id = channel.community_id,
+    type = channel.type
   })
 
   resubscribe('community:' .. community.id)
@@ -94,7 +100,8 @@ function Channels:POST()
   return {
     json = {
       id = channel.id,
-      name = channel.name
+      name = channel.name,
+      type = channel.type
     }
   }
 end
@@ -113,7 +120,11 @@ function Channels:PATCH()
   helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS })), { 403, 'MissingPermissions' })
 
   if self.params.order then
-    helpers.assert_error(Set(self.params.order) == Set(map(community:get_channels(), function(row) return row.id end)), { 400, 'InvalidOrder' })
+    helpers.assert_error(Set(self.params.order) == Set(map(array.filter(community:get_channels(), function(row)
+      return not row.parent_id
+    end), function(row)
+      return row.id
+    end)), { 400, 'InvalidOrder' })
 
     reorder_channels(self.params.order)
 
