@@ -10,6 +10,7 @@ local MembersModel = require 'models.members'
 local GroupsModel = require 'models.groups'
 local engine = require 'util.permissions.engine'
 local Set = require 'pl.Set'
+local nanoid = require 'nanoid'
 
 local Invites = {}
 
@@ -61,7 +62,7 @@ function Invites:POST()
 
   local invite = InvitesModel:create({
     id = uuid(),
-    code = uuid(),
+    code = nanoid(10),
     community_id = self.params.id,
     author_id = self.user.id,
     uses = 0

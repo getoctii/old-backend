@@ -11,11 +11,16 @@ local Invite = {}
 
 function Invite:GET()
   validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidCode' }
+    { 'id', exists = true, is_uuid = true, 'InvalidId' }
   })
 
-  local invite = helpers.assert_error(Invites:find({ code = self.params.id }), 'InviteNotFound')
-  local community = invite:get_community()
+  local invite = helpers.assert_error(Invites:find({ id = self.params.id }), 'InviteNotFound')
+  local member = helpers.assert_error(MembersModel:find({
+    community_id =   invite.community_id,
+    user_id = self.user.id
+  }), { 404, 'CommunityNotFound' })
+
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_INVITES })), { 403, 'MissingPermissions' })
 
   return {
     json = {
@@ -25,13 +30,7 @@ function Invite:GET()
       created_at = invite.created_at,
       updated_at = invite.updated_at,
       uses = invite.uses,
-      community = {
-        id = community.id,
-        name = community.name,
-        icon = community.icon,
-        large = community.large,
-        owner_id = community.owner_id
-      }
+      community = invite.community_id
     }
   }
 end

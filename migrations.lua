@@ -230,5 +230,11 @@ return {
   [1613172821] = function()
     schema.add_column('channels', 'type', types.integer { default = 1 })
     schema.add_column('channels', 'parent_id', 'uuid')
+  end,
+  [1613703708] = function()
+    db.query('ALTER TABLE invites ALTER COLUMN code TYPE text')
+  end,
+  [1613704965] = function()
+    db.query('ALTER TABLE invites ADD CONSTRAINT code_constraint UNIQUE (code)')
   end
 }

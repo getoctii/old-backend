@@ -6,7 +6,6 @@ local uuid = require 'util.uuid'
 local broadcast = require 'util.broadcast'
 local resubscribe = require 'util.resubscribe'
 local MessagesModel = require 'models.messages'
-local ChannelsModel = require 'models.channels'
 local joinMessages = require 'util.messages'.joinMessages
 
 -- the leave messages are more like ban messages ngl
@@ -14,9 +13,32 @@ local joinMessages = require 'util.messages'.joinMessages
 -- i mean we wont be adding bans in this release
 local Use = {}
 
+function Use:GET()
+  validate.assert_valid(self.params, {
+    { 'code', exists = true, 'InvalidCode' }
+  })
+
+  local invite = helpers.assert_error(InvitesModel:find({ code = self.params.code }), 'InviteNotFound')
+  local community = invite:get_community()
+
+  return {
+    json = {
+      author_id = invite.author_id,
+      community = {
+        id = community.id,
+        name = community.name,
+        icon = community.icon,
+        large = community.large,
+        owner_id = community.owner_id
+      }
+    }
+  }
+end
+
+
 function Use:POST()
   validate.assert_valid(self.params, {
-    { 'code', exists = true, is_uuid = true, 'InvalidCode' }
+    { 'code', exists = true, 'InvalidCode' }
   })
 
   local invite = helpers.assert_error(InvitesModel:find({ code = self.params.code }), { 404, 'InviteNotFound' })
