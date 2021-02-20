@@ -7,6 +7,7 @@ local GroupsModel = require 'models.groups'
 local engine = require 'util.permissions.engine'
 local Set = require 'pl.Set'
 local reorder_channels = require 'util.reorder_channels'
+local broadcast = require 'util.broadcast'
 
 local Reorder = {}
 
@@ -28,6 +29,11 @@ function Reorder:POST()
   helpers.assert_error(Set(self.params.order) == Set(map(channel:get_children(), function(row) return row.id end)), { 400, 'InvalidOrder' })
 
   reorder_channels(self.params.order)
+
+  broadcast('channel:' .. channel.id, 'REORDERED_CHILDREN', {
+    id = channel.id,
+    order = self.parms.order,
+  })
 
   return {
     layout = false,
