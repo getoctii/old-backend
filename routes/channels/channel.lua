@@ -176,6 +176,16 @@ function Channel:PATCH()
   helpers.assert_error(not empty(patch), { 400, 'InvalidPatch' })
   channel:update(patch)
 
+  broadcast(channel.id, 'UPDATED_CHANNEL', {
+    id = channel.id,
+    name = channel.name,
+    description = channel.description,
+    color = channel.color,
+    order = channel.order,
+    type = channel.type,
+    parent_id = channel.parent_id
+  })
+
   return {
     status = 204,
     layout = false
