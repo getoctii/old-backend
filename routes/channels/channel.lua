@@ -176,7 +176,7 @@ function Channel:PATCH()
   helpers.assert_error(not empty(patch), { 400, 'InvalidPatch' })
   channel:update(patch)
 
-  broadcast(channel.id, 'UPDATED_CHANNEL', {
+  broadcast('channel:' .. channel.id, 'UPDATED_CHANNEL', {
     id = channel.id,
     name = channel.name,
     description = channel.description,
