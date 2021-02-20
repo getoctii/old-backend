@@ -33,6 +33,7 @@ function Reorder:POST()
   broadcast('channel:' .. channel.id, 'REORDERED_CHILDREN', {
     id = channel.id,
     order = self.parms.order,
+    community_id = channel.community_id,
   })
 
   return {

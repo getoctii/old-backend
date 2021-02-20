@@ -147,9 +147,18 @@ function Channel:PATCH()
       if channel.parent_id then
         local children = map(channel:get_parent():get_children(), function(row) return row.id end)
         reorder_channels(array.without(children, { channel.id }))
+        broadcast('channel:' .. channel.parent_id, 'REORDERED_CHILDREN', {
+          id = channel.parent_id,
+          order = array.without(children, { channel.id }),
+          community_id = channel.community_id,
+        })
       end
 
       reorder_channels(self.params.parent_order)
+      broadcast('community:' .. channel.community_id, 'REORDERED_CHANNELS', {
+        community_id = channel.community_id,
+        order = self.params.parent_order,
+      })
 
       patch.parent_id = db.NULL
     else
@@ -160,14 +169,28 @@ function Channel:PATCH()
       if channel.parent_id then
         local children = map(channel:get_parent():get_children(), function(row) return row.id end)
         reorder_channels(array.without(children, { channel.id }))
+        broadcast('channel:' .. channel.parent_id, 'REORDERED_CHILDREN', {
+          id = channel.parent_id,
+          order = array.without(children, { channel.id }),
+          community_id = channel.community_id,
+        })
       else
         local children = map(array.filter(channel:get_community():get_channels(), function(row)
           return not row.parent_id
         end), function(row) return row.id end)
         reorder_channels(array.without(children, { channel.id }))
+        broadcast('community:' .. channel.community_id, 'REORDERED_CHANNELS', {
+          community_id = channel.community_id,
+          order = array.without(children, { channel.id }),
+        })
       end
 
       reorder_channels(self.params.parent_order)
+      broadcast('channel:' .. self.params.parent, 'REORDERED_CHILDREN', {
+        id = self.params.parent,
+        order = self.params.parent_order,
+        community_id = channel.community_id,
+      })
 
       patch.parent_id = self.params.parent
     end
@@ -183,7 +206,8 @@ function Channel:PATCH()
     color = channel.color,
     order = channel.order,
     type = channel.type,
-    parent_id = channel.parent_id
+    parent_id = channel.parent_id,
+    community_id = channel.community_id,
   })
 
   return {
