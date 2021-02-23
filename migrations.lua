@@ -236,5 +236,15 @@ return {
   end,
   [1613704965] = function()
     db.query('ALTER TABLE invites ADD CONSTRAINT code_constraint UNIQUE (code)')
+  end,
+  [1614068514] = function()
+    schema.create_table('group_overrides', {
+      { 'channel_id', uuid },
+      { 'group_id', uuid },
+      { 'allow', types.integer { array = true, default = '{}' } },
+      { 'deny', types.integer { array = true, default = '{}' } },
+
+      'PRIMARY KEY (channel_id, group_id)'
+    })
   end
 }
