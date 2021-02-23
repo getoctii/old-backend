@@ -76,15 +76,26 @@ function Channel:DELETE()
     helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS })), { 403, 'MissingPermissions' })
   end
 
-  assert(db.delete('channels', {
-    id = channel.id
-  }))
-  assert(db.delete('messages', 'channel_id = ?', self.params.id))
+  if channel.parent_id then
+    local children = map(channel:get_parent():get_children(), function(row) return row.id end)
+    reorder_channels(array.without(children, { channel.id }))
+  else
+    if channel.type == ChannelsModel.types.CATEGORY then
+      db.update('channels', {
+        parent_id = db.NULL
+      }, {
+        parent_id = channel.parent_id
+      })
+    end
 
-  local children = map(array.filter(channel:get_community():get_channels(), function(row)
-    return not row.parent_id
-  end), function(row) return row.id end)
-  reorder_channels(array.without(children, { channel.id }))
+    local children = map(array.filter(channel:get_community():get_channels(), function(row)
+      return not row.parent_id
+    end), function(row) return row.id end)
+    reorder_channels(array.without(children, { channel.id }))
+  end
+
+  channel:delete()
+  assert(db.delete('messages', 'channel_id = ?', self.params.id))
 
   broadcast('community:' .. channel.community_id, 'DELETED_CHANNEL', {
     id = channel.id,
