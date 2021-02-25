@@ -6,6 +6,7 @@ local uuid = require 'util.uuid'
 local broadcast = require 'util.broadcast'
 local resubscribe = require 'util.resubscribe'
 local MessagesModel = require 'models.messages'
+local db = require 'lapis.db'
 local joinMessages = require 'util.messages'.joinMessages
 
 -- the leave messages are more like ban messages ngl
@@ -51,6 +52,10 @@ function Use:POST()
     community_id = invite.community_id,
     user_id = self.user.id
   }))
+
+  invite:update({
+    uses = db.raw('uses + 1')
+  })
 
   local systemChannel = community:get_system_channel()
 
