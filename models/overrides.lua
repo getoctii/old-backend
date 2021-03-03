@@ -1,6 +1,6 @@
 local Model = require('lapis.db.model').Model
 
-local Overrides = Model:extend('channel_overrides', {
+local Overrides = Model:extend('group_overrides', {
   relations = {
     { 'channel', belongs_to = 'channels' }
   },
