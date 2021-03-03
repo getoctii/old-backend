@@ -38,8 +38,51 @@ function Overrides:POST()
   OverridesModel:create({
     channel_id = self.params.id,
     group_id = self.params.group_id,
-    allow = array.empty(self.params.permissions) and db.raw('array[]::integer[]') or db.array(Set.values(Set(self.params.allow))),
-    deny = array.empty(self.params.permissions) and db.raw('array[]::integer[]') or db.array(Set.values(Set(self.params.deny)))
+    allow = array.empty(self.params.allow) and db.raw('array[]::integer[]') or db.array(Set.values(Set(self.params.allow))),
+    deny = array.empty(self.params.deny) and db.raw('array[]::integer[]') or db.array(Set.values(Set(self.params.deny)))
+  })
+
+  return {
+    status = 204,
+    layout = false
+  }
+end
+
+function Overrides:PATCH()
+  validate.assert_valid(self.params, {
+    { 'id', exists = true, is_uuid = true, 'InvalidUUID' },
+    { 'group_id', exists = true, is_uuid = true, 'InvalidUUID' },
+    { 'allow', exists = true, optional = true, is_array = true, 'InvalidAllow' },
+    { 'deny', exists = true, optional = true, is_array = true, 'InvalidDeny' }
+  })
+
+  if self.params.allow then
+    helpers.assert_error(type((self.params.allow) == 'table') and ((Set(self.params.allow) + permission_set) == permission_set), { 400, 'InvalidAllow' })
+  end
+
+  if self.params.deny then
+    helpers.assert_error(type((self.params.deny) == 'table') and ((Set(self.params.deny) + permission_set) == permission_set), { 400, 'InvalidDeny' })
+  end
+
+  local channel = helpers.assert_error(Channels:find({ id = self.params.id }), { 404, 'ChannelNotFound' })
+  helpers.assert_error(channel.community_id, { 404, 'ChannelNotFound' })
+
+  local member = helpers.assert_error(MembersModel:find({
+    community_id = channel.community_id,
+    user_id = self.user.id
+  }), { 404, 'ChannelNotFound' })
+
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS })))
+
+  local override = helpers.assert_error(OverridesModel:find({
+    channel_id = self.params.id,
+    group_id = self.params.group_id
+  }), { 404, 'OverrideNotFound' })
+
+  override:update({
+    allow = self.params.allow and (array.empty(self.params.permissions) and db.raw('array[]::integer[]') or db.array(Set.values(Set(self.params.allow)))) or nil,
+    deny = self.params.deny and (helpers.assert_error(type((self.params.deny) == 'table') and ((Set(self.params.deny) + permission_set) == permission_set), { 400, 'InvalidDeny' }) or nil
+  )
   })
 
   return {
