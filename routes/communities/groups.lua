@@ -72,6 +72,7 @@ function Groups:POST()
   validate.assert_valid(self.params, {
     { 'id', exists = true, is_uuid = true, 'InvalidUUID'},
     { 'name', exists = true, matches_regexp = '^[a-zA-Z0-9_\\-]+$', min_length = 2, max_length = 30, 'GroupNameInvalid' },
+    -- TODO: Why is this optional?
     { 'permissions', exists = true, optional = true, is_array = true, 'InvalidPermissions' }
   })
 
