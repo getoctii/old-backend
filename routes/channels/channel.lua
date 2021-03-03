@@ -44,6 +44,16 @@ function Channel:GET()
     order = 'desc'
   })
 
+  local overrides = channel:get_overrides()
+  local mapped_overrides = {}
+
+  for _, override in ipairs(overrides) do
+    mapped_overrides[override.group_id] = {
+      allow = override.allow,
+      deny = override.deny
+    }
+  end
+
   return {
     json = {
       id = channel.id,
@@ -55,7 +65,8 @@ function Channel:GET()
       last_message_id = (pager:get_page()[1] or {}).id,
       order = channel.order,
       type = channel.type,
-      parent_id = channel.parent_id
+      parent_id = channel.parent_id,
+      overrides = mapped_overrides
     }
   }
 end

@@ -7,7 +7,8 @@ local Channels = Model:extend('channels', {
     { 'community', belongs_to = 'communities' },
     { 'conversation', has_one = 'conversations' },
     { 'parent', belongs_to = 'channels' },
-    { 'children', has_many = 'channels', key = 'parent_id' }
+    { 'children', has_many = 'channels', key = 'parent_id' },
+    { 'overrides', has_many = 'group_overrides' }
   }
 })
 
