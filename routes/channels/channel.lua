@@ -83,9 +83,7 @@ function Channel:DELETE()
     if channel.type == ChannelsModel.types.CATEGORY then
       db.update('channels', {
         parent_id = db.NULL
-      }, {
-        parent_id = channel.parent_id
-      })
+      }, 'parent_id = ?', channel.parent_id)
     end
 
     local children = map(array.filter(channel:get_community():get_channels(), function(row)
