@@ -48,11 +48,13 @@ function Channel:GET()
   local overrides = OverridesModel:find({ channel_id = channel.id })
   local mapped_overrides = {}
 
-  for _, override in ipairs(overrides) do
-    mapped_overrides[override.group_id] = {
-      allow = override.allow,
-      deny = override.deny
-    }
+  if overrides ~= nil then 
+    for _, override in ipairs(overrides) do
+      mapped_overrides[override.group_id] = {
+        allow = override.allow,
+        deny = override.deny
+      }
+    end
   end
 
   return {
