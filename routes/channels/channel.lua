@@ -15,6 +15,7 @@ local Set = require 'pl.Set'
 local json = require 'cjson'
 local reorder_channels = require 'util.reorder_channels'
 local array = require 'array'
+local OverridesModel = require 'models.overrides'
 local Channel = {}
 
 function Channel:GET()
@@ -44,7 +45,7 @@ function Channel:GET()
     order = 'desc'
   })
 
-  local overrides = channel:get_overrides()
+  local overrides = OverridesModel:find({ channel_id = channel.id })
   local mapped_overrides = {}
 
   for _, override in ipairs(overrides) do
