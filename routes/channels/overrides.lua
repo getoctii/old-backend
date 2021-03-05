@@ -5,12 +5,20 @@ local Channels = require 'models.channels'
 local GroupsModel = require 'models.groups'
 local engine = require 'util.permissions.engine'
 local Set = require 'pl.Set'
-local C = require 'pl.comprehension'.new()
 local array = require 'array'
 local db = require 'lapis.db'
 local MembersModel = require 'models.members'
 
-local permission_set = Set(C 'x for x=1,17' ())
+local permission_set = Set({
+  GroupsModel.permissions.READ_MESSAGES,
+  GroupsModel.permissions.SEND_MESSAGES,
+  GroupsModel.permissions.EMBED_LINKS,
+  GroupsModel.permissions.MENTION_MEMBERS,
+  GroupsModel.permissions.MENTION_GROUPS,
+  GroupsModel.permissions.MENTION_EVERYONE,
+  GroupsModel.permissions.MENTION_SOMEONE,
+  GroupsModel.permissions.MANAGE_MESSAGES
+})
 
 local Overrides = {}
 
