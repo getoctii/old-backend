@@ -1,6 +1,6 @@
 local OverridesModel = require 'models.overrides'
 local helpers = require 'lapis.application'
-local Channels = require 'models.channels'
+local ChannelsModel = require 'models.channels'
 local GroupsModel = require 'models.groups'
 local engine = require 'util.permissions.engine'
 local Set = require 'pl.Set'
@@ -9,7 +9,6 @@ local MembersModel = require 'models.members'
 local validate = require 'util.validate'
 local types = require 'tableshape'.types
 local custom_types = require 'util.types'
-
 local Overrides = {}
 
 function Overrides:POST()
@@ -20,10 +19,10 @@ function Overrides:POST()
     deny = custom_types.overrides
   })
 
-  local channel = helpers.assert_error(Channels:find({ id = params.id }), { 404, 'ChannelNotFound' })
+  local channel = helpers.assert_error(ChannelsModel:find({ id = params.id }), { 404, 'ChannelNotFound' })
   helpers.assert_error(channel.community_id, { 404, 'ChannelNotFound' })
 
-  local group = helpers.assert_error(GroupsModel:find({ id = params.group_id }) { 404, 'GroupNotFound' })
+  local group = helpers.assert_error(GroupsModel:find({ id = params.group_id }), { 404, 'GroupNotFound' })
   helpers.assert_error(group.community_id == channel.community_id)
 
   local member = helpers.assert_error(MembersModel:find({
@@ -53,7 +52,7 @@ function Overrides:PATCH()
     deny = custom_types.overrides:is_optional()
   })
 
-  local channel = helpers.assert_error(Channels:find({ id = params.id }), { 404, 'ChannelNotFound' })
+  local channel = helpers.assert_error(ChannelsModel:find({ id = params.id }), { 404, 'ChannelNotFound' })
   helpers.assert_error(channel.community_id, { 404, 'ChannelNotFound' })
 
   local member = helpers.assert_error(MembersModel:find({
