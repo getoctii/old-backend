@@ -1,4 +1,3 @@
-local validate = require 'lapis.validate'
 local helpers = require 'lapis.application'
 local Communities = require 'models.communities'
 local map = require 'array'.map
@@ -11,15 +10,18 @@ local GroupsModel = require 'models.groups'
 local engine = require 'util.permissions.engine'
 local Set = require 'pl.Set'
 local nanoid = require 'nanoid'
+local validate = require 'util.validate'
+local types = require 'tableshape'.types
+local custom_types = require 'util.types'
 
 local Invites = {}
 
 function Invites:GET()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid
   })
 
-  local community = helpers.assert_error(Communities:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
+  local community = helpers.assert_error(Communities:find({ id = params.id }), { 404, 'CommunityNotFound' })
 
   local member = helpers.assert_error(MembersModel:find({
     community_id = community.id,
@@ -48,11 +50,11 @@ function Invites:GET()
 end
 
 function Invites:POST()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid
   })
 
-  local community = helpers.assert_error(Communities:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
+  local community = helpers.assert_error(Communities:find({ id = params.id }), { 404, 'CommunityNotFound' })
 
   local member = helpers.assert_error(MembersModel:find({
     community_id = community.id,
@@ -63,7 +65,7 @@ function Invites:POST()
   local invite = InvitesModel:create({
     id = uuid(),
     code = nanoid(10),
-    community_id = self.params.id,
+    community_id = params.id,
     author_id = self.user.id,
     uses = 0
   })

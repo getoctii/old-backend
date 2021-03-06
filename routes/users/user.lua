@@ -1,4 +1,3 @@
-local validate = require 'lapis.validate'
 local helpers = require 'lapis.application'
 local Users = require 'models.users'
 local argon2 = require 'argon2'
@@ -8,17 +7,20 @@ local empty = require 'array'.is_empty
 local generateDiscriminator = require 'util.generatediscriminator'
 local http = require 'resty.http'
 local map = require 'array'.map
-local broadcast_multiple = require 'util.broadcast_multiple'
-local generate_grip_channels = require 'util.generate_grip_channels'
+-- local broadcast_multiple = require 'util.broadcast_multiple'
+-- local generate_grip_channels = require 'util.generate_grip_channels'
+local validate = require 'util.validate'
+local types = require 'tableshape'.types
+local custom_types = require 'util.types'
 
 local User = {}
 
 function User:GET()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID'}
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid
   })
 
-  local user = helpers.assert_error(Users:find({ id = self.params.id }), { 404, 'UserNotFound' })
+  local user = helpers.assert_error(Users:find({ id = params.id }), { 404, 'UserNotFound' })
   local info = {
     id = user.id,
     username = user.username,
@@ -47,31 +49,26 @@ function User:GET()
 end
 
 function User:PATCH()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID' },
-    { 'oldPassword', exists = true, optional = true, min_length = 8, max_length = 128, 'InvalidPassword' },
-    { 'newPassword', exists = true, optional = true, min_length = 8, max_length = 128, 400, 'InvalidPassword' },
-    { 'username', exists = true, optional = true, min_length = 3, max_length = 16, matches_pattern = '^%a+$', 'InvalidUsername' },
-    { 'avatar', exists = true, optional = true, matches_regexp = '^https:\\/\\/file\\.coffee\\/u\\/[a-zA-Z0-9_-]{7,14}\\.(png|jpeg|jpg|gif)$', 'InvalidAvatar' },
-    { 'status', exists = true, optional = true, max_length = 140, 'InvalidStatus' },
-    { 'state', exists = true, optional = true, one_of = {
-      'offline',
-      'idle',
-      'dnd',
-      'online',
-    }, 'InvalidState'},
-    { 'color', exists = true, optional = true, is_color = true, 'InvalidColor' }
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid,
+    oldPassword = custom_types.password:is_optional(),
+    newPassword = custom_types.password:is_optional(),
+    username = custom_types.username:is_optional(),
+    avatar = custom_types.image:is_optional(),
+    status = types.string:length(0, 140):is_optional(),
+    state = types.one_of({ 'online', 'idle', 'dnd', 'online' }):is_optional(),
+    color = custom_types.color:is_optional()
   })
 
-  helpers.assert_error(self.params.id == self.user.id, { 403, 'MissingPermissions' })
-  local user = helpers.assert_error(Users:find({ id = self.params.id }), { 404, 'UserNotFound' })
+  helpers.assert_error(params.id == self.user.id, { 403, 'MissingPermissions' })
+  local user = helpers.assert_error(Users:find({ id = params.id }), { 404, 'UserNotFound' })
 
   local patch = {}
 
-  if self.params.oldPassword and self.params.newPassword then
-    helpers.assert_error(argon2.verify(user.password, self.params.oldPassword), { 401, 'WrongPassword' })
+  if params.oldPassword and params.newPassword then
+    helpers.assert_error(argon2.verify(user.password, params.oldPassword), { 401, 'WrongPassword' })
     local salt = encoding.encode_base64(assert(rand.bytes(32)))
-    patch.password = assert(argon2.hash_encoded(self.params.newPassword, salt, {
+    patch.password = assert(argon2.hash_encoded(params.newPassword, salt, {
       variant = argon2.variants.argon2_id,
       parallelism = 2,
       m_cost = 2 ^ 18,
@@ -79,31 +76,31 @@ function User:PATCH()
     }))
   end
 
-  if self.params.username then
-    patch.username = self.params.username
+  if params.username then
+    patch.username = params.username
     if user.discriminator ~= 0 then
-      patch.discriminator = generateDiscriminator(self.params.username)
+      patch.discriminator = generateDiscriminator(params.username)
     end
   end
 
-  if self.params.avatar then
+  if params.avatar then
     local httpc = assert(http.new())
-    local status = assert(httpc:request_uri(self.params.avatar, { method = 'HEAD' })).status
+    local status = assert(httpc:request_uri(params.avatar, { method = 'HEAD' })).status
 
     helpers.assert_error(status == 200, { 400, 'InvalidAvatar' })
-    patch.avatar = self.params.avatar
+    patch.avatar = params.avatar
   end
 
-  if self.params.status then
-    patch.status = self.params.status
+  if params.status then
+    patch.status = params.status
   end
 
-  if self.params.state then
-    patch.state = Users.states:for_db(self.params.state)
+  if params.state then
+    patch.state = Users.states:for_db(params.state)
   end
 
-  if self.params.color then
-    patch.color = self.params.color
+  if params.color then
+    patch.color = params.color
   end
 
   helpers.assert_error(not empty(patch), { 400, 'InvalidPatch'})

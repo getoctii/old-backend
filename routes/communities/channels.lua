@@ -1,4 +1,3 @@
-local validate = require 'lapis.validate'
 local CommunitiesModel = require 'models.communities'
 local helpers = require 'lapis.application'
 local ChannelsModel = require 'models.channels'
@@ -13,6 +12,9 @@ local MembersModel = require 'models.members'
 local GroupsModel = require 'models.groups'
 local engine = require 'util.permissions.engine'
 local Set = require 'pl.Set'
+local validate = require 'util.validate'
+local types = require 'tableshape'.types
+local custom_types = require 'util.types'
 
 local Channels = {}
 
@@ -32,10 +34,11 @@ local function reorder_channels(order)
 end
 
 function Channels:GET()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID'}
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid
   })
-  local community = helpers.assert_error(CommunitiesModel:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
+
+  local community = helpers.assert_error(CommunitiesModel:find({ id = params.id }), { 404, 'CommunityNotFound' })
 
   local member = helpers.assert_error(MembersModel:find({
     community_id = community.id,
@@ -67,13 +70,18 @@ function Channels:GET()
 end
 
 function Channels:POST()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID'},
-    { 'name', exists = true, matches_regexp = '^[a-zA-Z0-9_\\-]+$', min_length = 2, max_length = 30, 'ChannelNameInvalid'},
-    { 'type', exists = true, optional = true }
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid,
+    name = custom_types.channel_name,
+    type = types.one_of {
+      ChannelsModel.types.TEXT,
+      ChannelsModel.types.CATEGORY,
+      ChannelsModel.types.VOICE,
+      ChannelsModel.types.CUSTOM
+    }
   })
 
-  local community = helpers.assert_error(CommunitiesModel:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
+  local community = helpers.assert_error(CommunitiesModel:find({ id = params.id }), { 404, 'CommunityNotFound' })
 
   local member = helpers.assert_error(MembersModel:find({
     community_id = community.id,
@@ -89,9 +97,9 @@ function Channels:POST()
 
   local channel = ChannelsModel:create({
     id = uuid(),
-    name = self.params.name,
+    name = params.name,
     community_id = community.id,
-    type = self.params.type and self.params.type or 1
+    type = params.type and params.type or 1
   })
 
   reorder_channels(array.concat({ channel.id }, channel_ids))
@@ -115,11 +123,12 @@ function Channels:POST()
 end
 
 function Channels:PATCH()
-  validate.assert_valid(self.params, {
-    { 'order', exists = true, optional = true, is_array = true, 'InvalidOrder' }
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid,
+    order = types.number
   })
 
-  local community = helpers.assert_error(CommunitiesModel:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
+  local community = helpers.assert_error(CommunitiesModel:find({ id = params.id }), { 404, 'CommunityNotFound' })
 
   local member = helpers.assert_error(MembersModel:find({
     community_id = community.id,
@@ -127,18 +136,18 @@ function Channels:PATCH()
   }), { 404, 'CommunityNotFound' })
   helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS })), { 403, 'MissingPermissions' })
 
-  if self.params.order then
-    helpers.assert_error(Set(self.params.order) == Set(map(array.filter(community:get_channels(), function(row)
+  if params.order then
+    helpers.assert_error(Set(params.order) == Set(map(array.filter(community:get_channels(), function(row)
       return not row.parent_id
     end), function(row)
       return row.id
     end)), { 400, 'InvalidOrder' })
 
-    reorder_channels(self.params.order)
+    reorder_channels(params.order)
 
     broadcast('community:' .. community.id, 'REORDERED_CHANNELS', {
       community_id = community.id,
-      order = self.params.order
+      order = params.order
     })
   end
 

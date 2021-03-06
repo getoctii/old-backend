@@ -1,4 +1,3 @@
-local validate = require 'lapis.validate'
 local Channels = require 'models.channels'
 local helpers = require 'lapis.application'
 local contains = require 'array'.includes
@@ -8,15 +7,18 @@ local broadcast = require 'util.broadcast'
 local MembersModel = require 'models.members'
 local GroupsModel = require 'models.groups'
 local engine = require 'util.permissions.engine'
+local validate = require 'util.validate'
+local types = require 'tableshape'.types
+local custom_types = require 'util.types'
 
 local Typing = {}
 
 function Typing:POST()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid
   })
 
-  local channel = helpers.assert_error(Channels:find({ id = self.params.id }), { 404, 'ChannelNotFound' })
+  local channel = helpers.assert_error(Channels:find({ id = params.id }), { 404, 'ChannelNotFound' })
   helpers.assert_error(channel.type == 1, { 400, 'ChannelNotText' })
   if not channel.community_id then
     helpers.assert_error(contains(map(channel:get_conversation():get_participants(), function(participant)

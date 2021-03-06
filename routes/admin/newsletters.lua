@@ -4,13 +4,18 @@ local helpers = require 'lapis.application'
 local empty = require 'array'.is_empty
 local Newsletters = {}
 local db = require 'lapis.db'
-
+local validate = require 'util.validate'
+local types = require 'tableshape'.types
 
 function Newsletters:GET()
+  local params = validate(self.params, types.shape {
+    last_email_id = types.string:is_optional()
+  })
+
   helpers.assert_error(self.user.discriminator == 0, { 403, 'NotAllowed' })
 
-  local page = self.params.last_email_id and
-    db.query('SELECT * FROM (SELECT *, ROW_NUMBER() OVER (order by created_at desc) rank FROM "newsletter_subscribers" order by created_at desc) t WHERE rank > (SELECT rank FROM (SELECT *, ROW_NUMBER() OVER (order by created_at desc) rank FROM newsletter_subscribers) t2 WHERE email = ?) LIMIT 25', self.params.last_email_id)
+  local page = params.last_email_id and
+    db.query('SELECT * FROM (SELECT *, ROW_NUMBER() OVER (order by created_at desc) rank FROM "newsletter_subscribers" order by created_at desc) t WHERE rank > (SELECT rank FROM (SELECT *, ROW_NUMBER() OVER (order by created_at desc) rank FROM newsletter_subscribers) t2 WHERE email = ?) LIMIT 25', params.last_email_id)
     or NewslettersModal:select('ORDER BY created_at DESC LIMIT 25')
 
   if empty(page) then

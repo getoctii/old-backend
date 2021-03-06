@@ -1,4 +1,3 @@
-local validate = require 'lapis.validate'
 local helpers = require 'lapis.application'
 local Conversations = require 'models.conversations'
 local contains = require 'array'.includes
@@ -13,15 +12,18 @@ local MessagesModel = require 'models.messages'
 local joinMessages = require 'util.messages'.joinMessages
 local leaveMessages = require 'util.messages'.leaveMessages
 local are_friends = require 'util.are_friends'
+local validate = require 'util.validate'
+local types = require 'tableshape'.types
+local custom_types = require 'util.types'
 
 local Conversation = {}
 
 function Conversation:GET()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid
   })
 
-  local conversation = helpers.assert_error(Conversations:find({ id = self.params.id }), { 404, 'ConversationNotFound' })
+  local conversation = helpers.assert_error(Conversations:find({ id = params.id }), { 404, 'ConversationNotFound' })
   helpers.assert_error(contains(map(conversation:get_participants(), function(participant)
     return participant.user_id
   end), self.user.id), { 403, 'MissingPermissions' })
@@ -35,25 +37,25 @@ function Conversation:GET()
 end
 
 function Conversation:POST()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID' },
-    { 'recipient', exists = true, is_uuid = true, 'InvalidUUID' }
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid,
+    recipient = custom_types.uuid
   })
 
-  local conversation = helpers.assert_error(Conversations:find({ id = self.params.id }), { 404, 'ConversationNotFound' })
+  local conversation = helpers.assert_error(Conversations:find({ id = params.id }), { 404, 'ConversationNotFound' })
   helpers.assert_error(contains(map(conversation:get_participants(), function(participant)
     return participant.user_id
   end), self.user.id), { 403, 'MissingPermissions' })
 
-  helpers.assert_error(self.params.recipient ~= self.user.id, { 422, 'InvalidRecipient' }) -- TODO: add as validation
+  helpers.assert_error(params.recipient ~= self.user.id, { 422, 'InvalidRecipient' }) -- TODO: add as validation
 
-  local recipient = helpers.assert_error(Users:find({ id = self.params.recipient }), { 404, 'RecipientNotFound' })
+  local recipient = helpers.assert_error(Users:find({ id = params.recipient }), { 404, 'RecipientNotFound' })
   helpers.assert_error(are_friends(self.user.id, recipient.id), { 422, 'NotFriends' })
 
   local user_ids = map(conversation:get_participants(), function(row) return row.user_id end)
 
   -- TODO: Maybe use a multiple column key to ensure uniqueness?
-  helpers.assert_error(not contains(user_ids, self.params.recipient), { 422, 'InvalidRecipient' })
+  helpers.assert_error(not contains(user_ids, params.recipient), { 422, 'InvalidRecipient' })
 
   local from = assert(Participants:create({
     id = assert(uuid()),
@@ -72,7 +74,7 @@ function Conversation:POST()
   local row = MessagesModel:create({
     id = uuid(),
     author_id = '30eeda0f-8969-4811-a118-7cefa01098a3',
-    content = '<@' .. self.params.recipient .. '>' .. joinMessages[math.random(#joinMessages)],
+    content = '<@' .. params.recipient .. '>' .. joinMessages[math.random(#joinMessages)],
     channel_id = conversation.channel_id,
     type = 3
   })
@@ -123,11 +125,11 @@ function Conversation:POST()
 end
 
 function Conversation:DELETE()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid
   })
 
-  local conversation = helpers.assert_error(Conversations:find({ id = self.params.id }), { 404, 'ConversationNotFound' })
+  local conversation = helpers.assert_error(Conversations:find({ id = params.id }), { 404, 'ConversationNotFound' })
   helpers.assert_error(contains(map(conversation:get_participants(), function(participant)
     return participant.user_id
   end), self.user.id), { 403, 'MissingPermissions' })

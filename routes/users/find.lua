@@ -1,16 +1,21 @@
-local validate = require 'lapis.validate'
 local helpers = require 'lapis.application'
 local Users = require 'models.users'
+local validate = require 'util.validate'
+local types = require 'tableshape'.types
+local custom_types = require 'util.types'
 
 local Find = {}
 
 function Find:GET()
-  validate.assert_valid(self.params, {
-    { 'username', exists = true, min_length = 3, max_length = 16, matches_pattern = '^%a+$', 'InvalidUsername'},
-    { 'discriminator', exists = true, is_integer = true, 'InvalidDiscriminator' }
+  local params = validate(self.params, types.shape {
+    username = custom_types.username,
+    discriminator = custom_types.discriminator
   })
 
-  local user = helpers.assert_error(Users:find({ username = self.params.username, discriminator = self.params.discriminator }), { 404, 'UserNotFound' })
+  local user = helpers.assert_error(Users:find({
+    username = params.username,
+    discriminator = params.discriminator
+  }), { 404, 'UserNotFound' })
 
   local info = {
     id = user.id,

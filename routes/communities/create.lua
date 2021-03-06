@@ -1,6 +1,5 @@
 local Communities = require 'models.communities'
 local Members = require 'models.members'
-local validate = require 'lapis.validate'
 local resubscribe = require 'util.resubscribe'
 local broadcast = require 'util.broadcast'
 local http = require 'resty.http'
@@ -8,24 +7,27 @@ local helpers = require 'lapis.application'
 local uuid = require 'util.uuid'
 local Groups = require 'models.groups'
 local db = require 'lapis.db'
+local validate = require 'util.validate'
+local types = require 'tableshape'.types
+local custom_types = require 'util.types'
 
 local Create = {}
 
 function Create:POST()
-  validate.assert_valid(self.params, {
-    { 'name', exists = true, min_length = 2, max_length = 16, 'CommunityNameInvalid' },
-    { 'icon', exists = true, matches_regexp = '^https:\\/\\/file\\.coffee\\/u\\/[a-zA-Z0-9_-]{7,14}\\.(png|jpeg|jpg|gif)$', 'InvalidIcon' }
+  local params = validate(self.params, types.shape {
+    name = custom_types.community_name,
+    icon = custom_types.image
   })
 
   local httpc = assert(http.new())
-  local status = assert(httpc:request_uri(self.params.icon, { method = 'HEAD' })).status
+  local status = assert(httpc:request_uri(params.icon, { method = 'HEAD' })).status
 
   helpers.assert_error(status == 200, { 400, 'InvalidIcon' })
 
   local community = assert(Communities:create({ -- TODO: handle all db errors
     id = assert(uuid()),
-    name = self.params.name, -- TODO: Differenciate between query params and form
-    icon = self.params.icon,
+    name = params.name, -- TODO: Differenciate between query params and form
+    icon = params.icon,
     large = true,
     owner_id = self.user.id,
     base_permissions = db.array({ Groups.permissions.READ_MESSAGES, Groups.permissions.SEND_MESSAGES })
