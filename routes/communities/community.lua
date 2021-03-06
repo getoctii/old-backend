@@ -2,7 +2,6 @@ local CommunitiesModel = require 'models.communities'
 local Members = require 'models.members'
 local Users = require 'models.users'
 local helpers = require 'lapis.application'
-local validate = require 'lapis.validate'
 local db = require 'lapis.db'
 local map = require 'array'.map
 local broadcast = require 'util.broadcast'
@@ -15,11 +14,12 @@ local MembersModel = require 'models.members'
 local engine = require 'util.permissions.engine'
 local GroupsModel = require 'models.groups'
 local Set = require 'pl.Set'
-local C = require 'pl.comprehension'.new()
 local resubscribe = require 'util.resubscribe'
-local Community = {}
+local validate = require 'util.validate'
+local types = require 'tableshape'.types
+local custom_types = require 'util.types'
 
-local permission_set = Set(C 'x for x=1,17' ())
+local Community = {}
 
 local function sort_channels(channels)
   table.sort(channels, function(a, b)
@@ -28,11 +28,11 @@ local function sort_channels(channels)
 end
 
 function Community:GET()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid
   })
 
-  local community = helpers.assert_error(CommunitiesModel:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
+  local community = helpers.assert_error(CommunitiesModel:find({ id = params.id }), { 404, 'CommunityNotFound' })
   helpers.assert_error(MembersModel:find({
     community_id = community.id,
     user_id = self.user.id
@@ -64,11 +64,12 @@ function Community:GET()
 end
 
 function Community:DELETE()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid
   })
+
   -- TODO: NOT ATOMIC BUT OK
-  local community = helpers.assert_error(CommunitiesModel:find({ id = self.params.id }), 'CommunityNotFound')
+  local community = helpers.assert_error(CommunitiesModel:find({ id = params.id }), 'CommunityNotFound')
   local member = helpers.assert_error(MembersModel:find({
     community_id = community.id,
     user_id = self.user.id
@@ -86,13 +87,13 @@ function Community:DELETE()
   end
 
   assert(db.delete('communities', {
-    id = self.params.id
+    id = params.id
   }))
   -- community:delete() TODO: Causes error, let's file an issue.
-  assert(db.delete('members', { community_id = self.params.id }))
-  assert(db.delete('channels', { community_id = self.params.id }))
-  assert(db.delete('groups', { community_id = self.params.id }))
-  assert(db.delete('invites', { community_id = self.params.id }))
+  assert(db.delete('members', { community_id = params.id }))
+  assert(db.delete('channels', { community_id = params.id }))
+  assert(db.delete('groups', { community_id = params.id }))
+  assert(db.delete('invites', { community_id = params.id }))
 
   -- TODO: Delete associated objects.
 
@@ -102,16 +103,16 @@ function Community:DELETE()
 end
 
 function Community:PATCH()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID' },
-    { 'icon', exists = true, optional = true, matches_regexp = '^https:\\/\\/file\\.coffee\\/u\\/[a-zA-Z0-9_-]{7,14}\\.(png|jpeg|jpg|gif)$', 'InvalidAvatar' },
-    { 'name', exists = true, optional = true, min_length = 2, max_length = 16, 'CommunityNameInvalid' },
-    { 'owner_id', exists = true, optional = true, is_uuid = true, 'InvalidOwnerUUID' },
-    { 'system_channel_id', exists = true, optional = true, 'InvalidChannelUUID'},
-    { 'base_permissions', exists = true, optional = true, is_array = true, 'InvalidPermissions' }
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid,
+    icon = custom_types.image:is_optional(),
+    name = custom_types.community_name:is_optional(),
+    owner_id = custom_types.uuid:is_optional(),
+    system_channel_id = custom_types.uuid:is_optional(),
+    base_permissions = custom_types.permissions:is_optional()
   })
 
-  local community = helpers.assert_error(CommunitiesModel:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
+  local community = helpers.assert_error(CommunitiesModel:find({ id = params.id }), { 404, 'CommunityNotFound' })
   local member = helpers.assert_error(MembersModel:find({
     community_id = community.id,
     user_id = self.user.id
@@ -119,49 +120,48 @@ function Community:PATCH()
 
   local patch = {}
 
-  if self.params.name then
+  if params.name then
     helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_COMMUNITY })), { 403, 'MissingPermissions' })
-    patch.name = self.params.name
+    patch.name = params.name
   end
 
-  if self.params.icon then
+  if params.icon then
     helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_COMMUNITY })), { 403, 'MissingPermissions' })
     local httpc = assert(http.new())
-    local status = assert(httpc:request_uri(self.params.icon, { method = 'HEAD' })).status
+    local status = assert(httpc:request_uri(params.icon, { method = 'HEAD' })).status
 
     helpers.assert_error(status == 200, { 400, 'InvalidIcon' })
-    patch.icon = self.params.icon
+    patch.icon = params.icon
   end
 
-  if self.params.owner_id then
+  if params.owner_id then
     helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.OWNER })), { 403, 'MissingPermissions' })
-    helpers.assert_error(Users:find({ id = self.params.owner_id }), { 404, 'UserNotFound' })
-    helpers.assert_error(Members:find({ user_id = self.params.owner_id, community_id = self.params.id }), { 404, 'UserNotFound' })
-    patch.owner_id = self.params.owner_id
+    helpers.assert_error(Users:find({ id = params.owner_id }), { 404, 'UserNotFound' })
+    helpers.assert_error(Members:find({ user_id = params.owner_id, community_id = params.id }), { 404, 'UserNotFound' })
+    patch.owner_id = params.owner_id
   end
 
-  if self.params.system_channel_id then
+  if params.system_channel_id then
     helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_COMMUNITY })), { 403, 'MissingPermissions' })
-    if self.params.system_channel_id ~= json.null then
-      local channel = helpers.assert_error(ChannelsModel:find({ id = self.params.system_channel_id }), { 404, 'ChannelNotFound' })
+    if params.system_channel_id ~= json.null then
+      local channel = helpers.assert_error(ChannelsModel:find({ id = params.system_channel_id }), { 404, 'ChannelNotFound' })
       helpers.assert_error(channel.community_id == community.id, { 404, 'ChannelNotFound' })
-      patch.system_channel_id = self.params.system_channel_id
+      patch.system_channel_id = params.system_channel_id
     else
       patch.system_channel_id = db.NULL
     end
   end
 
-  if self.params.base_permissions then
+  if params.base_permissions then
     helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_GROUPS })), { 403, 'MissingPermissions' })
-    helpers.assert_error(engine.can_update_permissions(member, Set(community.base_permissions), Set(self.params.base_permissions)), { 403, 'MissingPermissions' })
-    helpers.assert_error(type((self.params.base_permissions) == 'table') and ((Set(self.params.base_permissions) + permission_set) == permission_set), { 400, 'InvalidPermissions' })
-    patch.base_permissions = empty(self.params.base_permissions) and db.raw('array[]::integer[]') or db.array(Set.values(Set(self.params.base_permissions)))
+    helpers.assert_error(engine.can_update_permissions(member, Set(community.base_permissions), params.base_permissions), { 403, 'MissingPermissions' })
+    patch.base_permissions = #params.base_permissions == 0 and db.raw('array[]::integer[]') or db.array(Set.values(params.base_permissions))
   end
 
   helpers.assert_error(not empty(patch), { 400, 'InvalidPatch'})
   community:update(patch)
 
-  if self.params.base_permissions then
+  if params.base_permissions then
     resubscribe('community:' .. community.id)
   end
 

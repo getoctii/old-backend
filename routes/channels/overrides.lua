@@ -1,40 +1,30 @@
-local validate = require 'lapis.validate'
 local OverridesModel = require 'models.overrides'
 local helpers = require 'lapis.application'
 local Channels = require 'models.channels'
 local GroupsModel = require 'models.groups'
 local engine = require 'util.permissions.engine'
 local Set = require 'pl.Set'
-local array = require 'array'
 local db = require 'lapis.db'
 local MembersModel = require 'models.members'
-
-local permission_set = Set({
-  GroupsModel.permissions.READ_MESSAGES,
-  GroupsModel.permissions.SEND_MESSAGES,
-  GroupsModel.permissions.EMBED_LINKS,
-  GroupsModel.permissions.MENTION_MEMBERS,
-  GroupsModel.permissions.MENTION_GROUPS,
-  GroupsModel.permissions.MENTION_EVERYONE,
-  GroupsModel.permissions.MENTION_SOMEONE,
-  GroupsModel.permissions.MANAGE_MESSAGES
-})
+local validate = require 'util.validate'
+local types = require 'tableshape'.types
+local custom_types = require 'util.types'
 
 local Overrides = {}
 
 function Overrides:POST()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID' },
-    { 'group_id', exists = true, is_uuid = true, 'InvalidUUID' },
-    { 'allow', exists = true, is_array = true, 'InvalidAllow' },
-    { 'deny', exists = true, is_array = true, 'InvalidDeny' }
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid,
+    group_id = custom_types.uuid,
+    allow = custom_types.overrides,
+    deny = custom_types.overrides
   })
 
-  helpers.assert_error(type((self.params.allow) == 'table') and ((Set(self.params.allow) + permission_set) == permission_set), { 400, 'InvalidAllow' })
-  helpers.assert_error(type((self.params.deny) == 'table') and ((Set(self.params.deny) + permission_set) == permission_set), { 400, 'InvalidDeny' })
-
-  local channel = helpers.assert_error(Channels:find({ id = self.params.id }), { 404, 'ChannelNotFound' })
+  local channel = helpers.assert_error(Channels:find({ id = params.id }), { 404, 'ChannelNotFound' })
   helpers.assert_error(channel.community_id, { 404, 'ChannelNotFound' })
+
+  local group = helpers.assert_error(GroupsModel:find({ id = params.group_id }) { 404, 'GroupNotFound' })
+  helpers.assert_error(group.community_id == channel.community_id)
 
   local member = helpers.assert_error(MembersModel:find({
     community_id = channel.community_id,
@@ -44,10 +34,10 @@ function Overrides:POST()
   helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS })))
 
   OverridesModel:create({
-    channel_id = self.params.id,
-    group_id = self.params.group_id,
-    allow = array.empty(self.params.allow) and db.raw('array[]::integer[]') or db.array(Set.values(Set(self.params.allow))),
-    deny = array.empty(self.params.deny) and db.raw('array[]::integer[]') or db.array(Set.values(Set(self.params.deny)))
+    channel_id = params.id,
+    group_id = params.group_id,
+    allow = #params.allow == 0 and db.raw('array[]::integer[]') or db.array(Set.values(params.allow)),
+    deny = #self.params.deny == 0 and db.raw('array[]::integer[]') or db.array(Set.values(self.params.deny))
   })
 
   return {
@@ -57,22 +47,13 @@ function Overrides:POST()
 end
 
 function Overrides:PATCH()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID' },
-    { 'group_id', exists = true, is_uuid = true, 'InvalidUUID' },
-    { 'allow', exists = true, optional = true, is_array = true, 'InvalidAllow' },
-    { 'deny', exists = true, optional = true, is_array = true, 'InvalidDeny' }
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid,
+    allow = custom_types.overrides:is_optional(),
+    deny = custom_types.overrides:is_optional()
   })
 
-  if self.params.allow then
-    helpers.assert_error(type((self.params.allow) == 'table') and ((Set(self.params.allow) + permission_set) == permission_set), { 400, 'InvalidAllow' })
-  end
-
-  if self.params.deny then
-    helpers.assert_error(type((self.params.deny) == 'table') and ((Set(self.params.deny) + permission_set) == permission_set), { 400, 'InvalidDeny' })
-  end
-
-  local channel = helpers.assert_error(Channels:find({ id = self.params.id }), { 404, 'ChannelNotFound' })
+  local channel = helpers.assert_error(Channels:find({ id = params.id }), { 404, 'ChannelNotFound' })
   helpers.assert_error(channel.community_id, { 404, 'ChannelNotFound' })
 
   local member = helpers.assert_error(MembersModel:find({
@@ -83,14 +64,13 @@ function Overrides:PATCH()
   helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS })))
 
   local override = helpers.assert_error(OverridesModel:find({
-    channel_id = self.params.id,
-    group_id = self.params.group_id
+    channel_id = params.id,
+    group_id = params.group_id
   }), { 404, 'OverrideNotFound' })
 
   override:update({
-    allow = self.params.allow and (array.empty(self.params.permissions) and db.raw('array[]::integer[]') or db.array(Set.values(Set(self.params.allow)))) or nil,
-    deny = self.params.deny and (helpers.assert_error(type((self.params.deny) == 'table') and ((Set(self.params.deny) + permission_set) == permission_set), { 400, 'InvalidDeny' }) or nil
-  )
+    allow = params.allow and (#params.allow == 0 and db.raw('array[]::integer[]') or db.array(Set.values(params.allow))) or nil,
+    deny = params.deny and (#params.deny == 0 and db.raw('array[]::integer[]') or db.array(Set.values(params.deny))) or nil
   })
 
   return {

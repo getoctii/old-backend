@@ -1,4 +1,3 @@
-local validate = require 'lapis.validate'
 local helpers = require 'lapis.application'
 local map = require 'array'.map
 local contains = require 'array'.includes
@@ -8,17 +7,20 @@ local GroupsModel = require 'models.groups'
 local engine = require 'util.permissions.engine'
 local MembersModel = require 'models.members'
 local Set = require 'pl.Set'
+local validate = require 'util.validate'
+local types = require 'tableshape'.types
+local custom_types = require 'util.types'
 
 local Messages = require 'models.messages'
 
 local Message = {}
 
 function Message:GET()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, { 400, 'InvalidUUID' } }
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid
   })
 
-  local message = helpers.assert_error(Messages:find({ id = self.params.id }), { 404, 'MessageNotFound' })
+  local message = helpers.assert_error(Messages:find({ id = params.id }), { 404, 'MessageNotFound' })
   local channel = message:get_channel()
 
   if not channel.community_id then
@@ -47,11 +49,12 @@ function Message:GET()
 end
 
 function Message:PATCH()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, { 400, 'InvalidUUID' } },
-    { 'content', exists = true, min_length = 1, max_length = 2000, 'InvalidMessage'}
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid,
+    content = types.string:length(1, 2000)
   })
-  local message = helpers.assert_error(Messages:find({ id = self.params.id }), { 404, 'MessageNotFound' })
+
+  local message = helpers.assert_error(Messages:find({ id = params.id }), { 404, 'MessageNotFound' })
   local channel = message:get_channel()
   if not channel.community_id then
     helpers.assert_error(contains(map(channel:get_conversation():get_participants(), function(participant)
@@ -66,7 +69,7 @@ function Message:PATCH()
   end
   helpers.assert_error(message:get_author().id == self.user.id, { 403, 'MissingPermissions' })
   message:update({
-    content = self.params.content
+    content = params.content
   })
   message:refresh()
   local message_event = {
@@ -85,11 +88,11 @@ function Message:PATCH()
 end
 
 function Message:DELETE()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid
   })
 
-  local message = helpers.assert_error(Messages:find({ id = self.params.id }), { 404, 'MessageNotFound' })
+  local message = helpers.assert_error(Messages:find({ id = params.id }), { 404, 'MessageNotFound' })
   local channel = message:get_channel()
 
   if not channel.community_id then

@@ -4,7 +4,9 @@ local uuid = require 'util.uuid'
 local empty = require 'array'.is_empty
 local json = require 'cjson'
 local db = require 'lapis.db'
-local validate = require 'lapis.validate'
+local validate = require 'util.validate'
+local types = require 'tableshape'.types
+local custom_types = require 'util.types'
 
 local Codes = {}
 
@@ -42,12 +44,13 @@ function Codes:POST()
 end
 
 function Codes:DELETE()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid
   })
+
   helpers.assert_error(self.user.discriminator == 0, { 403, 'NotAllowed' })
-  
-  local code = helpers.assert_error(CodesModel:find({ id = self.params.id }), 'CodeNotFound')
+
+  local code = helpers.assert_error(CodesModel:find({ id = params.id }), 'CodeNotFound')
 
   assert(db.delete('codes', {
     id = code.id

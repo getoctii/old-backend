@@ -1,19 +1,20 @@
 local config = require 'lapis.config'.get()
-local validate = require 'lapis.validate'
 local NewsletterSubscribers = require 'models.newsletter_subscriptions'
 local http = require 'resty.http'
 local json = require 'cjson'
-local email = require 'util.email'
+local validate = require 'util.validate'
+local types = require 'tableshape'.types
+local custom_types = require 'util.types'
 
 local Newsletter = {}
 
 function Newsletter:POST()
-  validate.assert_valid(self.params, {
-    { 'email', exists = true, min_length = 3, max_length = 128, matches_regexp = email, 'InvalidEmail'}
+  local params = validate(self.params, types.shape {
+    email = custom_types.email
   })
 
-  if not NewsletterSubscribers:find({ email = self.params.email }) then
-    NewsletterSubscribers:create({ email = self.params.email })
+  if not NewsletterSubscribers:find({ email = params.email }) then
+    NewsletterSubscribers:create({ email = params.email })
     local httpc = assert(http.new())
     assert(httpc:request_uri(config.subscriptions_webhook, {
       method = 'POST',

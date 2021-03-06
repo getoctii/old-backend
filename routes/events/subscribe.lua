@@ -1,20 +1,24 @@
 local helpers = require 'lapis.application'
-local Users = require 'models.users'
+-- local Users = require 'models.users'
 
-local map = require 'array'.map
-local validate = require 'lapis.validate'
+-- local map = require 'array'.map
 
-local broadcast_multiple = require 'util.broadcast_multiple'
+-- local broadcast_multiple = require 'util.broadcast_multiple'
 local generate_grip_channels = require 'util.generate_grip_channels'
+
+local validate = require 'util.validate'
+local types = require 'tableshape'.types
+local custom_types = require 'util.types'
 
 local Subscribe = {}
 
 function Subscribe:GET()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid,
+    authorization = types.string:is_optional()
   })
 
-  helpers.assert_error(self.user.id == self.params.id, { 403, 'NotAllowed' })
+  helpers.assert_error(self.user.id == params.id, { 403, 'NotAllowed' })
 
   local all_grip_channels = generate_grip_channels(self.user)
 
@@ -44,7 +48,7 @@ function Subscribe:GET()
       ['Grip-Channel'] = table.concat(all_grip_channels, ','),
       ['Content-Type'] = 'text/event-stream',
       ['Grip-Keep-Alive'] = '\\n; format=cstring; timeout=30',
-      ['Grip-Link'] = string.format('</events/subscribe/%s?authorization=%s>; rel=next', self.user.id, self.req.headers.Authorization or self.params.authorization) -- TODO: Make this wayyy less hacky
+      ['Grip-Link'] = string.format('</events/subscribe/%s?authorization=%s>; rel=next', self.user.id, self.req.headers.Authorization or params.authorization) -- TODO: Make this wayyy less hacky
     }
   }
 end

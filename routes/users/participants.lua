@@ -1,7 +1,9 @@
 local Users = require 'models.users'
 local helpers = require 'lapis.application'
-local validate = require 'lapis.validate'
 local preload = require 'lapis.db.model'.preload
+local validate = require 'util.validate'
+local types = require 'tableshape'.types
+local custom_types = require 'util.types'
 
 local json = require 'cjson'
 
@@ -11,13 +13,13 @@ local empty = require 'array'.is_empty
 local Participants = {}
 
 function Participants:GET()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID'}
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid
   })
 
-  helpers.assert_error(self.params.id == self.user.id, { 403, 'InvalidUser' })
+  helpers.assert_error(params.id == self.user.id, { 403, 'InvalidUser' })
 
-  local participants = helpers.assert_error(Users:find({ id = self.params.id }), { 404, 'UserNotFound' }):get_participants()
+  local participants = helpers.assert_error(Users:find({ id = params.id }), { 404, 'UserNotFound' }):get_participants()
   preload(participants, { conversation = { 'participants', 'channel'} })
 
   local participant_stubs = map(participants, function(row)
@@ -40,8 +42,8 @@ function Participants:GET()
         -- TODO: This might be a bit inefficent, refactor.
         last_message_id = message.id,
         last_message_date = message.created_at,
-        participants = map(all_participants, function(row)
-          return row.user_id
+        participants = map(all_participants, function(user)
+          return user.user_id
         end)
       }
     }
