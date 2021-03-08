@@ -144,7 +144,7 @@ function Messages:POST()
 
   db.query('UPDATE mentions SET read = true FROM messages WHERE mentions.message_id = messages.id AND messages.channel_id = ?', channel.id)
 
-  if (not channel.community_id) or engine.has_community_permissions(MembersModel:find({ community_id = channel.community_id, user_id = self.user.id }), Set({ GroupsModel.permissions.MENTION_MEMBERS })) then
+  if (not channel.community_id) or engine.has_community_permissions(MembersModel:find({ community_id = channel.community_id, user_id = self.user.id }), Set({ GroupsModel.permissions.MENTION_MEMBERS }), channel) then
     local mentioned_users = {}
 
     -- TODO: Cleanup

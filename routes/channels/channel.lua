@@ -72,7 +72,9 @@ function Channel:GET()
       order = channel.order,
       type = channel.type,
       parent_id = channel.parent_id,
-      overrides = mapped_overrides
+      overrides = mapped_overrides,
+      base_allow = channel.base_allow,
+      base_deny = channel.base_deny
     }
   }
 end
@@ -131,19 +133,21 @@ function Channel:PATCH()
     description = types.string:length(0, 140):is_optional(),
     color = custom_types.color:is_optional(),
     parent = custom_types.uuid:is_optional(),
-    parent_order = types.number:is_optional()
+    parent_order = types.number:is_optional(),
+    base_allow = custom_types.overrides:is_optional(),
+    base_deny = custom_types.overrides:is_optional()
   })
 
   local channel = helpers.assert_error(ChannelsModel:find({ id = params.id }), { 404, 'ChannelNotFound' })
   if not channel.community_id then
     helpers.yield_error({ 400, 'InvalidChannel' })
-  else
-    local member = helpers.assert_error(MembersModel:find({
-      community_id = channel.community_id,
-      user_id = self.user.id
-    }), { 404, 'ChannelNotFound' })
-    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS }), channel), { 403, 'MissingPermissions' })
   end
+
+  local member = helpers.assert_error(MembersModel:find({
+    community_id = channel.community_id,
+    user_id = self.user.id
+  }), { 404, 'ChannelNotFound' })
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS }), channel), { 403, 'MissingPermissions' })
 
   local patch = {}
 
@@ -157,6 +161,16 @@ function Channel:PATCH()
 
   if params.color and channel.type == 1  then
     patch.color = params.color
+  end
+
+  if params.base_allow then
+    helpers.assert_error(engine.can_update_permissions(member, Set(channel.base_allow), params.base_allow), { 403, 'MissingPermissions' })
+    patch.base_allow = #params.base_allow == 0 and db.raw('array[]::integer[]') or db.array(Set.values(params.base_allow))
+  end
+
+  if params.base_deny then
+    helpers.assert_error(engine.can_update_permissions(member, Set(channel.base_deny), params.base_deny), { 403, 'MissingPermissions' })
+    patch.base_deny = #params.base_deny == 0 and db.raw('array[]::integer[]') or db.array(Set.values(params.base_deny))
   end
 
   if params.parent then

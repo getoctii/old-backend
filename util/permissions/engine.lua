@@ -3,7 +3,6 @@ local array = require 'array'
 local preload = require 'lapis.db.model'.preload
 local GroupsModel = require 'models.groups'
 local OverridesModel = require 'models.overrides'
-local inspect = require 'inspect'
 local engine = {}
 
 function engine.sum(permission_sets)
@@ -93,23 +92,21 @@ function engine.has_community_permissions(member, permissions, channel)
     return true
   end
 
-  print('Based on groups')
-  print(inspect(Set.values(total_permissions)))
-  print('A channel was passed: ' .. tostring(not not channel))
-
   if channel then
     local groups = engine.retrieve_groups(member)
 
     if channel.parent_id then
-      local accumulated_overrides = engine.calculate_total_overrides(channel:get_parent(), groups)
-      print('Based on parent')
-      print(inspect(accumulated_overrides.deny))
+      local parent = channel:get_parent()
+
+      total_permissions = total_permissions + Set(parent.base_allow) - Set(parent.base_deny)
+
+      local accumulated_overrides = engine.calculate_total_overrides(parent, groups)
       total_permissions = total_permissions + accumulated_overrides.allow - accumulated_overrides.deny
     end
 
+    total_permissions = total_permissions + Set(channel.base_allow) - Set(channel.base_deny)
+
     local accumulated_overrides = engine.calculate_total_overrides(channel, groups)
-    print('Based on channel')
-    print(inspect(accumulated_overrides.deny))
     total_permissions = total_permissions + accumulated_overrides.allow - accumulated_overrides.deny
   end
 
