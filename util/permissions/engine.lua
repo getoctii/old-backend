@@ -2,6 +2,8 @@ local Set = require 'pl.Set'
 local array = require 'array'
 local preload = require 'lapis.db.model'.preload
 local GroupsModel = require 'models.groups'
+local OverridesModel = require 'models.overrides'
+local inspect = require 'inspect'
 local engine = {}
 
 function engine.sum(permission_sets)
@@ -10,15 +12,55 @@ function engine.sum(permission_sets)
   end, Set())
 end
 
-function engine.retrieve_permissions(member)
-  local community = member:get_community()
+function engine.get_override_map(channel)
+  local overrides = OverridesModel:select('WHERE channel_id = ?', channel.id)
+  return overrides or {}
+end
 
+function engine.calculate_total_overrides(channel, groups)
+  local overrides = engine.get_override_map(channel)
+
+  local mapped_overrides = array.map(groups, function(group)
+    local override = overrides[group.id]
+
+    if override then
+      return {
+        allow = Set(override.allow),
+        deny = Set(override.deny)
+      }
+    end
+
+    return nil
+  end)
+
+  local accumulated_overrides = array.reduce(mapped_overrides, function(a, b)
+    return {
+      allow = a.allow + b.allow,
+      deny = a.deny + b.deny
+    }
+  end, { allow = Set(), deny = Set() })
+
+  return accumulated_overrides
+end
+
+function engine.retrieve_groups(member)
   local group_members = member:get_group_members()
   preload(group_members, 'group')
 
   local groups = array.map(group_members, function(group_member)
     return group_member:get_group()
   end)
+
+  table.sort(groups, function(a, b)
+    return a.order < b.order
+  end)
+
+  return groups
+end
+
+function engine.retrieve_permissions(member)
+  local community = member:get_community()
+  local groups = engine.retrieve_groups(member)
 
   local total_permissions = Set(community.base_permissions) + engine.sum(array.map(groups, function(group)
     return Set(group.permissions)
@@ -27,7 +69,7 @@ function engine.retrieve_permissions(member)
   return total_permissions
 end
 
-function engine.has_community_permissions(member, permissions)
+function engine.has_community_permissions(member, permissions, channel)
   local community = member:get_community()
 
   if member.user_id == community.owner_id then
@@ -38,6 +80,26 @@ function engine.has_community_permissions(member, permissions)
 
   if total_permissions[GroupsModel.permissions.ADMINISTRATOR] or total_permissions[GroupsModel.permissions.OWNER] then
     return true
+  end
+
+  print('Based on groups')
+  print(inspect(Set.values(total_permissions)))
+  print('A channel was passed: ' .. tostring(not not channel))
+
+  if channel then
+    local groups = engine.retrieve_groups(member)
+
+    if channel.parent_id then
+      local accumulated_overrides = engine.calculate_total_overrides(channel:get_parent(), groups)
+      print('Based on parent')
+      print(inspect(accumulated_overrides.deny))
+      total_permissions = total_permissions + accumulated_overrides.allow - accumulated_overrides.deny
+    end
+
+    local accumulated_overrides = engine.calculate_total_overrides(channel, groups)
+    print('Based on channel')
+    print(inspect(accumulated_overrides.deny))
+    total_permissions = total_permissions + accumulated_overrides.allow - accumulated_overrides.deny
   end
 
   return permissions < total_permissions

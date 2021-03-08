@@ -36,7 +36,7 @@ function Channel:GET()
       community_id = channel.community_id,
       user_id = self.user.id
     }), { 404, 'ChannelNotFound' })
-    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.READ_MESSAGES })), { 403, 'MissingPermissions' })
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.READ_MESSAGES }), channel), { 403, 'MissingPermissions' })
   end
 
   local read = Read:find({ user_id = self.user.id, channel_id = channel.id })
@@ -48,14 +48,14 @@ function Channel:GET()
     order = 'desc'
   })
 
-  local overrides = OverridesModel:find({ channel_id = channel.id })
+  local overrides = OverridesModel:select('WHERE channel_id = ?', channel.id)
   local mapped_overrides = {}
 
-  if overrides ~= nil then 
+  if overrides ~= nil then
     for _, override in ipairs(overrides) do
       mapped_overrides[override.group_id] = {
-        allow = override.allow,
-        deny = override.deny
+        allow = empty(override.allow) and json.empty_array or override.allow,
+        deny = empty(override.deny) and json.empty_array or override.deny
       }
     end
   end
@@ -90,7 +90,7 @@ function Channel:DELETE()
       community_id = channel.community_id,
       user_id = self.user.id
     }), { 404, 'ChannelNotFound' })
-    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS })), { 403, 'MissingPermissions' })
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS }), channel), { 403, 'MissingPermissions' })
   end
 
   if channel.parent_id then
@@ -142,7 +142,7 @@ function Channel:PATCH()
       community_id = channel.community_id,
       user_id = self.user.id
     }), { 404, 'ChannelNotFound' })
-    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS })), { 403, 'MissingPermissions' })
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS }), channel), { 403, 'MissingPermissions' })
   end
 
   local patch = {}

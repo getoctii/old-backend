@@ -27,6 +27,10 @@ local uuid_type = types.custom(function(value)
   end
 end)
 
+local function new_set(x)
+  return Set(x)
+end
+
 local hex = '[a-fA-f0-9]'
 local three = '^#' .. table.concat({ hex, hex, hex }, '') .. '$'
 local six = '^#' .. table.concat({ hex, hex, hex, hex, hex, hex }, '') .. '$'
@@ -43,7 +47,7 @@ return {
   uuid = uuid_type,
   image = regexp('^https:\\/\\/file\\.coffee\\/u\\/[a-zA-Z0-9_-]{7,14}\\.(png|jpeg|jpg|gif)$'),
   color = types.pattern(three) + types.pattern(six),
-  permissions = types.array_of(types.one_of(C 'x for x=1,17' () )) / Set,
+  permissions = types.array_of(types.one_of(C 'x for x=1,17' () )) / new_set,
   overrides = types.array_of(types.one_of({
     GroupsModel.permissions.READ_MESSAGES,
     GroupsModel.permissions.SEND_MESSAGES,
@@ -53,5 +57,5 @@ return {
     GroupsModel.permissions.MENTION_EVERYONE,
     GroupsModel.permissions.MENTION_SOMEONE,
     GroupsModel.permissions.MANAGE_MESSAGES
-  })) / Set
+  })) / new_set
 }

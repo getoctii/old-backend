@@ -9,6 +9,7 @@ local MembersModel = require 'models.members'
 local validate = require 'util.validate'
 local types = require 'tableshape'.types
 local custom_types = require 'util.types'
+
 local Overrides = {}
 
 function Overrides:POST()
@@ -30,7 +31,9 @@ function Overrides:POST()
     user_id = self.user.id
   }), { 404, 'ChannelNotFound' })
 
-  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS })))
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS }), channel), { 403, 'MissingPermissions' })
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.OWNER })) or (engine.get_highest_order(member) > group.order) , { 403, 'MissingPermissions' })
+  helpers.assert_error(engine.has_community_permissions(member, Set((params.allow or Set()) + (params.deny or Set()))), { 403, 'MissingPermissions' })
 
   OverridesModel:create({
     channel_id = params.id,
@@ -48,6 +51,7 @@ end
 function Overrides:PATCH()
   local params = validate(self.params, types.shape {
     id = custom_types.uuid,
+    group_id = custom_types.uuid,
     allow = custom_types.overrides:is_optional(),
     deny = custom_types.overrides:is_optional()
   })
@@ -60,12 +64,21 @@ function Overrides:PATCH()
     user_id = self.user.id
   }), { 404, 'ChannelNotFound' })
 
-  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS })))
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS }), channel), { 403, 'MissingPermissions' })
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.OWNER })) or (engine.get_highest_order(member) > group.order) , { 403, 'MissingPermissions' })
 
   local override = helpers.assert_error(OverridesModel:find({
     channel_id = params.id,
     group_id = params.group_id
   }), { 404, 'OverrideNotFound' })
+
+  if params.allow then
+    helpers.assert_error(engine.can_update_permissions(member, Set(override.allow), params.allow), { 403, 'MissingPermissions' })
+  end
+
+  if params.deny then
+    helpers.assert_error(engine.can_update_permissions(member, Set(override.deny), params.deny), { 403, 'MissingPermissions' })
+  end
 
   override:update({
     allow = params.allow and (#params.allow == 0 and db.raw('array[]::integer[]') or db.array(Set.values(params.allow))) or nil,
@@ -74,6 +87,37 @@ function Overrides:PATCH()
 
   return {
     status = 204,
+    layout = false
+  }
+end
+
+function Overrides:DELETE()
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid,
+    group_id = custom_types.uuid
+  })
+
+  local channel = helpers.assert_error(ChannelsModel:find({ id = params.id }), { 404, 'ChannelNotFound' })
+  helpers.assert_error(channel.community_id, { 404, 'ChannelNotFound' })
+
+  local member = helpers.assert_error(MembersModel:find({
+    community_id = channel.community_id,
+    user_id = self.user.id
+  }), { 404, 'ChannelNotFound' })
+
+  --TODO: KINDA NEED TO RETURN SIOMETHINBG OBN ASSERT FAILKKURE
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS }), channel), { 403, 'MissingPermissions' })
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.OWNER })) or (engine.get_highest_order(member) > group.order) , { 403, 'MissingPermissions' })
+
+  local override = helpers.assert_error(OverridesModel:find({
+    channel_id = params.id,
+    group_id = params.group_id
+  }), { 404, 'OverrideNotFound' })
+
+  override:delete()
+
+  return {
+    status = 200,
     layout = false
   }
 end

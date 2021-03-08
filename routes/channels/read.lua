@@ -30,7 +30,7 @@ function Read:POST()
       community_id = channel.community_id,
       user_id = self.user.id
     }), { 404, 'ChannelNotFound' })
-    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.READ_MESSAGES })), { 403, 'MissingPermissions' })
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.READ_MESSAGES }), channel), { 403, 'MissingPermissions' })
   end
 
   local read = ReadIndicators:find({ user_id = self.user.id, channel_id = channel.id })

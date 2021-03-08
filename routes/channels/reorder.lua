@@ -27,7 +27,7 @@ function Reorder:POST()
     user_id = self.user.id
   }), { 404, 'ChannelNotFound' })
 
-  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS })), { 403, 'MissingPermissions' })
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS }), channel), { 403, 'MissingPermissions' })
   helpers.assert_error(Set(params.order) == Set(map(channel:get_children(), function(row) return row.id end)), { 400, 'InvalidOrder' })
 
   reorder_channels(params.order)

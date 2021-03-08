@@ -32,7 +32,7 @@ function Message:GET()
       community_id = channel.community_id,
       user_id = self.user.id
     }), { 404, 'MessageNotFound' })
-    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.READ_MESSAGES })), { 403, 'MissingPermissions' })
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.READ_MESSAGES }), channel), { 403, 'MissingPermissions' })
   end
 
   return {
@@ -65,7 +65,7 @@ function Message:PATCH()
       community_id = channel.community_id,
       user_id = self.user.id
     }), { 404, 'MessageNotFound' })
-    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.SEND_MESSAGES })), { 403, 'MissingPermissions' })
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.SEND_MESSAGES }), channel), { 403, 'MissingPermissions' })
   end
   helpers.assert_error(message:get_author().id == self.user.id, { 403, 'MissingPermissions' })
   message:update({
@@ -105,7 +105,7 @@ function Message:DELETE()
       user_id = self.user.id
     }), { 404, 'MessageNotFound' })
     if not engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_MESSAGES })) then
-      helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.SEND_MESSAGES })), { 403, 'MissingPermissions' })
+      helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.SEND_MESSAGES }), channel), { 403, 'MissingPermissions' })
       helpers.assert_error(message:get_author().id == self.user.id, { 403, 'MissingPermissions' })
     end
   end
