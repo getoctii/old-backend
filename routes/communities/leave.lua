@@ -32,10 +32,7 @@ function Leave:POST()
 
   local member = MembersModel:find({ user_id = self.user.id, community_id = community.id })
 
-  -- TODO: investigate why obj:delete() errors
-  assert(db.delete('members', {
-    id = member.id
-  }))
+  member:delete()
 
   broadcast('user:' .. self.user.id, 'DELETED_MEMBER', {
     id = member.id,

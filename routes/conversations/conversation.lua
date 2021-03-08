@@ -59,7 +59,7 @@ function Conversation:POST()
 
   local from = assert(Participants:create({
     id = assert(uuid()),
-    user_id = recipient.id, -- TODO: check that acc exists
+    user_id = recipient.id,
     conversation_id = conversation.id
   }))
 

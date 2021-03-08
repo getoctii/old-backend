@@ -24,7 +24,7 @@ function Overrides:POST()
   helpers.assert_error(channel.community_id, { 404, 'ChannelNotFound' })
 
   local group = helpers.assert_error(GroupsModel:find({ id = params.group_id }), { 404, 'GroupNotFound' })
-  helpers.assert_error(group.community_id == channel.community_id)
+  helpers.assert_error(group.community_id == channel.community_id, { 404, 'GroupNotFound' })
 
   local member = helpers.assert_error(MembersModel:find({
     community_id = channel.community_id,
@@ -105,7 +105,6 @@ function Overrides:DELETE()
     user_id = self.user.id
   }), { 404, 'ChannelNotFound' })
 
-  --TODO: KINDA NEED TO RETURN SIOMETHINBG OBN ASSERT FAILKKURE
   helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS }), channel), { 403, 'MissingPermissions' })
   helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.OWNER })) or (engine.get_highest_order(member) > group.order) , { 403, 'MissingPermissions' })
 
