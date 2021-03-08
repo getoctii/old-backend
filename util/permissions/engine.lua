@@ -13,8 +13,19 @@ function engine.sum(permission_sets)
 end
 
 function engine.get_override_map(channel)
-  local overrides = OverridesModel:select('WHERE channel_id = ?', channel.id)
-  return overrides or {}
+  local overrides = OverridesModel:select('WHERE channel_id = ?', channel.id) or {}
+  local mapped = {}
+
+  if overrides then
+    for _, override in ipairs(overrides) do
+      mapped[override.group_id] = {
+        allow = override.allow,
+        deny = override.deny
+      }
+    end
+  end
+
+  return mapped
 end
 
 function engine.calculate_total_overrides(channel, groups)
