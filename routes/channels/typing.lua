@@ -10,6 +10,7 @@ local engine = require 'util.permissions.engine'
 local validate = require 'util.validate'
 local types = require 'tableshape'.types
 local custom_types = require 'util.types'
+local Set = require 'pl.Set'
 
 local Typing = {}
 
@@ -29,7 +30,7 @@ function Typing:POST()
       community_id = channel.community_id,
       user_id = self.user.id
     }), { 404, 'ChannelNotFound' })
-    helpers.assert_error(engine.has_community_permissions(member, { GroupsModel.permissions.SEND_MESSAGES }, channel), { 403, 'MissingPermissions' })
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.SEND_MESSAGES }), channel), { 403, 'MissingPermissions' })
   end
 
   local user = assert(Users:find({ id = self.user.id }))
