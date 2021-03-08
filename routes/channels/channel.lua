@@ -73,8 +73,8 @@ function Channel:GET()
       type = channel.type,
       parent_id = channel.parent_id,
       overrides = mapped_overrides,
-      base_allow = channel.base_allow,
-      base_deny = channel.base_deny
+      base_allow = empty(channel.base_allow) and json.empty_array or channel.base_allow,
+      base_deny = empty(channel.base_deny) and json.empty_array or channel.base_deny
     }
   }
 end
