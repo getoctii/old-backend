@@ -45,8 +45,11 @@ function Channels:GET()
     user_id = self.user.id
   }), { 404, 'CommunityNotFound' })
   helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.READ_MESSAGES })), { 403, 'MissingPermissions' })
+  local raw_channels = community:get_channels()
 
-  local channels = map(community:get_channels(), function(row)
+  local channels = map(array.filter(raw_channels, function(row)
+    return engine.has_community_permissions(member, Set({ GroupsModel.permissions.READ_MESSAGES }), row)
+  end), function(row)
     return {
       id = row.id,
       name = row.name,
