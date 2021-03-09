@@ -116,7 +116,7 @@ end
 
 function Groups:PATCH()
   local params = validate(self.params, types.shape {
-    order = types.array_of(types.number):is_optional()
+    order = types.array_of(types.string):is_optional()
   })
 
   local community = helpers.assert_error(Communities:find({ id = params.id }), { 404, 'CommunityNotFound' })
