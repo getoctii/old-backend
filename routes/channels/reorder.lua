@@ -16,7 +16,7 @@ local Reorder = {}
 function Reorder:POST()
   local params = validate(self.params, types.shape {
     id = custom_types.uuid,
-    order = types.array_of(types.number)
+    order = types.array_of(types.string)
   })
 
   local channel = helpers.assert_error(Channels:find({ id = params.id }), { 404, 'ChannelNotFound' })
