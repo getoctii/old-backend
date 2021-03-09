@@ -4,6 +4,7 @@ local email = require 'util.email'
 local C = require 'pl.comprehension'.new()
 local Set = require 'pl.Set'
 local GroupsModel = require 'models.groups'
+local json = require 'cjson'
 
 local function regexp(regex)
   return types.custom(function(value)
@@ -57,5 +58,6 @@ return {
     GroupsModel.permissions.MENTION_EVERYONE,
     GroupsModel.permissions.MENTION_SOMEONE,
     GroupsModel.permissions.MANAGE_MESSAGES
-  })) / new_set
+  })) / new_set,
+  null = types.literal(json.null)
 }

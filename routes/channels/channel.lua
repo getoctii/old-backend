@@ -132,7 +132,7 @@ function Channel:PATCH()
     name = custom_types.channel_name:is_optional(),
     description = types.string:length(0, 140):is_optional(),
     color = custom_types.color:is_optional(),
-    parent = custom_types.uuid:is_optional(),
+    parent = (custom_types.uuid + custom_types.null):is_optional(),
     parent_order = types.array_of(types.string):is_optional(),
     base_allow = custom_types.overrides:is_optional(),
     base_deny = custom_types.overrides:is_optional()
