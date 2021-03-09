@@ -128,7 +128,7 @@ end
 function Channels:PATCH()
   local params = validate(self.params, types.shape {
     id = custom_types.uuid,
-    order = types.number
+    order = types.array_of(types.number)
   })
 
   local community = helpers.assert_error(CommunitiesModel:find({ id = params.id }), { 404, 'CommunityNotFound' })
