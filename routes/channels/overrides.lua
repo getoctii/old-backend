@@ -64,6 +64,9 @@ function Overrides:PATCH()
     user_id = self.user.id
   }), { 404, 'ChannelNotFound' })
 
+  local group = helpers.assert_error(GroupsModel:find({ id = params.group_id }), { 404, 'GroupNotFound' })
+  helpers.assert_error(group.community_id == channel.community_id, { 404, 'GroupNotFound' })
+
   helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS }), channel), { 403, 'MissingPermissions' })
   helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.OWNER })) or (engine.get_highest_order(member) > group.order) , { 403, 'MissingPermissions' })
 
@@ -104,6 +107,9 @@ function Overrides:DELETE()
     community_id = channel.community_id,
     user_id = self.user.id
   }), { 404, 'ChannelNotFound' })
+
+  local group = helpers.assert_error(GroupsModel:find({ id = params.group_id }), { 404, 'GroupNotFound' })
+  helpers.assert_error(group.community_id == channel.community_id, { 404, 'GroupNotFound' })
 
   helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS }), channel), { 403, 'MissingPermissions' })
   helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.OWNER })) or (engine.get_highest_order(member) > group.order) , { 403, 'MissingPermissions' })
