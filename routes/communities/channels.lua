@@ -125,39 +125,4 @@ function Channels:POST()
   }
 end
 
-function Channels:PATCH()
-  local params = validate(self.params, types.shape {
-    id = custom_types.uuid,
-    order = types.array_of(types.string)
-  })
-
-  local community = helpers.assert_error(CommunitiesModel:find({ id = params.id }), { 404, 'CommunityNotFound' })
-
-  local member = helpers.assert_error(MembersModel:find({
-    community_id = community.id,
-    user_id = self.user.id
-  }), { 404, 'CommunityNotFound' })
-  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS })), { 403, 'MissingPermissions' })
-
-  if params.order then
-    helpers.assert_error(Set(params.order) == Set(map(array.filter(community:get_channels(), function(row)
-      return not row.parent_id
-    end), function(row)
-      return row.id
-    end)), { 400, 'InvalidOrder' })
-
-    reorder_channels(params.order)
-
-    broadcast('community:' .. community.id, 'REORDERED_CHANNELS', {
-      community_id = community.id,
-      order = params.order
-    })
-  end
-
-  return {
-    status = 204,
-    layout = false
-  }
-end
-
 return Channels
