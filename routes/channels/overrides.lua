@@ -9,6 +9,9 @@ local MembersModel = require 'models.members'
 local validate = require 'util.validate'
 local types = require 'tableshape'.types
 local custom_types = require 'util.types'
+local broadcast = require 'util.broadcast'
+local json = require 'cjson'
+local resubscribe = require 'util.resubscribe'
 
 local Overrides = {}
 
@@ -39,7 +42,16 @@ function Overrides:POST()
     channel_id = params.id,
     group_id = params.group_id,
     allow = #params.allow == 0 and db.raw('array[]::integer[]') or db.array(Set.values(params.allow)),
-    deny = #self.params.deny == 0 and db.raw('array[]::integer[]') or db.array(Set.values(self.params.deny))
+    deny = #params.deny == 0 and db.raw('array[]::integer[]') or db.array(Set.values(params.deny))
+  })
+
+  resubscribe('community:' .. channel.community_id)
+
+  broadcast('channel:' .. channel.id, 'NEW_OVERRIDE', {
+    channel_id = params.id,
+    group_id = params.group_id,
+    allow = #params.allow == 0 and json.empty_array or Set.values(params.allow),
+    deny = #params.deny == 0 and json.empty_array or Set.values(params.deny)
   })
 
   return {
@@ -88,6 +100,15 @@ function Overrides:PATCH()
     deny = params.deny and (#params.deny == 0 and db.raw('array[]::integer[]') or db.array(Set.values(params.deny))) or nil
   })
 
+  resubscribe('community:' .. channel.community_id)
+
+  broadcast('channel:' .. channel.id, 'UPDATED_OVERRIDE', {
+    channel_id = params.id,
+    group_id = params.group_id,
+    allow = #params.allow == 0 and json.empty_array or Set.values(params.allow),
+    deny = #params.deny == 0 and json.empty_array or Set.values(params.deny)
+  })
+
   return {
     status = 204,
     layout = false
@@ -120,6 +141,13 @@ function Overrides:DELETE()
   }), { 404, 'OverrideNotFound' })
 
   override:delete()
+
+  resubscribe('community:' .. channel.community_id)
+
+  broadcast('channel:' .. channel.id, 'DELETED_OVERRIDE', {
+    channel_id = params.id,
+    group_id = params.group_id
+  })
 
   return {
     status = 200,
