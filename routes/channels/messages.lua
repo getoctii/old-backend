@@ -24,7 +24,8 @@ local Messages = {}
 
 function Messages:GET()
   local params = validate(self.params, types.shape {
-    id = custom_types.uuid
+    id = custom_types.uuid,
+    last_message_id = custom_types.uuid:is_optional()
   })
 
   local channel = helpers.assert_error(Channels:find({ id = params.id }), { 404, 'ChannelNotFound' })
