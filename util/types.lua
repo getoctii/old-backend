@@ -1,0 +1,63 @@
+local types = require 'tableshape'.types
+local uuid = require 'resty.jit-uuid'
+local email = require 'util.email'
+local C = require 'pl.comprehension'.new()
+local Set = require 'pl.Set'
+local GroupsModel = require 'models.groups'
+local json = require 'cjson'
+
+local function regexp(regex)
+  return types.custom(function(value)
+    if not types.string(value) then return nil, 'Expected string' end
+
+    if ngx.re.match(value, regex, 'i') then
+      return true
+    else
+      return nil, 'Does not match regexp'
+    end
+  end)
+end
+
+local uuid_type = types.custom(function(value)
+  if not types.string(value) then return nil, 'Expected string' end
+
+  if uuid.is_valid(value) then
+    return true
+  else
+    return nil, 'Expected valid UUID'
+  end
+end)
+
+local function new_set(x)
+  return Set(x)
+end
+
+local hex = '[a-fA-f0-9]'
+local three = '^#' .. table.concat({ hex, hex, hex }, '') .. '$'
+local six = '^#' .. table.concat({ hex, hex, hex, hex, hex, hex }, '') .. '$'
+
+return {
+  username = types.string:length(3, 16) * types.pattern('^%a+$'),
+  group_name = types.string:length(2, 30) * regexp('^[a-zA-Z0-9_\\-]+$'),
+  community_name = types.string:length(2, 16),
+  channel_name = types.string:length(2, 30) * regexp('^[a-zA-Z0-9_\\-]+$'),
+  discriminator = types.range(0, 9999),
+  email = types.string:length(3, 128) * regexp(email),
+  password = types.string:length(8, 128),
+  regexp = regexp,
+  uuid = uuid_type,
+  image = regexp('^https:\\/\\/file\\.coffee\\/u\\/[a-zA-Z0-9_-]{7,14}\\.(png|jpeg|jpg|gif)$'),
+  color = types.pattern(three) + types.pattern(six),
+  permissions = types.array_of(types.one_of(C 'x for x=1,17' () )) / new_set,
+  overrides = types.array_of(types.one_of({
+    GroupsModel.permissions.READ_MESSAGES,
+    GroupsModel.permissions.SEND_MESSAGES,
+    GroupsModel.permissions.EMBED_LINKS,
+    GroupsModel.permissions.MENTION_MEMBERS,
+    GroupsModel.permissions.MENTION_GROUPS,
+    GroupsModel.permissions.MENTION_EVERYONE,
+    GroupsModel.permissions.MENTION_SOMEONE,
+    GroupsModel.permissions.MANAGE_MESSAGES
+  })) / new_set,
+  null = types.literal(json.null)
+}

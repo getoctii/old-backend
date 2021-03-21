@@ -1,5 +1,4 @@
 local ChannelsModel = require 'models.channels'
-local validate = require 'lapis.validate'
 local helpers = require 'lapis.application'
 local db = require 'lapis.db'
 local contains = require 'array'.includes
@@ -15,14 +14,37 @@ local Set = require 'pl.Set'
 local json = require 'cjson'
 local reorder_channels = require 'util.reorder_channels'
 local array = require 'array'
+local OverridesModel = require 'models.overrides'
+local validate = require 'util.validate'
+local types = require 'tableshape'.types
+local custom_types = require 'util.types'
+local inspect = require 'inspect'
+
+local function sort_channels(channels)
+  table.sort(channels, function(a, b)
+    return a.order < b.order
+  end)
+end
+
+local function insert_after(arr, before_item, after_item)
+  local index = array.index_of(arr, before_item)
+  if index == -1 then return arr end
+
+  return array.concat(
+    array.slice(arr, 1, index + 1),
+    { after_item },
+    array.slice(arr, index + 1)
+  )
+end
+
 local Channel = {}
 
 function Channel:GET()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid
   })
 
-  local channel = helpers.assert_error(ChannelsModel:find({ id = self.params.id }), { 404, 'ChannelNotFound' })
+  local channel = helpers.assert_error(ChannelsModel:find({ id = params.id }), { 404, 'ChannelNotFound' })
   if not channel.community_id then
     helpers.assert_error(contains(map(channel:get_conversation():get_participants(), function(participant)
       return participant.user_id
@@ -32,7 +54,7 @@ function Channel:GET()
       community_id = channel.community_id,
       user_id = self.user.id
     }), { 404, 'ChannelNotFound' })
-    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.READ_MESSAGES })), { 403, 'MissingPermissions' })
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.READ_MESSAGES }), channel), { 403, 'MissingPermissions' })
   end
 
   local read = Read:find({ user_id = self.user.id, channel_id = channel.id })
@@ -43,6 +65,18 @@ function Channel:GET()
     },
     order = 'desc'
   })
+
+  local overrides = OverridesModel:select('WHERE channel_id = ?', channel.id)
+  local mapped_overrides = {}
+
+  if overrides ~= nil then
+    for _, override in ipairs(overrides) do
+      mapped_overrides[override.group_id] = {
+        allow = empty(override.allow) and json.empty_array or override.allow,
+        deny = empty(override.deny) and json.empty_array or override.deny
+      }
+    end
+  end
 
   return {
     json = {
@@ -55,17 +89,20 @@ function Channel:GET()
       last_message_id = (pager:get_page()[1] or {}).id,
       order = channel.order,
       type = channel.type,
-      parent_id = channel.parent_id
+      parent_id = channel.parent_id,
+      overrides = mapped_overrides,
+      base_allow = empty(channel.base_allow) and json.empty_array or channel.base_allow,
+      base_deny = empty(channel.base_deny) and json.empty_array or channel.base_deny
     }
   }
 end
 
 function Channel:DELETE()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid
   })
 
-  local channel = helpers.assert_error(ChannelsModel:find({ id = self.params.id }), 'ChannelNotFound')
+  local channel = helpers.assert_error(ChannelsModel:find({ id = params.id }), 'ChannelNotFound')
   if not channel.community_id then
     helpers.yield_error({ 400, 'InvalidChannel' })
   else
@@ -73,7 +110,7 @@ function Channel:DELETE()
       community_id = channel.community_id,
       user_id = self.user.id
     }), { 404, 'ChannelNotFound' })
-    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS })), { 403, 'MissingPermissions' })
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS }), channel), { 403, 'MissingPermissions' })
   end
 
   if channel.parent_id then
@@ -93,7 +130,7 @@ function Channel:DELETE()
   end
 
   channel:delete()
-  assert(db.delete('messages', 'channel_id = ?', self.params.id))
+  assert(db.delete('messages', 'channel_id = ?', params.id))
 
   broadcast('community:' .. channel.community_id, 'DELETED_CHANNEL', {
     id = channel.id,
@@ -108,104 +145,149 @@ function Channel:DELETE()
 end
 
 function Channel:PATCH()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID' },
-    { 'name', exists = true, optional = true, matches_regexp = '^[a-zA-Z0-9_\\-]+$', min_length = 2, max_length = 30, 'ChannelNameInvalid' },
-    { 'description', exists = true, optional = true, max_length = 140, 'InvalidDescription' },
-    { 'color', exists = true, optional = true, is_color = true, 'InvalidColor' },
-    { 'parent', exists = true, optional = true, 'InvalidParentUUID' },
-    { 'parent_order', exists = true, optional = true, is_array = true, 'InvalidParentUUID' }
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid,
+    name = custom_types.channel_name:is_optional(),
+    description = types.string:length(0, 140):is_optional(),
+    color = custom_types.color:is_optional(),
+    parent = (custom_types.uuid + custom_types.null):is_optional(),
+    previous_channel_id = (custom_types.uuid + custom_types.null):is_optional(),
+    base_allow = custom_types.overrides:is_optional(),
+    base_deny = custom_types.overrides:is_optional()
   })
 
-  local channel = helpers.assert_error(ChannelsModel:find({ id = self.params.id }), { 404, 'ChannelNotFound' })
+  local channel = helpers.assert_error(ChannelsModel:find({ id = params.id }), { 404, 'ChannelNotFound' })
   if not channel.community_id then
     helpers.yield_error({ 400, 'InvalidChannel' })
-  else
-    local member = helpers.assert_error(MembersModel:find({
-      community_id = channel.community_id,
-      user_id = self.user.id
-    }), { 404, 'ChannelNotFound' })
-    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS })), { 403, 'MissingPermissions' })
   end
+
+  local member = helpers.assert_error(MembersModel:find({
+    community_id = channel.community_id,
+    user_id = self.user.id
+  }), { 404, 'ChannelNotFound' })
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS }), channel), { 403, 'MissingPermissions' })
 
   local patch = {}
 
-  if self.params.name then
-    patch.name = self.params.name
+  if params.name then
+    patch.name = params.name
   end
 
-  if self.params.description and channel.type == 1 then
-    patch.description = self.params.description
+  if params.description and channel.type == 1 then
+    patch.description = params.description
   end
 
-  if self.params.color and channel.type == 1  then
-    patch.color = self.params.color
+  if params.color and channel.type == 1  then
+    patch.color = params.color
   end
 
-  if self.params.parent then
-    helpers.assert_error(channel.type == 1 and channel.community_id, { 400, 'InvalidChannel' })
-    helpers.assert_error(self.params.parent_order, { 400, 'InvalidParentOrder' })
+  if params.base_allow then
+    helpers.assert_error(engine.can_update_permissions(member, Set(channel.base_allow), params.base_allow), { 403, 'MissingPermissions' })
+    patch.base_allow = #params.base_allow == 0 and db.raw('array[]::integer[]') or db.array(Set.values(params.base_allow))
+  end
 
-    if self.params.parent == json.null then
-      helpers.assert_error(Set(self.params.parent_order) == (Set(map(array.filter(channel:get_community():get_channels(), function(row)
-        return not row.parent_id
-      end), function(row)
-        return row.id
-      end)) + Set({ channel.id })), { 400, 'InvalidParentOrder' })
+  if params.base_deny then
+    helpers.assert_error(engine.can_update_permissions(member, Set(channel.base_deny), params.base_deny), { 403, 'MissingPermissions' })
+    patch.base_deny = #params.base_deny == 0 and db.raw('array[]::integer[]') or db.array(Set.values(params.base_deny))
+  end
 
-      if channel.parent_id then
+  if params.previous_channel_id and params.parent then
+    helpers.assert_error((channel.type == 1 or (channel.type == 2 and params.parent == json.null)) and channel.community_id, { 400, 'InvalidParent' })
+    if params.parent ~= json.null then
+      local parent = helpers.assert_error(ChannelsModel:find({ id = params.parent }), { 404, 'InvalidParent' })
+      helpers.assert_error(parent.community_id == channel.community_id and parent.type == ChannelsModel.types.CATEGORY, { 400, 'InvalidParent' })        
+    end
+
+    if params.previous_channel_id ~= json.null then
+      local previous_channel = helpers.assert_error(ChannelsModel:find({ id = params.previous_channel_id }), { 404, 'InvalidPrevious' })
+      helpers.assert_error(previous_channel.community_id == channel.community_id, { 400, 'InvalidPrevious' })
+    end
+
+    if not (channel.parent_id == params.parent or (params.parent == json.null and channel.parent_id == nil)) then
+      if channel.parent_id == nil then
+        local children = map(array.filter(channel:get_community():get_channels(), function(row)
+          return not row.parent_id
+        end), function(row) return row.id end)
+
+        reorder_channels(array.without(children, { channel.id }))
+
+        broadcast('community:' .. channel.community_id, 'REORDERED_CHANNELS', {
+          community_id = channel.community_id,
+          order = reorder_channels(array.without(children, { channel.id })),
+        })
+      else
         local children = map(channel:get_parent():get_children(), function(row) return row.id end)
         reorder_channels(array.without(children, { channel.id }))
-        broadcast('channel:' .. channel.parent_id, 'REORDERED_CHILDREN', {
-          id = channel.parent_id,
+
+        broadcast('channel:' .. channel:get_parent().id, 'REORDERED_CHILDREN', {
+          id = channel:get_parent().id,
           order = array.without(children, { channel.id }),
           community_id = channel.community_id,
         })
       end
+    end
 
-      reorder_channels(self.params.parent_order)
-      broadcast('community:' .. channel.community_id, 'REORDERED_CHANNELS', {
-        community_id = channel.community_id,
-        order = self.params.parent_order,
-      })
+    if params.previous_channel_id ~= json.null then
+      print('aaaaa')
+      if params.parent == json.null then
+        local children = array.filter(channel:get_community():get_channels(), function(row)
+          return not row.parent_id
+        end)
+        sort_channels(children)
 
-      patch.parent_id = db.NULL
-    else
-      local parent = helpers.assert_error(ChannelsModel:find({ id = self.params.parent }), { 404, 'CategoryNotFound' })
-      helpers.assert_error(parent.community_id == channel.community_id and parent.type == ChannelsModel.types.CATEGORY, { 400, 'InvalidParent'} )
-      helpers.assert_error(Set(self.params.parent_order) == (Set(map(parent:get_children(), function(row) return row.id end)) + Set({ channel.id })), { 400, 'InvalidParentOrder' })
+        reorder_channels(insert_after(array.without(map(children, function(row) return row.id end), { channel.id }), params.previous_channel_id, channel.id))
+        patch.parent_id = db.NULL
 
-      if channel.parent_id then
-        local children = map(channel:get_parent():get_children(), function(row) return row.id end)
-        reorder_channels(array.without(children, { channel.id }))
-        broadcast('channel:' .. channel.parent_id, 'REORDERED_CHILDREN', {
-          id = channel.parent_id,
-          order = array.without(children, { channel.id }),
+        broadcast('community:' .. channel.community_id, 'REORDERED_CHANNELS', {
           community_id = channel.community_id,
+          order = insert_after(children, params.previous_channel_id, channel.id),
         })
       else
-        local children = map(array.filter(channel:get_community():get_channels(), function(row)
+        local children = ChannelsModel:find({ id = params.parent }):get_children()
+        sort_channels(children)
+
+        reorder_channels(insert_after(array.without(map(children, function(row) return row.id end), { channel.id }), params.previous_channel_id, channel.id))
+        print(inspect(insert_after(array.without(map(children, function(row) return row.id end), { channel.id }), params.previous_channel_id, channel.id)))
+        patch.parent_id = params.parent
+
+        broadcast('channel:' .. params.parent, 'REORDERED_CHILDREN', {
+          id = params.parent,
+          order = insert_after(array.without(map(children, function(row) return row.id end), { channel.id }), params.previous_channel_id, channel.id),
+          community_id = channel.community_id,
+        })
+      end
+    elseif params.previous_channel_id == json.null then
+      if params.parent == json.null then
+        local children = array.filter(channel:get_community():get_channels(), function(row)
           return not row.parent_id
-        end), function(row) return row.id end)
-        reorder_channels(array.without(children, { channel.id }))
+        end)
+
+        sort_channels(children)
+
+        reorder_channels(array.concat({ channel.id }, array.without(map(children, function(row) return row.id end), { channel.id })))
+        patch.parent_id = db.NULL
+
         broadcast('community:' .. channel.community_id, 'REORDERED_CHANNELS', {
           community_id = channel.community_id,
           order = array.without(children, { channel.id }),
         })
+      else
+        local children = ChannelsModel:find({ id = params.parent }):get_children()
+        sort_channels(children)
+        reorder_channels(array.concat({ channel.id }, array.without(map(children, function(row) return row.id end), { channel.id })))
+        patch.parent_id = params.parent
+
+        broadcast('channel:' .. params.parent, 'REORDERED_CHILDREN', {
+          id = params.parent,
+          order = array.concat({ channel.id }, children),
+          community_id = channel.community_id,
+        })
       end
-
-      reorder_channels(self.params.parent_order)
-      broadcast('channel:' .. self.params.parent, 'REORDERED_CHILDREN', {
-        id = self.params.parent,
-        order = self.params.parent_order,
-        community_id = channel.community_id,
-      })
-
-      patch.parent_id = self.params.parent
     end
+
+    resubscribe('community:' .. channel.community_id)
   end
 
-  helpers.assert_error(not empty(patch), { 400, 'InvalidPatch' })
   channel:update(patch)
 
   broadcast('channel:' .. channel.id, 'UPDATED_CHANNEL', {

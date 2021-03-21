@@ -1,22 +1,23 @@
 local Users = require 'models.users'
-local validate = require 'lapis.validate'
 local helpers = require 'lapis.application'
 local preload = require 'lapis.db.model'.preload
+local validate = require 'util.validate'
+local types = require 'tableshape'.types
+local custom_types = require 'util.types'
 
 local json = require 'cjson'
 local empty = require 'array'.is_empty
-local reduce = require 'array'.reduce
 
 local Mentions = {}
 
 function Mentions:GET()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid
   })
 
-  helpers.assert_error(self.params.id == self.user.id, { 403, 'InvalidUser' })
+  helpers.assert_error(params.id == self.user.id, { 403, 'InvalidUser' })
 
-  local raw_mentions = helpers.assert_error(Users:find({ id = self.params.id }), { 404, 'UserNotFound' }):get_mentions()
+  local raw_mentions = helpers.assert_error(Users:find({ id = params.id }), { 404, 'UserNotFound' }):get_mentions()
   preload({ mentions = 'message' })
 
   local mentions = {}

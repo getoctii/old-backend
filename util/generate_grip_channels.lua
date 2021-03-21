@@ -1,6 +1,7 @@
 local preload = require 'lapis.db.model'.preload
 local map = require 'array'.map
 local flatten = require 'array'.flat
+local filter = require 'array'.filter
 local engine = require 'util.permissions.engine'
 local Set = require 'pl.Set'
 local GroupsModel = require 'models.groups'
@@ -14,7 +15,9 @@ return function(user)
   local grip_communities = map(communities, function (row) return 'community:' .. row.id end)
   local community_channels = flatten(map(members, function(member)
     if engine.has_community_permissions(member, Set({ GroupsModel.permissions.READ_MESSAGES })) then
-      return member:get_community():get_channels()
+      return filter(member:get_community():get_channels(), function(channel)
+        return engine.has_community_permissions(member, Set({ GroupsModel.permissions.READ_MESSAGES }), channel)
+      end)
     else
       return {}
     end

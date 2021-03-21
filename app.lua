@@ -6,17 +6,12 @@ local config = require 'lapis.config'.get()
 local jwt = require 'resty.jwt'
 local validators = require 'resty.jwt-validators'
 local raven = require 'raven'
-local rand = require 'openssl.rand'
 local UsersModel = require 'models.users'
-
-math.randomseed(math.floor(assert(rand.uniform(2^31 - 1))))
 
 local app = lapis.Application()
 app.include = function(self, a)
 	self.__class.include(self, a, nil, self)
 end
-
--- TODO: Handle JSON validation, not sure if lapis handles types.
 
 -- Validators
 require 'util.validators.uuid'

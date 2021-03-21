@@ -246,5 +246,9 @@ return {
 
       'PRIMARY KEY (channel_id, group_id)'
     })
+  end,
+  [1615183494] = function()
+    schema.add_column('channels', 'base_allow', types.integer { array = true, default = '{}' })
+    schema.add_column('channels', 'base_deny', types.integer { array = true, default = '{}' })
   end
 }

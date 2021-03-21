@@ -1,4 +1,3 @@
-local validate = require 'lapis.validate'
 local helpers = require 'lapis.application'
 local MembersModel = require 'models.members'
 local empty = require 'array'.is_empty
@@ -6,15 +5,18 @@ local json = require 'cjson'
 local map = require 'array'.map
 local engine = require 'util.permissions.engine'
 local Set = require 'pl.Set'
+local validate = require 'util.validate'
+local types = require 'tableshape'.types
+local custom_types = require 'util.types'
 
 local Member = {}
 
 function Member:GET()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidMemberUUID' }
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid
   })
 
-  local member = helpers.assert_error(MembersModel:find({ id = self.params.id }), 'MemberNotFound')
+  local member = helpers.assert_error(MembersModel:find({ id = params.id }), 'MemberNotFound')
 
   helpers.assert_error(MembersModel:find({
     community_id = member.community_id,

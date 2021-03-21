@@ -1,9 +1,11 @@
 local helpers = require 'lapis.application'
-local validate = require 'lapis.validate'
 local RelationshipsModel = require 'models.relationships'
 local array = require 'array'
 local json = require 'cjson'
 local Set = require 'pl.Set'
+local validate = require 'util.validate'
+local types = require 'tableshape'.types
+local custom_types = require 'util.types'
 
 local Relationships = {}
 
@@ -14,11 +16,11 @@ local function row_map(type)
 end
 
 function Relationships:GET()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID'}
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid
   })
 
-  helpers.assert_error(self.params.id == self.user.id, { 403, 'InvalidUser' })
+  helpers.assert_error(params.id == self.user.id, { 403, 'InvalidUser' })
 
   local relationships = RelationshipsModel:select('WHERE user_id = ? OR recipient_id = ?', self.user.id, self.user.id)
 

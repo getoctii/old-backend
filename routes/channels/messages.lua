@@ -1,4 +1,3 @@
-local validate = require 'lapis.validate'
 local helpers = require 'lapis.application'
 local contains = require 'array'.includes
 local map = require 'array'.map
@@ -17,15 +16,18 @@ local MembersModel = require 'models.members'
 local GroupsModel = require 'models.groups'
 local engine = require 'util.permissions.engine'
 local Set = require 'pl.Set'
+local validate = require 'util.validate'
+local types = require 'tableshape'.types
+local custom_types = require 'util.types'
 
 local Messages = {}
 
 function Messages:GET()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid
   })
 
-  local channel = helpers.assert_error(Channels:find({ id = self.params.id }), { 404, 'ChannelNotFound' })
+  local channel = helpers.assert_error(Channels:find({ id = params.id }), { 404, 'ChannelNotFound' })
   helpers.assert_error(channel.type == 1, { 400, 'ChannelNotText' })
 
   if not channel.community_id then
@@ -37,12 +39,12 @@ function Messages:GET()
       community_id = channel.community_id,
       user_id = self.user.id
     }), { 404, 'ChannelNotFound' })
-    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.READ_MESSAGES })), { 403, 'MissingPermissions' })
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.READ_MESSAGES }), channel), { 403, 'MissingPermissions' })
   end
 
-  local page = self.params.last_message_id and
-    db.query('SELECT * FROM (SELECT *, ROW_NUMBER() OVER (order by created_at desc) rank FROM "messages" WHERE "channel_id" = ? order by created_at desc) t WHERE rank > (SELECT rank FROM (SELECT *, ROW_NUMBER() OVER (order by created_at desc) rank FROM messages WHERE "channel_id" = ?) t2 WHERE id = ?) LIMIT 25', self.params.id, self.params.id, self.params.last_message_id)
-    or MessagesModel:select('WHERE channel_id = ? ORDER BY created_at DESC LIMIT 25', self.params.id)
+  local page = params.last_message_id and
+    db.query('SELECT * FROM (SELECT *, ROW_NUMBER() OVER (order by created_at desc) rank FROM "messages" WHERE "channel_id" = ? order by created_at desc) t WHERE rank > (SELECT rank FROM (SELECT *, ROW_NUMBER() OVER (order by created_at desc) rank FROM messages WHERE "channel_id" = ?) t2 WHERE id = ?) LIMIT 25', params.id, params.id, params.last_message_id)
+    or MessagesModel:select('WHERE channel_id = ? ORDER BY created_at DESC LIMIT 25', params.id)
 
   local messages = map(page, function(row)
     return {
@@ -65,11 +67,12 @@ function Messages:GET()
 end
 
 function Messages:POST()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID' },
-    { 'content', exists = true, min_length = 1, max_length = 2000, 'InvalidMessage'}
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid,
+    content = types.string:length(1, 2000)
   })
-  local channel = helpers.assert_error(Channels:find({ id = self.params.id }), { 404, 'ChannelNotFound' })
+
+  local channel = helpers.assert_error(Channels:find({ id = params.id }), { 404, 'ChannelNotFound' })
   helpers.assert_error(channel.type == 1, { 400, 'ChannelNotText' })
   if not channel.community_id then
     helpers.assert_error(contains(map(channel:get_conversation():get_participants(), function(participant)
@@ -80,13 +83,13 @@ function Messages:POST()
       community_id = channel.community_id,
       user_id = self.user.id
     }), { 404, 'ChannelNotFound' })
-    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.SEND_MESSAGES })), { 403, 'MissingPermissions' })
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.SEND_MESSAGES }), channel), { 403, 'MissingPermissions' })
   end
 
   local row = MessagesModel:create({
     id = uuid(),
     author_id = self.user.id,
-    content = self.params.content,
+    content = params.content,
     channel_id = channel.id,
     type = 1
   })
@@ -141,7 +144,7 @@ function Messages:POST()
 
   db.query('UPDATE mentions SET read = true FROM messages WHERE mentions.message_id = messages.id AND messages.channel_id = ?', channel.id)
 
-  if (not channel.community_id) or engine.has_community_permissions(MembersModel:find({ community_id = channel.community_id, user_id = self.user.id }), Set({ GroupsModel.permissions.MENTION_MEMBERS })) then
+  if (not channel.community_id) or engine.has_community_permissions(MembersModel:find({ community_id = channel.community_id, user_id = self.user.id }), Set({ GroupsModel.permissions.MENTION_MEMBERS }), channel) then
     local mentioned_users = {}
 
     -- TODO: Cleanup

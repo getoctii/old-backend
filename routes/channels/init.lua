@@ -12,6 +12,6 @@ app:match('channel', '/:id', guard(json_params(helpers.respond_to(require 'route
 app:match('read', '/:id/read', guard(json_params(helpers.respond_to(require 'routes.channels.read' ))))
 app:match('messages', '/:id/messages', guard(json_params(helpers.respond_to(require 'routes.channels.messages'))))
 app:match('typing', '/:id/typing',guard(json_params(helpers.respond_to(require 'routes.channels.typing' ))))
-app:match('reorder', '/:id/reorder',guard(json_params(helpers.respond_to(require 'routes.channels.reorder' ))))
+app:match('overrides', '/:id/overrides/:group_id', guard(json_params(helpers.respond_to(require 'routes.channels.overrides'))))
 
 return app

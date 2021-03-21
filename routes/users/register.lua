@@ -1,4 +1,3 @@
-local validate = require 'lapis.validate'
 local Users = require 'models.users'
 local argon2 = require 'argon2'
 local uuid = require 'util.uuid'
@@ -8,24 +7,26 @@ local generateLoginToken = require 'util.jwt'
 local Codes = require 'models.codes'
 local helpers = require 'lapis.application'
 local generateDiscriminator = require 'util.generatediscriminator'
-local email = require 'util.email'
 local config = require 'lapis.config'.get()
+local validate = require 'util.validate'
+local types = require 'tableshape'.types
+local custom_types = require 'util.types'
 
 local Register = {}
 
 function Register:POST()
-  validate.assert_valid(self.params, {
-    { 'username', exists = true, min_length = 3, max_length = 16, matches_pattern = '^%a+$', 'InvalidUsername' },
-    { 'password', exists = true, min_length = 8, max_length = 128, 'InvalidPassword' },
-    { 'email', exists = true, min_length = 3, max_length = 128, matches_regexp = email, 'InvalidEmail' },
-    { 'betaCode', exists = true, is_uuid = true, 'WrongBetaCode' }
+  local params = validate(self.params, types.shape {
+    username = custom_types.username,
+    password = custom_types.password,
+    email = custom_types.email,
+    betaCode = custom_types.uuid
   })
 
-  local code = helpers.assert_error(Codes:find({ id = self.params.betaCode }), { 400, 'WrongBetaCode' })
+  local code = helpers.assert_error(Codes:find({ id = params.betaCode }), { 400, 'WrongBetaCode' })
   if code.used then helpers.yield_error({ 400, 'WrongBetaCode' }) end
 
   local salt = encoding.encode_base64(assert(rand.bytes(32))) -- 256 bit salt because we paranoid bois
-  local hashed = assert(argon2.hash_encoded(self.params.password, salt, {
+  local hashed = assert(argon2.hash_encoded(params.password, salt, {
     variant = argon2.variants.argon2_id,
     parallelism = 2,
     m_cost = 2 ^ 18,
@@ -33,12 +34,12 @@ function Register:POST()
   }))
 
   local user = Users:create({
-    username = self.params.username,
+    username = params.username,
     password = hashed,
-    email = self.params.email,
+    email = params.email,
     id = assert(uuid()),
     avatar = config.default_profile_pictures[math.random(#config.default_profile_pictures)],
-    discriminator = generateDiscriminator(self.params.username)
+    discriminator = generateDiscriminator(params.username)
   })
 
   code:update({

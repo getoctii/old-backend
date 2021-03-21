@@ -1,4 +1,3 @@
-local validate = require 'lapis.validate'
 local helpers = require 'lapis.application'
 local InvitesModel = require 'models.invites'
 local MembersModel = require 'models.members'
@@ -8,18 +7,17 @@ local resubscribe = require 'util.resubscribe'
 local MessagesModel = require 'models.messages'
 local db = require 'lapis.db'
 local joinMessages = require 'util.messages'.joinMessages
+local validate = require 'util.validate'
+local types = require 'tableshape'.types
 
--- the leave messages are more like ban messages ngl
--- one was you leaving, the other is you being banned lmao
--- i mean we wont be adding bans in this release
 local Use = {}
 
 function Use:GET()
-  validate.assert_valid(self.params, {
-    { 'code', exists = true, 'InvalidCode' }
+  local params = validate(self.params, types.shape {
+    code = types.string
   })
 
-  local invite = helpers.assert_error(InvitesModel:find({ code = self.params.code }), 'InviteNotFound')
+  local invite = helpers.assert_error(InvitesModel:find({ code = params.code }), 'InviteNotFound')
   local community = invite:get_community()
 
   return {
@@ -38,11 +36,11 @@ end
 
 
 function Use:POST()
-  validate.assert_valid(self.params, {
-    { 'code', exists = true, 'InvalidCode' }
+  local params = validate(self.params, types.shape {
+    code = types.string
   })
 
-  local invite = helpers.assert_error(InvitesModel:find({ code = self.params.code }), { 404, 'InviteNotFound' })
+  local invite = helpers.assert_error(InvitesModel:find({ code = params.code }), { 404, 'InviteNotFound' })
   helpers.assert_error(not MembersModel:find({ community_id = invite.community_id, user_id = self.user.id }), { 400, 'AlreadyInCommunity' })
 
   local community = helpers.assert_error(invite:get_community(), { 404, 'InviteNotFound' })

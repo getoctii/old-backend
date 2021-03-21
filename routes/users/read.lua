@@ -1,8 +1,9 @@
-local Users = require 'models.users'
 local ReadIndicators = require 'models.read'
 local helpers = require 'lapis.application'
-local validate = require 'lapis.validate'
 local preload = require 'lapis.db.model'.preload
+local validate = require 'util.validate'
+local types = require 'tableshape'.types
+local custom_types = require 'util.types'
 
 local map = require 'array'.map
 local flatten = require 'array'.flat
@@ -11,11 +12,11 @@ local array = require 'array'
 local Read = {}
 
 function Read:GET()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID' }
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid
   })
 
-  helpers.assert_error(self.params.id == self.user.id, { 403, 'InvalidUser' })
+  helpers.assert_error(params.id == self.user.id, { 403, 'InvalidUser' })
   local members = self.user:get_members()
   local participants = self.user:get_participants()
 

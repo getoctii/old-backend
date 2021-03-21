@@ -1,4 +1,3 @@
-local validate = require 'lapis.validate'
 local Communities = require 'models.communities'
 local helpers = require 'lapis.application'
 local broadcast = require 'util.broadcast'
@@ -16,8 +15,9 @@ local db = require 'lapis.db'
 local MembersModel = require 'models.members'
 local engine = require 'util.permissions.engine'
 local resubscribe = require 'util.resubscribe'
-
-local permission_set = Set(C 'x for x=1,17' ())
+local validate = require 'util.validate'
+local types = require 'tableshape'.types
+local custom_types = require 'util.types'
 
 -- TODO: Non-atomic, is there some pure SQL way of doing this
 local function reorder_groups(order)
@@ -45,11 +45,11 @@ end
 local Groups = {}
 
 function Groups:GET()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID'}
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid
   })
 
-  local community = helpers.assert_error(Communities:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
+  local community = helpers.assert_error(Communities:find({ id = params.id }), { 404, 'CommunityNotFound' })
   helpers.assert_error(MembersModel:find({
     community_id = community.id,
     user_id = self.user.id
@@ -69,13 +69,13 @@ function Groups:GET()
 end
 
 function Groups:POST()
-  validate.assert_valid(self.params, {
-    { 'id', exists = true, is_uuid = true, 'InvalidUUID'},
-    { 'name', exists = true, matches_regexp = '^[a-zA-Z0-9_\\-]+$', min_length = 2, max_length = 30, 'GroupNameInvalid' },
-    { 'permissions', exists = true, optional = true, is_array = true, 'InvalidPermissions' }
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid,
+    name = custom_types.group_name,
+    permissions = custom_types.permissions:is_optional()
   })
 
-    local community = helpers.assert_error(Communities:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
+    local community = helpers.assert_error(Communities:find({ id = params.id }), { 404, 'CommunityNotFound' })
 
     local member = helpers.assert_error(MembersModel:find({
       community_id = community.id,
@@ -83,9 +83,8 @@ function Groups:POST()
     }), { 404, 'CommunityNotFound' })
     helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_GROUPS })), { 403, 'MissingPermissions' })
 
-    if self.params.permissions ~= nil then
-      helpers.assert_error(type((self.params.permissions) == 'table') and ((Set(self.params.permissions) + permission_set) == permission_set), { 400, 'InvalidPermissions' })
-      helpers.assert_error(engine.has_community_permissions(member, Set(self.params.permissions)), { 403, 'MissingPermissions' })
+    if params.permissions ~= nil then
+      helpers.assert_error(engine.has_community_permissions(member, params.permissions), { 403, 'MissingPermissions' })
     end
 
     local groups = community:get_groups()
@@ -93,9 +92,9 @@ function Groups:POST()
 
     local group = GroupsModel:create({
       id = uuid(),
-      name = self.params.name,
+      name = params.name,
       community_id = community.id,
-      permissions = self.params.permissions and (empty(self.params.permissions) and db.raw('array[]::integer[]') or db.array(Set.values(Set(self.params.permissions)))) or nil
+      permissions = params.permissions and (#params.permissions == 0 and db.raw('array[]::integer[]') or db.array(Set.values(params.permissions))) or nil
     })
 
     reorder_groups({ group.id, unpack(map(groups, function(row)
@@ -116,11 +115,11 @@ function Groups:POST()
 end
 
 function Groups:PATCH()
-  validate.assert_valid(self.params, {
-    { 'order', exists = true, optional = true, is_array = true, 'InvalidOrder' }
+  local params = validate(self.params, types.shape {
+    order = types.array_of(types.string):is_optional()
   })
 
-  local community = helpers.assert_error(Communities:find({ id = self.params.id }), { 404, 'CommunityNotFound' })
+  local community = helpers.assert_error(Communities:find({ id = params.id }), { 404, 'CommunityNotFound' })
 
   local member = helpers.assert_error(MembersModel:find({
     community_id = community.id,
@@ -128,8 +127,8 @@ function Groups:PATCH()
   }), { 404, 'CommunityNotFound' })
   helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_GROUPS })), { 403, 'MissingPermissions' })
 
-  if self.params.order then
-    helpers.assert_error(Set(self.params.order) == Set(map(community:get_groups(), function(row) return row.id end)), { 400, 'InvalidOrder' })
+  if params.order then
+    helpers.assert_error(Set(params.order) == Set(map(community:get_groups(), function(row) return row.id end)), { 400, 'InvalidOrder' })
 
     if not engine.has_community_permissions(member, Set({ GroupsModel.permissions.OWNER })) then
       local groups = community:get_groups()
@@ -142,18 +141,18 @@ function Groups:PATCH()
       end)
 
       if #protected_groups > 0 then
-        helpers.assert_error(array_equal(slice(self.params.order, (#self.params.order - #protected_groups) + 1), protected_groups), { 403, 'MissingPermissions' })
+        helpers.assert_error(array_equal(slice(params.order, (#params.order - #protected_groups) + 1), protected_groups), { 403, 'MissingPermissions' })
       end
     end
 
-    reorder_groups(self.params.order)
+    reorder_groups(params.order)
 
     -- lmao lag
     resubscribe('community:' .. community.id)
 
     broadcast('community:' .. community.id, 'REORDERED_GROUPS', {
       community_id = community.id,
-      order = self.params.order
+      order = params.order
     })
   end
 
