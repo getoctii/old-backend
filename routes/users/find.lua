@@ -9,7 +9,7 @@ local Find = {}
 function Find:GET()
   local params = validate(self.params, types.shape {
     username = custom_types.username,
-    discriminator = custom_types.discriminator
+    discriminator = custom_types.discriminator + (types.string / tonumber * custom_types.discriminator)
   })
 
   local user = helpers.assert_error(Users:find({
