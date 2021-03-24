@@ -250,5 +250,8 @@ return {
   [1615183494] = function()
     schema.add_column('channels', 'base_allow', types.integer { array = true, default = '{}' })
     schema.add_column('channels', 'base_deny', types.integer { array = true, default = '{}' })
+  end,
+  [1616546624] = function()
+    schema.add_column('users', 'developer', types.boolean { default = false })
   end
 }

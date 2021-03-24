@@ -41,6 +41,7 @@ function User:GET()
 
   if user.id == self.user.id or self.user.discriminator == 0 then
     info.email = user.email
+    info.developer = user.developer
   end
 
   return {
@@ -57,7 +58,8 @@ function User:PATCH()
     avatar = custom_types.image:is_optional(),
     status = types.string:length(0, 140):is_optional(),
     state = types.one_of({ 'online', 'idle', 'dnd', 'online' }):is_optional(),
-    color = custom_types.color:is_optional()
+    color = custom_types.color:is_optional(),
+    developer = types.boolean:is_optional()
   })
 
   helpers.assert_error(params.id == self.user.id, { 403, 'MissingPermissions' })
@@ -101,6 +103,10 @@ function User:PATCH()
 
   if params.color then
     patch.color = params.color
+  end
+
+  if params.developer then
+    patch.developer = params.developer
   end
 
   helpers.assert_error(not empty(patch), { 400, 'InvalidPatch'})
