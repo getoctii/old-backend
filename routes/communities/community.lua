@@ -58,7 +58,8 @@ function Community:GET()
       channels = channels,
       owner_id = community.owner_id,
       system_channel_id = community.system_channel_id,
-      base_permissions = empty(community.base_permissions) and json.empty_array or community.base_permissions
+      base_permissions = empty(community.base_permissions) and json.empty_array or community.base_permissions,
+      organization = community.organization
     }
   }
 end
@@ -109,7 +110,8 @@ function Community:PATCH()
     name = custom_types.community_name:is_optional(),
     owner_id = custom_types.uuid:is_optional(),
     system_channel_id = custom_types.uuid:is_optional(),
-    base_permissions = custom_types.permissions:is_optional()
+    base_permissions = custom_types.permissions:is_optional(),
+    organization = types.literal(true):is_optional()
   })
 
   local community = helpers.assert_error(CommunitiesModel:find({ id = params.id }), { 404, 'CommunityNotFound' })
@@ -139,6 +141,11 @@ function Community:PATCH()
     helpers.assert_error(Users:find({ id = params.owner_id }), { 404, 'UserNotFound' })
     helpers.assert_error(Members:find({ user_id = params.owner_id, community_id = params.id }), { 404, 'UserNotFound' })
     patch.owner_id = params.owner_id
+  end
+
+  if params.organization then
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.ADMINISTRATOR })), { 403, 'MissingPermissions' })
+    patch.organization = params.organization
   end
 
   if params.system_channel_id then

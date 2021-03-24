@@ -253,5 +253,8 @@ return {
   end,
   [1616546624] = function()
     schema.add_column('users', 'developer', types.boolean { default = false })
+  end,
+  [1616618673] = function()
+    schema.add_column('communities', 'organization', types.boolean { default = false })
   end
 }
