@@ -59,7 +59,7 @@ function User:PATCH()
     status = types.string:length(0, 140):is_optional(),
     state = types.one_of({ 'online', 'idle', 'dnd', 'online' }):is_optional(),
     color = custom_types.color:is_optional(),
-    developer = types.boolean:is_optional()
+    developer = types.literal(true):is_optional()
   })
 
   helpers.assert_error(params.id == self.user.id, { 403, 'MissingPermissions' })
