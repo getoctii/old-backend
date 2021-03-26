@@ -7,7 +7,8 @@ local Communities = Model:extend('communities', {
     { 'members', has_many = 'members' },
     { 'invites', has_many = 'invites' },
     { 'owner', belongs_to = 'users' },
-    { 'system_channel', belongs_to = 'channels' }
+    { 'system_channel', belongs_to = 'channels' },
+    { 'products', has_many = 'products', key = 'organization_id' }
   }
 })
 

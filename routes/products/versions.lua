@@ -1,0 +1,76 @@
+local encode_json = require 'pgmoon.json'.encode_json
+local validate = require 'util.validate'
+local types = require 'tableshape'.types
+local custom_types = require 'util.types'
+local helpers = require 'lapis.application'
+local array = require 'array'
+local json = require 'cjson'
+local ProductsModel = require 'models.products'
+local VersionsModel = require 'models.versions'
+local ResourcesModel = require 'models.resources'
+local db = require 'lapis.db'
+-- local uuid = require 'util.uuid'
+
+local Versions = {}
+
+function Versions:GET()
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid
+  })
+
+  local product = helpers.assert_error(ProductsModel:find(params.id), { 404, 'ProductNotFound' })
+  local versions = VersionsModel:select('WHERE product_id = ? ORDER BY number ASC', product.id)
+
+  local version_ids = array.map(versions, function(version)
+    return version.number
+  end)
+
+  return {
+    json = array.is_empty(version_ids) and json.empty_array or version_ids
+  }
+end
+
+function Versions:POST()
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid,
+    name = custom_types.community_name,
+    description = types.string:length(0, 140)
+  })
+
+  local product = helpers.assert_error(ProductsModel:find(params.id), { 404, 'ProductNotFound' })
+  local versions = VersionsModel:select('WHERE product_id = ? ORDER BY number ASC', product.id)
+
+  local next_number = #versions > 0 and versions[#versions].number + 1 or 1
+
+  local resources = product:get_resources()
+  local themes = array.map(array.filter(resources, function(resource)
+    return resource.type == ResourcesModel.types.THEME and resources.payload ~= db.NULL
+  end), function(resource)
+    return resource.payload
+  end)
+
+  local payload = {
+    themes = array.is_empty(themes) and json.empty_array or themes,
+    client = json.empty_array,
+    server = json.empty_array
+  }
+
+  local version = VersionsModel:create({
+    name = params.name,
+    description = params.description,
+    product_id = product.id,
+    number = next_number,
+    payload = db.raw(encode_json(payload))
+  })
+
+  return {
+    status = 201,
+    json = {
+      name = version.name,
+      description = version.description,
+      number = version.number
+    }
+  }
+end
+
+return Versions
