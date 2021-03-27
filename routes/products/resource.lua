@@ -3,6 +3,10 @@ local ResourcesModel = require 'models.resources'
 local types = require 'tableshape'.types
 local custom_types = require 'util.types'
 local helpers = require 'lapis.application'
+local MembersModel = require 'models.members'
+local engine = require 'util.permissions.engine'
+local Set = require 'pl.Set'
+local GroupsModel = require 'models.groups'
 
 local Resources = {}
 
@@ -14,6 +18,11 @@ function Resources:GET()
   })
 
   local resource = helpers.assert_error(ResourcesModel:find(params.resource_id), { 404, 'ResourceNotFound' })
+  local member = helpers.assert_error(MembersModel:find({
+    community_id = resource:get_product().organization_id,
+    user_id = self.user.id
+  }), { 403, 'MissingPermissions' })
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_PRODUCTS })), { 403, 'MissingPermissions' })
 
   return {
     json = {
@@ -32,6 +41,11 @@ function Resources:PATCH()
   })
 
   local resource = helpers.assert_error(ResourcesModel:find(params.resource_id), { 404, 'ResourceNotFound' })
+  local member = helpers.assert_error(MembersModel:find({
+    community_id = resource:get_product().organization_id,
+    user_id = self.user.id
+  }), { 403, 'MissingPermissions' })
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_PRODUCTS })), { 403, 'MissingPermissions' })
 
   resource:update({
     name = params.name
@@ -50,6 +64,11 @@ function Resources:DELETE()
   })
 
   local resource = helpers.assert_error(ResourcesModel:find(params.resource_id), { 404, 'ResourceNotFound' })
+  local member = helpers.assert_error(MembersModel:find({
+    community_id = resource:get_product().organization_id,
+    user_id = self.user.id
+  }), { 403, 'MissingPermissions' })
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_PRODUCTS })), { 403, 'MissingPermissions' })
   resource:delete()
 
   return {

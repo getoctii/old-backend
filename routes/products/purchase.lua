@@ -13,6 +13,7 @@ function Purchase:POST()
   })
 
   local product = helpers.assert_error(ProductsModel:find(params.id), { 404, 'ProductNotFound' })
+  helpers.assert_error(product.approved, { 404, 'ProductNotFound' })
 
   PurchasesModel:create({
     user_id = self.user.id,

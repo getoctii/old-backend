@@ -6,6 +6,10 @@ local custom_types = require 'util.types'
 local helpers = require 'lapis.application'
 local db = require 'lapis.db'
 local uuid = require 'util.uuid'
+local MembersModel = require 'models.members'
+local engine = require 'util.permissions.engine'
+local Set = require 'pl.Set'
+local GroupsModel = require 'models.groups'
 
 local theme_type = types.shape {
   colors = types.shape {
@@ -98,6 +102,11 @@ function Payload:GET()
   })
 
   local resource = helpers.assert_error(ResourcesModel:find(params.resource_id), { 404, 'ResourceNotFound' })
+  local member = helpers.assert_error(MembersModel:find({
+    community_id = resource:get_product().organization_id,
+    user_id = self.user.id
+  }), { 403, 'MissingPermissions' })
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_PRODUCTS })), { 403, 'MissingPermissions' })
 
   if resource.payload == db.NULL then
     return {
@@ -119,8 +128,17 @@ function Payload:PUT()
   })
 
   local resource = helpers.assert_error(ResourcesModel:find(params.resource_id), { 404, 'ResourceNotFound' })
+  local member = helpers.assert_error(MembersModel:find({
+    community_id = resource:get_product().organization_id,
+    user_id = self.user.id
+  }), { 403, 'MissingPermissions' })
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_PRODUCTS })), { 403, 'MissingPermissions' })
 
-  params.payload.id = uuid()
+  if resource.payload == db.NULL then
+    params.payload.id = uuid()
+  else
+    params.payload.id = resource.payload.id
+  end
 
   resource:update({
     payload = db.raw(encode_json(params.payload))

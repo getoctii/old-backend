@@ -3,6 +3,7 @@ local types = require 'tableshape'.types
 local ProductsModel = require 'models.products'
 local json = require 'cjson'
 local array = require 'array'
+local sanitize_sql_like = require 'util.sanitize_sql_like'
 
 local Search = {}
 
@@ -11,8 +12,7 @@ function Search:GET()
     query = types.string:length(1, 16)
   })
 
-  -- SECURITY: See thing with LIKE in other comment
-  local results = array.map(ProductsModel:select("WHERE approved = TRUE AND name LIKE '%' || ? || '%' LIMIT 5", params.query), function(product)
+  local results = array.map(ProductsModel:select("WHERE approved = TRUE AND name LIKE '%' || ? || '%' LIMIT 5", sanitize_sql_like(params.query)), function(product)
     return product.id
   end)
 

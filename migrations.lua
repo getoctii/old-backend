@@ -303,5 +303,11 @@ return {
   end,
   [1616731642] = function()
     schema.add_column('products', 'approved', types.boolean { default = false })
+  end,
+  [1616814093] = function()
+    schema.add_column('products', 'banner', types.text { null = true })
+  end,
+  [1616815731] = function()
+    schema.add_column('products', 'tagline', types.text { default = '' })
   end
 }

@@ -9,7 +9,10 @@ local ProductsModel = require 'models.products'
 local VersionsModel = require 'models.versions'
 local ResourcesModel = require 'models.resources'
 local db = require 'lapis.db'
--- local uuid = require 'util.uuid'
+local MembersModel = require 'models.members'
+local engine = require 'util.permissions.engine'
+local Set = require 'pl.Set'
+local GroupsModel = require 'models.groups'
 
 local Versions = {}
 
@@ -19,6 +22,12 @@ function Versions:GET()
   })
 
   local product = helpers.assert_error(ProductsModel:find(params.id), { 404, 'ProductNotFound' })
+  local member = helpers.assert_error(MembersModel:find({
+    community_id = product.organization_id,
+    user_id = self.user.id
+  }), { 403, 'MissingPermissions' })
+  helpers.assert_error(product.approved or engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_PRODUCTS })), { 403, 'MissingPermissions' })
+
   local versions = VersionsModel:select('WHERE product_id = ? ORDER BY number ASC', product.id)
 
   local version_ids = array.map(versions, function(version)
@@ -38,6 +47,11 @@ function Versions:POST()
   })
 
   local product = helpers.assert_error(ProductsModel:find(params.id), { 404, 'ProductNotFound' })
+  local member = helpers.assert_error(MembersModel:find({
+    community_id = product.organization_id,
+    user_id = self.user.id
+  }), { 403, 'MissingPermissions' })
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_PRODUCTS })), { 403, 'MissingPermissions' })
   local versions = VersionsModel:select('WHERE product_id = ? ORDER BY number ASC', product.id)
 
   local next_number = #versions > 0 and versions[#versions].number + 1 or 1

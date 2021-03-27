@@ -24,7 +24,8 @@ Groups.permissions = enum {
   MANAGE_COMMUNITY = 14,
   MANAGE_MESSAGES = 15,
   ADMINISTRATOR = 16,
-  OWNER = 17
+  OWNER = 17,
+  MANAGE_PRODUCTS = 18
 }
 
 return Groups

@@ -7,6 +7,10 @@ local json = require 'cjson'
 local ProductsModel = require 'models.products'
 local ResourcesModel = require 'models.resources'
 local uuid = require 'util.uuid'
+local MembersModel = require 'models.members'
+local engine = require 'util.permissions.engine'
+local Set = require 'pl.Set'
+local GroupsModel = require 'models.groups'
 
 local Resources = {}
 
@@ -16,6 +20,12 @@ function Resources:GET()
   })
 
   local product = helpers.assert_error(ProductsModel:find(params.id), { 404, 'ProductNotFound' })
+  local member = helpers.assert_error(MembersModel:find({
+    community_id = product.organization_id,
+    user_id = self.user.id
+  }), { 403, 'MissingPermissions' })
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_PRODUCTS })), { 403, 'MissingPermissions' })
+
   local resources = array.map(product:get_resources(), function(resource)
     return resource.id
   end)
@@ -33,6 +43,11 @@ function Resources:POST()
   })
 
   local product = helpers.assert_error(ProductsModel:find(params.id), { 404, 'ProductNotFound' })
+  local member = helpers.assert_error(MembersModel:find({
+    community_id = product.organization_id,
+    user_id = self.user.id
+  }), { 403, 'MissingPermissions' })
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_PRODUCTS })), { 403, 'MissingPermissions' })
 
   local resource = ResourcesModel:create({
     id = uuid(),

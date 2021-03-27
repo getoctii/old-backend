@@ -25,7 +25,8 @@ function Products:GET()
     community_id = community.id,
     user_id = self.user.id
   }), { 404, 'CommunityNotFound' })
-  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.ADMINISTRATOR })), { 403, 'MissingPermissions' })
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_PRODUCTS })), { 403, 'MissingPermissions' })
+  helpers.assert_error(community.organization, { 403, 'MissingPermissions' })
 
   local products = array.map(community:get_products(), function(product)
     return product.id
@@ -42,7 +43,9 @@ function Products:POST()
     id = custom_types.uuid,
     name = custom_types.community_name,
     icon = custom_types.image,
-    description = types.string:length(0, 140)
+    tagline = types.string:length(0, 140),
+    description = types.string:length(0, 2000),
+    banner = custom_types.image:is_optional()
   })
 
   local community = helpers.assert_error(Communities:find({ id = params.id }), { 404, 'CommunityNotFound' })
@@ -51,14 +54,17 @@ function Products:POST()
     community_id = community.id,
     user_id = self.user.id
   }), { 404, 'CommunityNotFound' })
-  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.ADMINISTRATOR })), { 403, 'MissingPermissions' })
+  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_PRODUCTS })), { 403, 'MissingPermissions' })
+  helpers.assert_error(community.organization, { 403, 'MissingPermissions' })
 
   local product = ProductsModel:create({
     id = uuid(),
     name = params.name,
     icon = params.icon,
+    tagline = params.tagline,
     description = params.description,
-    organization_id = community.id
+    organization_id = community.id,
+    banner = params.banner
   })
 
   return {
