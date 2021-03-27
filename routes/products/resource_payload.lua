@@ -134,7 +134,7 @@ function Payload:PUT()
   }), { 403, 'MissingPermissions' })
   helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_PRODUCTS })), { 403, 'MissingPermissions' })
 
-  if resource.payload == db.NULL then
+  if not resource.payload then
     params.payload.id = uuid()
   else
     params.payload.id = resource.payload.id
