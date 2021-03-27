@@ -11,6 +11,7 @@ local json = require 'cjson'
 local validate = require 'util.validate'
 local types = require 'tableshape'.types
 local custom_types = require 'util.types'
+local sanitize_sql_like = require 'util.sanitize_sql_like'
 
 local MembersSearch = {}
 
@@ -25,8 +26,7 @@ function MembersSearch:GET()
     community_id = community.id,
     user_id = self.user.id
   }), { 404, 'CommunityNotFound' })
-  -- SECURITY: Might want to revisit this query. If we made our username requirements less strict, someone could use metacharacters used for the like operator. This isn't an issue atm.
-  local filtered = Members:select("INNER JOIN users u ON members.user_id = u.id WHERE community_id = ? AND u.username LIKE '%' || ? || '%'", community.id, params.query)
+  local filtered = Members:select("INNER JOIN users u ON members.user_id = u.id WHERE community_id = ? AND u.username LIKE '%' || ? || '%'", community.id, sanitize_sql_like(params.query))
   preload(filtered, 'user')
 
   local members = map(filtered, function(row)

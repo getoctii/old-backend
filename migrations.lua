@@ -256,5 +256,58 @@ return {
   end,
   [1616618673] = function()
     schema.add_column('communities', 'organization', types.boolean { default = false })
+  end,
+  [1616645571] = function()
+    schema.create_table('products', {
+      { 'id', uuid },
+      { 'name', types.text },
+      { 'icon', types.text },
+      { 'description', types.text },
+      { 'organization_id', uuid }
+    })
+  end,
+  [1616717031] = function()
+    schema.create_table('resources', {
+      { 'id', uuid },
+      { 'name', types.text },
+      { 'type', types.integer },
+      { 'product_id', uuid }
+    })
+  end,
+  [1616720855] = function()
+    schema.add_column('resources', 'payload', 'json')
+  end,
+  [1616722872] = function()
+    schema.create_table('versions', {
+      { 'product_id', uuid },
+      { 'number', types.integer },
+      { 'payload', 'json NOT NULL'},
+
+      'PRIMARY KEY (product_id, number)'
+    })
+  end,
+  [1616723935] = function()
+    schema.add_column('versions', 'name', types.text)
+    schema.add_column('versions', 'description', types.text)
+  end,
+  [1616724761] = function()
+    schema.add_column('versions', 'approved', types.boolean { default = false })
+  end,
+  [1616730151] = function()
+    schema.create_table('purchases', {
+      { 'user_id', uuid },
+      { 'product_id', uuid },
+
+      'PRIMARY KEY (user_id, product_id)'
+    })
+  end,
+  [1616731642] = function()
+    schema.add_column('products', 'approved', types.boolean { default = false })
+  end,
+  [1616814093] = function()
+    schema.add_column('products', 'banner', types.text { null = true })
+  end,
+  [1616815731] = function()
+    schema.add_column('products', 'tagline', types.text { default = '' })
   end
 }

@@ -4,6 +4,7 @@ local email = require 'util.email'
 local C = require 'pl.comprehension'.new()
 local Set = require 'pl.Set'
 local GroupsModel = require 'models.groups'
+local ResourcesModel = require 'models.resources'
 local json = require 'cjson'
 
 local function regexp(regex)
@@ -48,7 +49,7 @@ return {
   uuid = uuid_type,
   image = regexp('^https:\\/\\/file\\.coffee\\/u\\/[a-zA-Z0-9_-]{7,14}\\.(png|jpeg|jpg|gif)$'),
   color = types.pattern(three) + types.pattern(six),
-  permissions = types.array_of(types.one_of(C 'x for x=1,17' () )) / new_set,
+  permissions = types.array_of(types.one_of(C 'x for x=1,18' () )) / new_set,
   overrides = types.array_of(types.one_of({
     GroupsModel.permissions.READ_MESSAGES,
     GroupsModel.permissions.SEND_MESSAGES,
@@ -59,5 +60,10 @@ return {
     GroupsModel.permissions.MENTION_SOMEONE,
     GroupsModel.permissions.MANAGE_MESSAGES
   })) / new_set,
-  null = types.literal(json.null)
+  null = types.literal(json.null),
+  resource_type = types.one_of({
+    ResourcesModel.types.THEME,
+    ResourcesModel.types.CLIENT_INTEGRATION,
+    ResourcesModel.types.SERVER_INTEGRATION
+  })
 }

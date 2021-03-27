@@ -137,4 +137,6 @@ app:include('routes.groups')
 app:include('routes.admin')
 app:include('routes.members')
 app:include('routes.relationships')
+app:include('routes.products')
+
 return app
