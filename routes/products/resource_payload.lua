@@ -10,6 +10,7 @@ local MembersModel = require 'models.members'
 local engine = require 'util.permissions.engine'
 local Set = require 'pl.Set'
 local GroupsModel = require 'models.groups'
+local tablex = require 'pl.tablex'
 
 local theme_type = types.shape {
   colors = types.shape {
@@ -129,7 +130,12 @@ function Payload:PUT()
     resource_id = custom_types.uuid
   })
 
-  local payload = validate(self.params.POST, theme_bundle_type)
+
+  local tmp = tablex.copy(self.params)
+  tmp.id = nil
+  tmp.resource_id = nil
+
+  local payload = validate(tmp, theme_bundle_type)
 
   local resource = helpers.assert_error(ResourcesModel:find(params.resource_id), { 404, 'ResourceNotFound' })
   local member = helpers.assert_error(MembersModel:find({
