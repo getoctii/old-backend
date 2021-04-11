@@ -11,7 +11,6 @@ local engine = require 'util.permissions.engine'
 local Set = require 'pl.Set'
 local GroupsModel = require 'models.groups'
 local tablex = require 'pl.tablex'
-local inspect = require 'inspect'
 
 local theme_type = types.shape {
   colors = types.shape {
@@ -135,7 +134,6 @@ function Payload:PUT()
   local tmp = tablex.copy(self.params)
   tmp.id = nil
   tmp.resource_id = nil
-  print(inspect(tmp))
   local payload = validate(tmp, theme_bundle_type)
 
   local resource = helpers.assert_error(ResourcesModel:find(params.resource_id), { 404, 'ResourceNotFound' })
