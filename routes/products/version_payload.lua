@@ -18,14 +18,13 @@ function Payload:GET()
   })
 
   local version = helpers.assert_error(VersionsModel:find({ product_id = params.id, number = params.version_id }), { 404, 'VersionNotFound' })
-  local member = helpers.assert_error(MembersModel:find({
-    community_id = version:get_product().organization_id,
-    user_id = self.user.id
-  }), { 403, 'MissingPermissions' })
-  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_PRODUCTS })) or (version:get_product().approved and PurchasesModel:find({
+  helpers.assert_error((version:get_product().approved and PurchasesModel:find({
     user_id = self.user.id,
     product_id = version.product_id
-  })), { 403, 'MissingPermissions' })
+  })) or engine.has_community_permissions(helpers.assert_error(MembersModel:find({
+    community_id = version:get_product().organization_id,
+    user_id = self.user.id
+  }), { 403, 'MissingPermissions' }), Set({ GroupsModel.permissions.MANAGE_PRODUCTS })) or , { 403, 'MissingPermissions' })
 
   return {
     json = version.payload
