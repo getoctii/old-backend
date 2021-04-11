@@ -17,11 +17,10 @@ function Product:GET()
   })
 
   local product = helpers.assert_error(ProductsModel:find(params.id), { 404, 'ProductNotFound' })
-  local member = helpers.assert_error(MembersModel:find({
+  helpers.assert_error(product.approved or engine.has_community_permissions(helpers.assert_error(MembersModel:find({
     community_id = product.organization_id,
     user_id = self.user.id
-  }), { 403, 'MissingPermissions' })
-  helpers.assert_error(product.approved or engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_PRODUCTS })), { 403, 'MissingPermissions' })
+  }), { 403, 'MissingPermissions' }), Set({ GroupsModel.permissions.MANAGE_PRODUCTS })), { 403, 'MissingPermissions' })
 
   return {
     json = {
