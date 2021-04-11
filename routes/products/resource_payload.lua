@@ -121,11 +121,15 @@ function Payload:GET()
 end
 
 function Payload:PUT()
-  local params = validate(self.params, types.shape {
+  local params = validate({
+    id = self.params.id,
+    resource_id = self.params.resource_id
+  }, types.shape {
     id = custom_types.uuid,
-    resource_id = custom_types.uuid,
-    payload = theme_bundle_type
+    resource_id = custom_types.uuid
   })
+
+  local payload = validate(self.params.POST, theme_bundle_type)
 
   local resource = helpers.assert_error(ResourcesModel:find(params.resource_id), { 404, 'ResourceNotFound' })
   local member = helpers.assert_error(MembersModel:find({
@@ -135,13 +139,13 @@ function Payload:PUT()
   helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_PRODUCTS })), { 403, 'MissingPermissions' })
 
   if not resource.payload then
-    params.payload.id = uuid()
+    payload.id = uuid()
   else
-    params.payload.id = resource.payload.id
+    payload.id = resource.payload.id
   end
 
   resource:update({
-    payload = db.raw(encode_json(params.payload))
+    payload = db.raw(encode_json(payload))
   })
 
   return {
