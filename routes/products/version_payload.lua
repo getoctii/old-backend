@@ -24,7 +24,7 @@ function Payload:GET()
   })) or engine.has_community_permissions(helpers.assert_error(MembersModel:find({
     community_id = version:get_product().organization_id,
     user_id = self.user.id
-  }), { 403, 'MissingPermissions' }), Set({ GroupsModel.permissions.MANAGE_PRODUCTS })) or , { 403, 'MissingPermissions' })
+  }), { 403, 'MissingPermissions' }), Set({ GroupsModel.permissions.MANAGE_PRODUCTS })), { 403, 'MissingPermissions' })
 
   return {
     json = version.payload
