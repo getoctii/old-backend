@@ -136,7 +136,6 @@ function Payload:PUT()
   tmp.id = nil
   tmp.resource_id = nil
   print(inspect(tmp))
-  print(theme_bundle_type:transform(tmp))
   local payload = validate(tmp, theme_bundle_type)
 
   local resource = helpers.assert_error(ResourcesModel:find(params.resource_id), { 404, 'ResourceNotFound' })
