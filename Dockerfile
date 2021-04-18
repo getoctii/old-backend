@@ -26,4 +26,4 @@ RUN chmod +x /usr/src/app/docker.sh
 
 # /usr/src/app/docker.sh lapis migrate && lapis server
 
-ENTRYPOINT sh
+ENTRYPOINT sleep infinity
