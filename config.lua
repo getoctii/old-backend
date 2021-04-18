@@ -2,8 +2,8 @@ local config = require 'lapis.config'
 
 config('development', {
   postgres = {
-    host = os.getenv('NOMAD_UPSTREAM_ADDR_postgres'),
-    port = tonumber(os.getenv('NOMAD_UPSTREAM_PORT_postgres')),
+    host = os.getenv('POSTGRES_IP'),
+    port = tonumber(os.getenv('POSTGRES_PORT')),
     user = 'neko',
     password = os.getenv('POSTGRES_PASSWORD'),
     database = 'neko',
