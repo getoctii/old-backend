@@ -24,4 +24,4 @@ COPY . .
 RUN mkdir /usr/src/app/temp
 RUN chmod +x /usr/src/app/docker.sh
 
-ENTRYPOINT /usr/src/app/docker.sh lapis migrate && lapis server
+ENTRYPOINT /usr/src/app/docker.sh echo "$POSTGRES_HOST" && lapis migrate && lapis server
