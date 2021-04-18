@@ -11,5 +11,4 @@ nginx.conf.compiled
 /.luarocks
 temp/**
 !temp/.gitkeep
-config.lua
 keys
