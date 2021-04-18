@@ -1,6 +1,6 @@
 local config = require 'lapis.config'
 
-config('development', {
+config('production', {
   postgres = {
     host = '127.0.0.1',
     user = 'neko',
@@ -11,7 +11,7 @@ config('development', {
     public = 'keys/public.pem',
     private = 'keys/private.pem'
   },
-  code_cache = 'off',
+  code_cache = 'on',
   default_profile_pictures = {
     'img1',
     'img2'
