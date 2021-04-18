@@ -20,9 +20,8 @@ RUN \
   /usr/local/openresty/luajit/bin/luarocks install tableshape
 
 COPY . .
-COPY pushpin /etc/pushpin
 
 RUN mkdir /usr/src/app/temp
 RUN chmod +x /usr/src/app/docker.sh
 
-ENTRYPOINT /usr/src/app/docker.sh echo "$GATEWAY_ADDR" > /etc/pushpin/routes && lapis migrate && lapis server
+ENTRYPOINT /usr/src/app/docker.sh lapis migrate && lapis server
