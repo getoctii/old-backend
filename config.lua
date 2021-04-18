@@ -21,5 +21,5 @@ config('development', {
   ssl_certificate = '/etc/ssl/cert.pem',
   port = tonumber(os.getenv('NOMAD_PORT_gateway')),
   pushpin = 'http://' .. os.getenv('NOMAD_ADDR_pushpin_admin'),
-  resolver = '127.0.0.11 ipv6=off'
+  resolver = '1.1.1.1'
 })
