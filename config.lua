@@ -18,6 +18,6 @@ config('development', {
   },
   ssl_certificate = '/etc/ssl/cert.pem',
   port = tonumber(os.getenv('NOMAD_PORT_gateway')),
-  pushpin = 'http://' .. os.getenv('NOMAD_ADDR_pushpin_admin'),
+  pushpin = 'http://' .. os.getenv('PUSHPIN_ADMIN'),
   resolver = '1.1.1.1'
 })
