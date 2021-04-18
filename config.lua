@@ -17,7 +17,7 @@ config('development', {
     'img2'
   },
   ssl_certificate = '/etc/ssl/cert.pem',
-  port = tonumber(os.getenv('NOMAD_PORT_gateway')),
+  port = 8086,
   pushpin = 'http://' .. os.getenv('PUSHPIN_ADMIN'),
   resolver = '1.1.1.1'
 })
