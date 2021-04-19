@@ -2,7 +2,7 @@ local config = require 'lapis.config'
 
 config('production', {
   postgres = {
-    host = '127.0.0.1',
+    host = 'postgres',
     user = 'neko',
     password = 'neko',
     database = 'neko',
