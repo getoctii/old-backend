@@ -8,21 +8,20 @@ services:
       POSTGRES_DB: octii
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      # If you ever need to access the DB from an external tool
-      - 5432:5432
   pushpin:
     image: fanout/pushpin
     volumes:
-      - ./pushpin:/etc/pushpin
-    ports: 
+      - pushpin:/etc/pushpin
+    ports:
       - 7999:7999
   gateway:
-    build: .
+    image: registry.innatical.com/project-neko/client-gateway:latest
     volumes:
       - ./config.lua:/usr/src/app/config.lua
-      - ./keys:/usr/src/app/keys
+      - keys:/usr/src/app/keys
     depends_on:
       - postgres
 volumes:
   postgres_data:
+  keys:
+  pushpin:

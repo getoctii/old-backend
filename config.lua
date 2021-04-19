@@ -4,7 +4,7 @@ config('production', {
   postgres = {
     host = '127.0.0.1',
     user = 'neko',
-    password = os.getenv('POSTGRES_PASSWORD'),
+    password = 'neko',
     database = 'neko',
   },
   jwt = {
@@ -18,6 +18,6 @@ config('production', {
   },
   ssl_certificate = '/etc/ssl/cert.pem',
   port = 8086,
-  pushpin = 'http://' .. os.getenv('PUSHPIN_ADMIN'),
+  pushpin = 'http://pushpin:5561',
   resolver = '1.1.1.1'
 })
