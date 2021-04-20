@@ -228,7 +228,6 @@ function Channel:PATCH()
     end
 
     if params.previous_channel_id ~= json.null then
-      print('aaaaa')
       if params.parent == json.null then
         local children = array.filter(channel:get_community():get_channels(), function(row)
           return not row.parent_id

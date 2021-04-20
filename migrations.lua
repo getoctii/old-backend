@@ -309,5 +309,12 @@ return {
   end,
   [1616815731] = function()
     schema.add_column('products', 'tagline', types.text { default = '' })
+  end,
+  [1618937126] = function()
+    schema.create_table('voice_rooms', {
+      { 'id', uuid },
+      { 'server', uuid },
+      { 'channel_id', uuid }
+    })
   end
 }

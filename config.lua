@@ -16,6 +16,12 @@ config('production', {
     'img1',
     'img2'
   },
+  voice_servers = {
+    ['8f50bcb4-996e-4182-8f78-abdc6cdf7756'] = {
+      public_url = 'https://voice.octii.chat',
+      private_url = 'http://voice:8081',
+    }
+  },
   ssl_certificate = '/etc/ssl/cert.pem',
   port = 8086,
   pushpin = 'http://pushpin:5561',

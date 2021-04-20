@@ -13,5 +13,6 @@ app:match('read', '/:id/read', guard(json_params(helpers.respond_to(require 'rou
 app:match('messages', '/:id/messages', guard(json_params(helpers.respond_to(require 'routes.channels.messages'))))
 app:match('typing', '/:id/typing',guard(json_params(helpers.respond_to(require 'routes.channels.typing' ))))
 app:match('overrides', '/:id/overrides/:group_id', guard(json_params(helpers.respond_to(require 'routes.channels.overrides'))))
+app:match('join', '/:id/join', guard(json_params(helpers.respond_to(require 'routes.channels.join'))))
 
 return app
