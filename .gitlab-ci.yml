@@ -39,8 +39,8 @@ deploy:
     - chmod 644 ~/.ssh/known_hosts
   environment:
     name: production
-    url: api.chat.innatical.com
+    url: gateway.octii.chat
   script:
-    - ssh neko@10.0.0.6 'cd /home/neko/client-gateway && git pull && lapis migrate production && lapis build production'
+    - ssh ci@192.168.0.180 'cd /home/ci/operations && git pull && docker stack deploy --with-registry-auth --compose-file docker-compose.yml neko'
   only:
     - master
