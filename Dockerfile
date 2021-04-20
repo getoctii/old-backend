@@ -24,4 +24,6 @@ COPY . .
 RUN mkdir /usr/src/app/temp
 RUN chmod +x /usr/src/app/docker.sh
 
+ENV ENVIROMENT="production"
+
 ENTRYPOINT /usr/src/app/docker.sh lapis migrate production && lapis server production

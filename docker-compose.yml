@@ -3,25 +3,27 @@ services:
   postgres:
     image: postgres
     environment:
-      POSTGRES_PASSWORD: octii
-      POSTGRES_USER: octii
-      POSTGRES_DB: octii
+      POSTGRES_PASSWORD: neko
+      POSTGRES_USER: neko
+      POSTGRES_DB: neko
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    ports:
+      # If you ever need to access the DB from an external tool
+      - 5432:5432
   pushpin:
     image: fanout/pushpin
     volumes:
-      - pushpin:/etc/pushpin
+      - ./pushpin:/etc/pushpin
     ports:
       - 7999:7999
   gateway:
-    image: registry.innatical.com/project-neko/client-gateway:latest
+    build: .
     volumes:
-      - ./config.lua:/usr/src/app/config.lua
-      - keys:/usr/src/app/keys
+      - ./keys:/usr/src/app/keys
     depends_on:
       - postgres
+    environment:
+      - ENVIROMENT=development
 volumes:
   postgres_data:
-  keys:
-  pushpin:
