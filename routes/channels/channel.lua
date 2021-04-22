@@ -192,7 +192,7 @@ function Channel:PATCH()
   end
 
   if params.previous_channel_id and params.parent then
-    helpers.assert_error((channel.type == 1 or (channel.type == 2 and params.parent == json.null)) and channel.community_id, { 400, 'InvalidParent' })
+    helpers.assert_error((channel.type == 1 or channel.type == 3 or (channel.type == 2 and params.parent == json.null)) and channel.community_id, { 400, 'InvalidParent' })
     if params.parent ~= json.null then
       local parent = helpers.assert_error(ChannelsModel:find({ id = params.parent }), { 404, 'InvalidParent' })
       helpers.assert_error(parent.community_id == channel.community_id and parent.type == ChannelsModel.types.CATEGORY, { 400, 'InvalidParent' })        
