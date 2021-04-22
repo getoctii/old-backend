@@ -41,7 +41,7 @@ config('production', {
   },
   voice_servers = {
     ['8f50bcb4-996e-4182-8f78-abdc6cdf7756'] = {
-      public_url = 'https://voice_server.octii.chat',
+      public_url = 'https://voice.octii.chat',
       private_url = 'http://voice_server:8081',
     }
   },
