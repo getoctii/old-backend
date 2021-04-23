@@ -16,7 +16,12 @@ config('development', {
     'img1',
     'img2'
   },
-  voice_servers = {},
+  voice_servers = {
+    ['56186404-d176-44e5-9176-b05b0f1e5c02'] = {
+      public_url = 'ws://localhost:8080',
+      private_url = 'http://host.docker.internal:8081'
+    }
+  },
   ssl_certificate = '/etc/ssl/cert.pem',
   port = 8086,
   pushpin = 'http://pushpin:5561',

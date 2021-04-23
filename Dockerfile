@@ -26,4 +26,4 @@ RUN chmod +x /usr/src/app/docker.sh
 
 ENV ENVIROMENT="production"
 
-ENTRYPOINT /usr/src/app/docker.sh lapis migrate production && lapis server production
+ENTRYPOINT /usr/src/app/docker.sh lapis migrate $ENVIROMENT && lapis server $ENVIROMENT
