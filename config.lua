@@ -53,5 +53,6 @@ config('production', {
   ssl_certificate = '/etc/ssl/cert.pem',
   port = 8086,
   pushpin = 'http://pushpin:5561',
+  push = 'http://push:8080',
   resolver = '127.0.0.11'
 })
