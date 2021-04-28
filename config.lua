@@ -47,7 +47,7 @@ config('production', {
   voice_servers = {
     ['8f50bcb4-996e-4182-8f78-abdc6cdf7756'] = {
       public_url = 'wss://voice.octii.chat',
-      private_url = 'http://voice_server:8081',
+      private_url = 'http://192.168.0.181:8081',
     }
   },
   ssl_certificate = '/etc/ssl/cert.pem',
