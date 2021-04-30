@@ -11,6 +11,7 @@ local VoiceRooms = require 'models.voice_rooms'
 local http = require 'resty.http'
 local json = require 'cjson'
 local config = require 'lapis.config'.get()
+local jwt = require 'resty.jwt'
 
 local Join = {}
 
@@ -22,6 +23,31 @@ local function to_pairs(tbl)
   end
 
   return output
+end
+
+local function generate_voice_token(room_id, user_id)
+  local keyfile = assert(io.open(config.jwt.voice, 'r'))
+  local key = assert(keyfile:read('a'))
+  keyfile:close()
+  local time = os.time()
+
+  local table = {
+    header = {
+      typ = 'JWT',
+      alg = 'RS256'
+    },
+    payload = {
+      iss = 'gateway.octii.chat',
+      aud = 'voice.octii.chat',
+      sub = user_id,
+      iat = time,
+      nbf = time,
+      exp = time + 30,
+      room = room_id
+    }
+  }
+
+  return jwt:sign(key, table)
 end
 
 function Join:POST()
@@ -49,7 +75,7 @@ function Join:POST()
       json = {
         server = config.voice_servers[room.server].public_url,
         room_id = room.id,
-        token = nil
+        token = generate_voice_token(room.id, self.user.id)
       }
     }
   else
@@ -76,7 +102,7 @@ function Join:POST()
       json = {
         server = config.voice_servers[room.server].public_url,
         room_id = room.id,
-        token = nil
+        token = generate_voice_token(room.id, self.user.id)
       }
     }
   end
