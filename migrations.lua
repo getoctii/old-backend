@@ -316,5 +316,8 @@ return {
       { 'server', uuid },
       { 'channel_id', uuid }
     })
+  end,
+  [1619821237] = function()
+    schema.add_column('voice_rooms', 'users', types.text { array = true, default = '{}' })
   end
 }

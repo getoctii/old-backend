@@ -15,6 +15,7 @@ local Set = require 'pl.Set'
 local validate = require 'util.validate'
 local types = require 'tableshape'.types
 local custom_types = require 'util.types'
+local VoiceRooms = require 'models.voice_rooms'
 
 local Channels = {}
 
@@ -50,6 +51,14 @@ function Channels:GET()
   local channels = map(array.filter(raw_channels, function(row)
     return engine.has_community_permissions(member, Set({ GroupsModel.permissions.READ_MESSAGES }), row)
   end), function(row)
+    local voice_users = (VoiceRooms:find({
+      channel_id = row.id
+    }) or {}).users
+
+    if row.type == 3 and (not voice_users or empty(voice_users)) then
+      voice_users = json.empty_array
+    end
+
     return {
       id = row.id,
       name = row.name,
@@ -57,7 +66,8 @@ function Channels:GET()
       color = row.color,
       order = row.order,
       type = row.type,
-      parent_id = row.parent_id
+      parent_id = row.parent_id,
+      voice_users = voice_users
     }
   end)
 

@@ -41,7 +41,7 @@ app:before_filter(function(self)
     return
   end
 
-  if self.route_name ~= 'users.login' and self.route_name ~= 'users.register' and self.route_name ~= 'users.newsletter' then
+  if self.route_name ~= 'users.login' and self.route_name ~= 'users.register' and self.route_name ~= 'users.newsletter' and self.route_name ~= 'voice.users' and self.route_name ~= 'voice.started' then
     local key_file = assert(io.open(config.jwt.public))
     local key = assert(key_file:read('a'))
     key_file:close()

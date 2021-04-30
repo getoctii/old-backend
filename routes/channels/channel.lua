@@ -19,6 +19,7 @@ local validate = require 'util.validate'
 local types = require 'tableshape'.types
 local custom_types = require 'util.types'
 local inspect = require 'inspect'
+local VoiceRooms = require 'models.voice_rooms'
 
 local function sort_channels(channels)
   table.sort(channels, function(a, b)
@@ -78,6 +79,14 @@ function Channel:GET()
     end
   end
 
+  local voice_users = (VoiceRooms:find({
+    channel_id = channel.id
+  }) or {}).users
+
+  if channel.type == 3 and (not voice_users or empty(voice_users)) then
+    voice_users = json.empty_array
+  end
+
   return {
     json = {
       id = channel.id,
@@ -92,7 +101,8 @@ function Channel:GET()
       parent_id = channel.parent_id,
       overrides = mapped_overrides,
       base_allow = empty(channel.base_allow) and json.empty_array or channel.base_allow,
-      base_deny = empty(channel.base_deny) and json.empty_array or channel.base_deny
+      base_deny = empty(channel.base_deny) and json.empty_array or channel.base_deny,
+      voice_users = voice_users
     }
   }
 end

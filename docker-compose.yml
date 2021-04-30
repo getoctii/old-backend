@@ -21,6 +21,7 @@ services:
     build: .
     volumes:
       - ./keys:/usr/src/app/keys
+      - ./config.lua:/usr/src/app/config.lua
     depends_on:
       - postgres
     environment:
