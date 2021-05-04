@@ -1,0 +1,56 @@
+local encode_json = require 'pgmoon.json'.encode_json
+local Users = require 'models.users'
+local helpers = require 'lapis.application'
+local validate = require 'util.validate'
+local types = require 'tableshape'.types
+local json = require 'cjson'
+local db = require 'lapis.db'
+local custom_types = require 'util.types'
+
+local Keychain = {}
+
+local keypair = types.shape {
+  privateKey = types.array_of(types.integer),
+  publicKey = types.array_of(types.integer),
+  salt = types.array_of(types.integer),
+  iv = types.array_of(types.integer)
+}
+
+local chain = types.shape {
+  encryption = keypair,
+  signing = keypair,
+  tokenSalt = types.array_of(types.integer)
+}
+
+function Keychain:GET()
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid
+  })
+
+  helpers.assert_error(params.id == self.user.id, { 403, 'InvalidUser' })
+  local user = helpers.assert_error(Users:find({ id = params.id }), { 404, 'UserNotFound' })
+
+  return {
+    json = user.keychain == db.null and json.null or user.keychain
+  }
+end
+
+function Keychain:PUT()
+  local params = validate(self.params, types.shape {
+    id = custom_types.uuid,
+    keychain = chain
+  })
+
+  helpers.assert_error(params.id == self.user.id, { 403, 'InvalidUser' })
+  local user = helpers.assert_error(Users:find({ id = params.id }), { 404, 'UserNotFound' })
+
+  user:update({
+    keychain = db.raw(encode_json(params.keychain))
+  })
+
+  return {
+    layout = false
+  }
+end
+
+return Keychain

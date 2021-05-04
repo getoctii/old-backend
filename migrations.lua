@@ -316,5 +316,8 @@ return {
       { 'server', uuid },
       { 'channel_id', uuid }
     })
+  end,
+  [1620088180] = function()
+    schema.add_column('users', 'keychain', 'json')
   end
 }
