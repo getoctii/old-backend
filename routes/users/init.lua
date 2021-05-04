@@ -21,6 +21,6 @@ app:match('notifications', '/:id/notifications', guard(json_params(respond_to(re
 app:match('relationships', '/:id/relationships', guard(json_params(respond_to(require 'routes.users.relationships'))))
 app:match('purchases', '/:id/purchases', guard(json_params(respond_to(require 'routes.users.purchases'))))
 app:match('organizations', '/:id/organizations', guard(json_params(respond_to(require 'routes.users.organizations'))))
-app:math('keychain', '/:id/keychain', guard(json_params(respond_to(require 'routes.users.keychain'))))
+app:match('keychain', '/:id/keychain', guard(json_params(respond_to(require 'routes.users.keychain'))))
 
 return app
