@@ -8,7 +8,7 @@ app.__base = app
 app.name = "voice."
 app.path = "/voice"
 
-app:match('voice', '', guard(json_params(respond_to(require 'routes.voice.voice'))))
-app:match('accept', '/:id/accept', guard(json_params(respond_to(require 'routes.voice.accept'))))
+app:match('users', '/:id/users/:user_id', guard(json_params(respond_to(require 'routes.voice.users'))))
+app:match('started', '/started/:id', guard(json_params(respond_to(require 'routes.voice.started'))))
 
 return app

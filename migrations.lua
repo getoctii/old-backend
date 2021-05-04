@@ -319,5 +319,8 @@ return {
   end,
   [1620088180] = function()
     schema.add_column('users', 'keychain', 'json')
+  end,
+  [1619821237] = function()
+    schema.add_column('voice_rooms', 'users', types.text { array = true, default = '{}' })
   end
 }
