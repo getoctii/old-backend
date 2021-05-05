@@ -38,7 +38,7 @@ local three = '^#' .. table.concat({ hex, hex, hex }, '') .. '$'
 local six = '^#' .. table.concat({ hex, hex, hex, hex, hex, hex }, '') .. '$'
 
 return {
-  username = types.string:length(3, 16) * types.pattern('^%a+$'),
+  username = types.string:length(3, 16) * types.pattern('^%w+$'),
   group_name = types.string:length(2, 30) * regexp('^[a-zA-Z0-9_\\-]+$'),
   community_name = types.string:length(2, 16),
   channel_name = types.string:length(2, 30) * regexp('^[a-zA-Z0-9_\\-]+$'),
