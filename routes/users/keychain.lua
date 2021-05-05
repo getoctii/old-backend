@@ -10,16 +10,16 @@ local custom_types = require 'util.types'
 local Keychain = {}
 
 local keypair = types.shape {
-  privateKey = types.array_of(types.integer),
-  publicKey = types.array_of(types.integer),
-  salt = types.array_of(types.integer),
-  iv = types.array_of(types.integer)
+  privateKey = types.array_of(types.integer / tonumber),
+  publicKey = types.array_of(types.integer / tonumber),
+  salt = types.array_of(types.integer / tonumber),
+  iv = types.array_of(types.integer / tonumber)
 }
 
 local chain = types.shape {
   encryption = keypair,
   signing = keypair,
-  tokenSalt = types.array_of(types.integer)
+  tokenSalt = types.array_of(types.integer / tonumber)
 }
 
 function Keychain:GET()
