@@ -33,6 +33,13 @@ local function new_set(x)
   return Set(x)
 end
 
+local keypair = types.shape {
+  privateKey = types.array_of(types.integer / tonumber),
+  publicKey = types.array_of(types.integer / tonumber),
+  salt = types.array_of(types.integer / tonumber),
+  iv = types.array_of(types.integer / tonumber)
+}
+
 local hex = '[a-fA-f0-9]'
 local three = '^#' .. table.concat({ hex, hex, hex }, '') .. '$'
 local six = '^#' .. table.concat({ hex, hex, hex, hex, hex, hex }, '') .. '$'
@@ -65,5 +72,10 @@ return {
     ResourcesModel.types.THEME,
     ResourcesModel.types.CLIENT_INTEGRATION,
     ResourcesModel.types.SERVER_INTEGRATION
-  })
+  }),
+  keychain = types.shape {
+    encryption = keypair,
+    signing = keypair,
+    tokenSalt = types.array_of(types.integer / tonumber)
+  }
 }

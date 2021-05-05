@@ -19,7 +19,8 @@ function Register:POST()
     username = custom_types.username,
     password = custom_types.password,
     email = custom_types.email,
-    betaCode = custom_types.uuid
+    betaCode = custom_types.uuid,
+    keychain = custom_types.keychain
   })
 
   local code = helpers.assert_error(Codes:find({ id = params.betaCode }), { 400, 'WrongBetaCode' })
@@ -39,7 +40,8 @@ function Register:POST()
     email = params.email,
     id = assert(uuid()),
     avatar = config.default_profile_pictures[math.random(#config.default_profile_pictures)],
-    discriminator = generateDiscriminator(params.username)
+    discriminator = generateDiscriminator(params.username),
+    keychain = params.keychain
   })
 
   code:update({

@@ -9,19 +9,6 @@ local custom_types = require 'util.types'
 
 local Keychain = {}
 
-local keypair = types.shape {
-  privateKey = types.array_of(types.integer / tonumber),
-  publicKey = types.array_of(types.integer / tonumber),
-  salt = types.array_of(types.integer / tonumber),
-  iv = types.array_of(types.integer / tonumber)
-}
-
-local chain = types.shape {
-  encryption = keypair,
-  signing = keypair,
-  tokenSalt = types.array_of(types.integer / tonumber)
-}
-
 function Keychain:GET()
   local params = validate(self.params, types.shape {
     id = custom_types.uuid
@@ -37,7 +24,7 @@ end
 function Keychain:PUT()
   local params = validate(self.params, types.shape {
     id = custom_types.uuid,
-    keychain = chain
+    keychain = custom_types.keychain
   })
 
   helpers.assert_error(params.id == self.user.id, { 403, 'InvalidUser' })
