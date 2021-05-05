@@ -27,7 +27,6 @@ function Keychain:GET()
     id = custom_types.uuid
   })
 
-  helpers.assert_error(params.id == self.user.id, { 403, 'InvalidUser' })
   local user = helpers.assert_error(Users:find({ id = params.id }), { 404, 'UserNotFound' })
 
   return {
