@@ -1,3 +1,4 @@
+local encode_json = require 'pgmoon.json'.encode_json
 local Users = require 'models.users'
 local argon2 = require 'argon2'
 local uuid = require 'util.uuid'
@@ -11,6 +12,7 @@ local config = require 'lapis.config'.get()
 local validate = require 'util.validate'
 local types = require 'tableshape'.types
 local custom_types = require 'util.types'
+local db = require 'lapis.db'
 
 local Register = {}
 
@@ -41,7 +43,7 @@ function Register:POST()
     id = assert(uuid()),
     avatar = config.default_profile_pictures[math.random(#config.default_profile_pictures)],
     discriminator = generateDiscriminator(params.username),
-    keychain = params.keychain
+    keychain = db.raw(encode_json(params.keychain))
   })
 
   code:update({
