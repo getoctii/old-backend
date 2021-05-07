@@ -43,7 +43,9 @@ function Message:GET()
       updated_at = message.updated_at,
       content = message.content,
       channel_id = message.channel_id,
-      author_id = message.author_id
+      author_id = message.author_id,
+      encrypted_content = message.encrypted_content,
+      self_encrypted_content = message.self_encrypted_content
     }
   }
 
