@@ -326,6 +326,6 @@ return {
   [1620347684] = function()
     schema.add_column('messages', 'encrypted_content', 'json')
     schema.add_column('messages', 'self_encrypted_content', 'json')
-    db.query('ALTER TABLE messages ALTER COLUMN content TYPE text NULL')
+    db.query('ALTER TABLE messages ALTER COLUMN content DROP NOT NULL')
   end
 }
