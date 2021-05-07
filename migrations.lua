@@ -322,5 +322,10 @@ return {
   end,
   [1619821237] = function()
     schema.add_column('voice_rooms', 'users', types.text { array = true, default = '{}' })
+  end,
+  [1620347684] = function()
+    schema.add_column('messages', 'encrypted_content', 'json')
+    schema.add_column('messages', 'self_encrypted_content', 'json')
+    db.query('ALTER TABLE messages ALTER COLUMN content TYPE text NULL')
   end
 }

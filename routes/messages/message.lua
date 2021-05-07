@@ -1,3 +1,4 @@
+local encode_json = require 'pgmoon.json'.encode_json
 local helpers = require 'lapis.application'
 local map = require 'array'.map
 local contains = require 'array'.includes
@@ -51,7 +52,9 @@ end
 function Message:PATCH()
   local params = validate(self.params, types.shape {
     id = custom_types.uuid,
-    content = types.string:length(1, 2000)
+    content = types.string:length(1, 2000):is_optional(),
+    encrypted_content = custom_types.encrypted_message:is_optional(),
+    self_encrypted_content = custom_types.encrypted_message:is_optional(),
   })
 
   local message = helpers.assert_error(Messages:find({ id = params.id }), { 404, 'MessageNotFound' })
@@ -68,15 +71,31 @@ function Message:PATCH()
     helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.SEND_MESSAGES }), channel), { 403, 'MissingPermissions' })
   end
   helpers.assert_error(message:get_author().id == self.user.id, { 403, 'MissingPermissions' })
+
+  if params.encrypted_content or params.self_encrypted_content then
+    helpers.assert_error(params.encrypted_content and params.self_encrypted_content, { 400, 'InvalidMessage' })
+    helpers.assert_error(not channel.community_id, { 400, 'InvalidMessage' })
+    helpers.assert_error(not params.content, { 400, 'InvalidMessage' })
+    helpers.assert_error(message.encrypted_content and message.self_encrypted_content, { 400, 'InvalidMessage' })
+  else
+    helpers.assert_error(params.content, { 400, 'InvalidMessage' })
+    helpers.assert_error(message.content, { 400, 'InvalidMessage' })
+  end
+
   message:update({
-    content = params.content
+    content = params.content,
+    encrypted_content = db.raw(encode_json(params.encrypted_content)),
+    self_encrypted_content = db.raw(encode_json(params.self_encrypted_content))
   })
+
   message:refresh()
   local message_event = {
     id = message.id,
     channel_id = message.channel_id,
     updated_at = message.updated_at,
-    content = message.content
+    content = message.content,
+    encrypted_content = message.encrypted_content,
+    self_encrypted_content = message.self_encrypted_content
   }
 
   broadcast('channel:' .. channel.id, 'UPDATED_MESSAGE', message_event)

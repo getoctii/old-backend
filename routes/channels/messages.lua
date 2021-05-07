@@ -1,3 +1,4 @@
+local encode_json = require 'pgmoon.json'.encode_json
 local helpers = require 'lapis.application'
 local contains = require 'array'.includes
 local map = require 'array'.map
@@ -54,7 +55,9 @@ function Messages:GET()
       type = row.type,
       created_at = row.created_at,
       updated_at = row.updated_at,
-      content = row.content
+      content = row.content,
+      encrypted_content = row.encrypted_content,
+      self_encrypted_content = row.self_encrypted_content
     }
   end)
 
@@ -70,7 +73,9 @@ end
 function Messages:POST()
   local params = validate(self.params, types.shape {
     id = custom_types.uuid,
-    content = types.string:length(1, 2000)
+    content = types.string:length(1, 2000):is_optional(),
+    encrypted_content = custom_types.encrypted_message:is_optional(),
+    self_encrypted_content = custom_types.encrypted_message:is_optional(),
   })
 
   local channel = helpers.assert_error(Channels:find({ id = params.id }), { 404, 'ChannelNotFound' })
@@ -87,12 +92,22 @@ function Messages:POST()
     helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.SEND_MESSAGES }), channel), { 403, 'MissingPermissions' })
   end
 
+  if params.encrypted_content or params.self_encrypted_content then
+    helpers.assert_error(params.encrypted_content and params.self_encrypted_content, { 400, 'InvalidMessage' })
+    helpers.assert_error(not channel.community_id, { 400, 'InvalidMessage' })
+    helpers.assert_error(not params.content, { 400, 'InvalidMessage' })
+  else
+    helpers.assert_error(params.content, { 400, 'InvalidMessage' })
+  end
+
   local row = MessagesModel:create({
     id = uuid(),
     author_id = self.user.id,
     content = params.content,
     channel_id = channel.id,
-    type = 1
+    type = 1,
+    encrypted_content = db.raw(encode_json(params.encrypted_content)),
+    self_encrypted_content = db.raw(encode_json(params.self_encrypted_content))
   })
 
   local author = row:get_author()
@@ -111,6 +126,8 @@ function Messages:POST()
     created_at = row.created_at,
     updated_at = row.updated_at,
     content = row.content,
+    encrypted_content = row.encrypted_content,
+    self_encrypted_content = row.self_encrypted_content,
     channel_id = row.channel_id,
     author = {
       id = author.id,

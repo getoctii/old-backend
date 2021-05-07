@@ -77,5 +77,11 @@ return {
     encryption = keypair,
     signing = keypair,
     tokenSalt = types.array_of(types.integer / tonumber)
+  },
+  encrypted_message = types.shape {
+    data = types.array_of(types.integer / tonumber),
+    signature = types.array_of(types.integer / tonumber),
+    key = types.array_of(types.integer / tonumber),
+    iv = types.array_of(types.integer / tonumber)
   }
 }
