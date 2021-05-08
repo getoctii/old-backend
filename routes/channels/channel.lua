@@ -187,7 +187,7 @@ function Channel:PATCH()
     patch.description = params.description
   end
 
-  if params.color and channel.type == 1  then
+  if params.color and (channel.type == 1 or channel.type == 3) then
     patch.color = params.color
   end
 
