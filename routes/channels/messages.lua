@@ -2,6 +2,7 @@ local encode_json = require 'pgmoon.json'.encode_json
 local helpers = require 'lapis.application'
 local contains = require 'array'.includes
 local map = require 'array'.map
+local array = require 'array'
 local uuid = require 'util.uuid'
 local broadcast = require 'util.broadcast'
 local Channels = require 'models.channels'
@@ -18,6 +19,7 @@ local GroupsModel = require 'models.groups'
 local engine = require 'util.permissions.engine'
 local Set = require 'pl.Set'
 local validate = require 'util.validate'
+local preload = require 'lapis.db.model'.preload
 local types = require 'tableshape'.types
 local custom_types = require 'util.types'
 
@@ -162,7 +164,7 @@ function Messages:POST()
 
   db.query('UPDATE mentions SET read = true FROM messages WHERE mentions.message_id = messages.id AND messages.channel_id = ?', channel.id)
 
-  if (not channel.community_id) or engine.has_community_permissions(MembersModel:find({ community_id = channel.community_id, user_id = self.user.id }), Set({ GroupsModel.permissions.MENTION_MEMBERS }), channel) then
+  if channel.community_id and engine.has_community_permissions(MembersModel:find({ community_id = channel.community_id, user_id = self.user.id }), Set({ GroupsModel.permissions.MENTION_MEMBERS }), channel) then
     local mentioned_users = {}
 
     -- TODO: Cleanup
@@ -213,6 +215,30 @@ function Messages:POST()
           })
         end
       end
+    end
+
+    if not empty(notifications) then
+      push({ payloads = notifications })
+    end
+  elseif not channel.community_id then
+    local conversation = channel:get_conversation()
+    local participants = conversation:get_participants()
+    local tokens = array.flat(map(participants, function(participant)
+      return participant:get_user():get_notification_tokens()
+    end))
+    preload(participants, { user = 'notification_tokens' })
+    local notifications = {}
+
+    for _, token in ipairs(tokens) do
+      table.insert(notifications, {
+        platform = token.platform,
+        token = token.token,
+        payload = {
+          title = message_event.author.username,
+          subtitle = '',
+          body = message_event.content and message_event.content or 'Encrypted Message'
+        }
+      })
     end
 
     if not empty(notifications) then
