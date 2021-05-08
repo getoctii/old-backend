@@ -224,7 +224,12 @@ function Messages:POST()
     local conversation = channel:get_conversation()
     local participants = conversation:get_participants()
     local tokens = array.flat(map(participants, function(participant)
-      return participant:get_user():get_notification_tokens()
+      local user = participant:get_user()
+      if user.id ~= message_event.author.id then
+        return user:get_notification_tokens()
+      else
+        return {}
+      end
     end))
     preload(participants, { user = 'notification_tokens' })
     local notifications = {}
