@@ -26,7 +26,7 @@ function MembersSearch:GET()
     community_id = community.id,
     user_id = self.user.id
   }), { 404, 'CommunityNotFound' })
-  local filtered = Members:select("INNER JOIN users u ON members.user_id = u.id WHERE community_id = ? AND u.username LIKE '%' || ? || '%'", community.id, sanitize_sql_like(params.query))
+  local filtered = Members:select("INNER JOIN users u ON members.user_id = u.id WHERE community_id = ? AND u.username LIKE '%' || ? || '%'", community.id, sanitize_sql_like(params.query:lower()))
   preload(filtered, 'user')
 
   local members = map(filtered, function(row)

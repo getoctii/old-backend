@@ -12,7 +12,7 @@ function Search:GET()
     query = types.string:length(1, 16)
   })
 
-  local results = array.map(ProductsModel:select("WHERE approved = TRUE AND name LIKE '%' || ? || '%' LIMIT 5", sanitize_sql_like(params.query)), function(product)
+  local results = array.map(ProductsModel:select("WHERE approved = TRUE AND name LIKE '%' || ? || '%' LIMIT 5", sanitize_sql_like(params.query:lower())), function(product)
     return product.id
   end)
 
