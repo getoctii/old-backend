@@ -20,5 +20,6 @@ config('development', {
   ssl_certificate = '/etc/ssl/cert.pem',
   port = 8086,
   pushpin = 'http://pushpin:5561',
-  resolver = '127.0.0.11 ipv6=off'
+  resolver = '127.0.0.11 ipv6=off',
+  subscriptions_webhook = '/run/secrets/neko_subscriptions_webhook'
 })

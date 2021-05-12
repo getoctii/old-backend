@@ -16,7 +16,12 @@ function Newsletter:POST()
   if not NewsletterSubscribers:find({ email = params.email }) then
     NewsletterSubscribers:create({ email = params.email })
     local httpc = assert(http.new())
-    assert(httpc:request_uri(config.subscriptions_webhook, {
+
+    local hookfile = assert(io.open(config.subscriptions_webhook, 'r'))
+    local hook = assert(hookfile:read('a'))
+    hookfile:close()
+
+    assert(httpc:request_uri(hook, {
       method = 'POST',
       headers = {
         ['content-type'] = 'application/json'
