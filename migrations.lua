@@ -327,5 +327,9 @@ return {
     schema.add_column('messages', 'encrypted_content', 'json')
     schema.add_column('messages', 'self_encrypted_content', 'json')
     db.query('ALTER TABLE messages ALTER COLUMN content DROP NOT NULL')
+  end,
+  [1620930665] = function()
+    db.query('ALTER TABLE codes ALTER COLUMN id TYPE text')
+    schema.add_column('codes', 'partner', types.boolean { default = false })
   end
 }

@@ -21,7 +21,7 @@ function Register:POST()
     username = custom_types.username,
     password = custom_types.password,
     email = custom_types.email,
-    betaCode = custom_types.uuid,
+    betaCode = types.string,
     keychain = custom_types.keychain
   })
 
@@ -46,9 +46,11 @@ function Register:POST()
     keychain = db.raw(encode_json(params.keychain))
   })
 
-  code:update({
-    used = true
-  })
+  if not code.partner then
+    code:update({
+      used = true
+    })
+  end
 
   return {
     status = 201,
