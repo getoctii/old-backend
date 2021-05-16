@@ -57,7 +57,7 @@ function User:PATCH()
     username = custom_types.username:is_optional(),
     avatar = custom_types.image:is_optional(),
     status = types.string:length(0, 140):is_optional(),
-    state = types.one_of({ 'online', 'idle', 'dnd', 'online' }):is_optional(),
+    state = types.one_of({ 'online', 'idle', 'dnd', 'offline' }):is_optional(),
     color = custom_types.color:is_optional(),
     developer = types.literal(true):is_optional()
   })
