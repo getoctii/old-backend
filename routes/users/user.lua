@@ -32,7 +32,8 @@ function User:GET()
       return Users.badges:to_name(badge)
     end),
     color = user.color,
-    disabled = user.disabled
+    disabled = user.disabled,
+    plus = user.plus
   }
 
   if (not user.last_ping) or ((os.time() - user.last_ping) > 180) then

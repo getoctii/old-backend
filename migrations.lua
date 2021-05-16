@@ -331,5 +331,8 @@ return {
   [1620930665] = function()
     db.query('ALTER TABLE codes ALTER COLUMN id TYPE text')
     schema.add_column('codes', 'partner', types.boolean { default = false })
+  end,
+  [1621206754] = function()
+    schema.add_column('users', 'plus', types.boolean { default = false })
   end
 }
