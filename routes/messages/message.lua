@@ -54,7 +54,7 @@ end
 function Message:PATCH()
   local params = validate(self.params, types.shape {
     id = custom_types.uuid,
-    content = types.string:length(1, 2000):is_optional(),
+    content = types.string:length(1, 5000):is_optional(),
     encrypted_content = custom_types.encrypted_message:is_optional(),
     self_encrypted_content = custom_types.encrypted_message:is_optional(),
   })
