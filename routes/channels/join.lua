@@ -61,7 +61,7 @@ function Join:POST()
   helpers.assert_error(channel.type == 3, { 400, 'ChannelNotVoice' })
 
   if not channel.community_id then
-    helpers.assert_error(array.contains(array.map(channel:get_voice_conversation():get_participants(), function(participant)
+    helpers.assert_error(array.includes(array.map(channel:get_voice_conversation():get_participants(), function(participant)
       return participant.user_id
     end), self.user.id), { 403, 'MissingPermissions' })
   else
