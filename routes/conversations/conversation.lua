@@ -31,7 +31,8 @@ function Conversation:GET()
   return {
     json = {
       id = conversation.id,
-      channel_id = conversation.get_channel().id
+      channel_id = conversation.channel_id,
+      voice_channel_id = conversation.voice_channel_id
     }
   }
 end
@@ -113,6 +114,7 @@ function Conversation:POST()
     conversation = {
       id = conversation.id,
       channel_id = conversation.channel_id,
+      voice_channel_id = conversation.voice_channel_id,
       last_message_id = (pager:get_page()[1] or {}).id,
       participants = user_ids
     }

@@ -1,5 +1,6 @@
 local db = require 'lapis.db'
 local schema = require 'lapis.db.schema'
+local new_uuid = require 'util.uuid'
 local types = schema.types
 
 local uuid = 'uuid NOT NULL'
@@ -334,5 +335,19 @@ return {
   end,
   [1621206754] = function()
     schema.add_column('users', 'plus', types.boolean { default = false })
+  end,
+  [1621383890] = function()
+    schema.add_column('conversations', 'voice_channel_id', types.text { null = true })
+
+    for _, row in ipairs(db.query('SELECT * FROM conversations')) do
+      local id = new_uuid()
+      db.insert('channels', {
+        id = id,
+        name = 'nekos-are-cute',
+        community_id = db.NULL,
+        type =  3
+      })
+      db.query('UPDATE conversations SET voice_channel_id=? WHERE id=?', id, row.id)
+    end
   end
 }

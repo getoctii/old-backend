@@ -32,9 +32,17 @@ function Create:POST() -- TODO: Damn, we make a lot of queries here. Let's consi
     community_id = db.NULL
   })
 
+  local voice_channel = Channels:create({
+    id = uuid(),
+    name = 'nekos-are-cute',
+    community_id = db.NULL,
+    type =  Channels.types.VOICE
+  })
+
   local conversation = Conversations:create({
     id = uuid(),
-    channel_id = channel.id
+    channel_id = channel.id,
+    voice_channel_id = voice_channel.id
   })
 
   local from = assert(Participants:create({
@@ -55,18 +63,20 @@ function Create:POST() -- TODO: Damn, we make a lot of queries here. Let's consi
   -- TODO: Batch these broadcast messages
   broadcast('user:' .. self.user.id, 'NEW_PARTICIPANT', {
     id = from.id,
-    conversation= {
+    conversation = {
       id = conversation.id,
       channel_id = channel.id,
+      voice_channel_id = conversation.voice_channel_id,
       participants = {self.user.id, recipient.id}
     }
   })
 
   broadcast('user:' .. recipient.id, 'NEW_PARTICIPANT', {
     id = to.id,
-    conversation= {
+    conversation = {
       id = conversation.id,
       channel_id = channel.id,
+      voice_channel_id = conversation.voice_channel_id,
       participants = {self.user.id, recipient.id}
     }
   })

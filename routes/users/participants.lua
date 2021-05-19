@@ -39,6 +39,7 @@ function Participants:GET()
       conversation = {
         id = conversation.id,
         channel_id = conversation.channel_id,
+        voice_channel_id = conversation.voice_channel_id,
         -- TODO: This might be a bit inefficent, refactor.
         last_message_id = message.id,
         last_message_date = message.created_at,

@@ -12,6 +12,7 @@ local http = require 'resty.http'
 local json = require 'cjson'
 local config = require 'lapis.config'.get()
 local jwt = require 'resty.jwt'
+local array = require 'array'
 
 local Join = {}
 
@@ -59,12 +60,18 @@ function Join:POST()
   local channel = helpers.assert_error(ChannelsModel:find({ id = params.id }), { 404, 'ChannelNotFound' })
   helpers.assert_error(channel.type == 3, { 400, 'ChannelNotVoice' })
 
-  local member = helpers.assert_error(MembersModel:find({
-    community_id = channel.community_id,
-    user_id = self.user.id
-  }), { 404, 'ChannelNotFound' })
+  if not channel.community_id then
+    helpers.assert_error(array.contains(array.map(channel:get_voice_conversation():get_participants(), function(participant)
+      return participant.user_id
+    end), self.user.id), { 403, 'MissingPermissions' })
+  else
+    local member = helpers.assert_error(MembersModel:find({
+      community_id = channel.community_id,
+      user_id = self.user.id
+    }), { 404, 'ChannelNotFound' })
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.READ_MESSAGES }), channel), { 403, 'MissingPermissions' })
+  end
 
-  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.READ_MESSAGES }), channel), { 403, 'MissingPermissions' })
 
   local room = VoiceRooms:find({
     channel_id = channel.id

@@ -37,10 +37,10 @@ return function(user)
   local conversations = map(participants, function(row) return row:get_conversation() end)
   local grip_conversations = map(conversations, function(row) return 'conversation:' .. row.id end)
 
-  local conversation_channels = map(participants, function(row) return row:get_conversation():get_channel() end)
-  local grip_conversation_channels = map(conversation_channels, function(row) return 'channel:' .. row.id end)
+  local grip_conversation_channels = map(conversations, function(row) return 'channel:' .. row.channel_id end)
+  local grip_conversation_voice_channels = map(conversations, function(row) return 'channel:' .. row.voice_channel_id end)
 
-  local all_grip_channels = flatten({grip_community_channels, grip_conversation_channels, grip_communities, grip_conversations, grip_groups, {'user:' .. user.id}})
+  local all_grip_channels = flatten({grip_community_channels, grip_conversation_channels, grip_communities, grip_conversations, grip_conversation_voice_channels, grip_groups, {'user:' .. user.id}})
 
   return all_grip_channels
 end
