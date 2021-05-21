@@ -44,7 +44,7 @@ function TOTP:DELETE()
   local user = helpers.assert_error(Users:find({ id = params.id }), { 404, 'UserNotFound' })
   helpers.assert_error(user.totp_key, { 400, 'NotInitalized' })
 
-  local totp = otp.new_hotp_from_key(user.totp_key)
+  local totp = otp.new_totp_from_key(user.totp_key)
   helpers.assert_error(totp:verify(params.code), { 403, 'Unauthorized' })
 
   user:update({
