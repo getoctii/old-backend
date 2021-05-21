@@ -349,5 +349,8 @@ return {
       })
       db.query('UPDATE conversations SET voice_channel_id=? WHERE id=?', id, row.id)
     end
+  end,
+  [1621555678] = function()
+    schema.add_column('users', 'totp_key', types.text { null = true })
   end
 }

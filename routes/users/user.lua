@@ -43,6 +43,7 @@ function User:GET()
   if user.id == self.user.id or self.user.discriminator == 0 then
     info.email = user.email
     info.developer = user.developer
+    info.totp = not not user.totp_key
   end
 
   return {
