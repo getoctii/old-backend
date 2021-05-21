@@ -4,6 +4,7 @@ local validate = require 'util.validate'
 local types = require 'tableshape'.types
 local custom_types = require 'util.types'
 local db = require 'lapis.db'
+local otp = require 'otp'
 
 local argon2 = require 'argon2'
 local generateLoginToken = require 'util.jwt'
@@ -22,6 +23,7 @@ function Login:GET()
 
   return {
     json = {
+      totp = not not user.totp_key,
       tokenSalt = keychain.tokenSalt
     }
   }
@@ -36,6 +38,11 @@ function Login:POST()
   local user = helpers.assert_error(Users:find({ email = params.email }), { 404, 'UserNotFound' })
   helpers.assert_error(not user.disabled, { 403, 'DisabledUser' })
   helpers.assert_error(argon2.verify(user.password, params.password), { 401, 'WrongPassword' })
+
+  if user.totp_key then
+    local totp = otp.new_totp_from_key(user.totp_key)
+    helpers.assert_error(totp:verify(params.code), { 403, 'WrongCode' })
+  end
 
   return {
     json = {
