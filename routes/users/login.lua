@@ -32,7 +32,8 @@ end
 function Login:POST()
   local params = validate(self.params, types.shape {
     email = custom_types.email,
-    password = custom_types.password
+    password = custom_types.password,
+    code = (types.string / tonumber * types.integer / tostring):is_optional()
   })
 
   local user = helpers.assert_error(Users:find({ email = params.email }), { 404, 'UserNotFound' })
@@ -40,6 +41,7 @@ function Login:POST()
   helpers.assert_error(argon2.verify(user.password, params.password), { 401, 'WrongPassword' })
 
   if user.totp_key then
+    helpers.assert_error(params.code, { 400, 'InvalidParameters' })
     local totp = otp.new_totp_from_key(user.totp_key)
     helpers.assert_error(totp:verify(params.code), { 403, 'WrongCode' })
   end
