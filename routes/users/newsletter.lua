@@ -40,7 +40,7 @@ function Newsletter:POST()
           }
         },
         username = 'Octii',
-        avatar_url = 'https://file.coffee/u/gpk_5iaji4.png'
+        avatar_url = 'https://file.coffee/u/Ypmv6ozGb7.jpeg'
       })
     }))
   end
