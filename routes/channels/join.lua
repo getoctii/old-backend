@@ -80,7 +80,7 @@ function Join:POST()
 
   if not channel.community_id then
     local conversation = channel:get_voice_conversation()
-    if (not room) or (not room.voice_users) or #room.voice_users == 0 then
+    if (not room) or #room.users == 0 then
       local users = array.map(conversation:get_participants(), function (row)
         return row.user_id
       end)
