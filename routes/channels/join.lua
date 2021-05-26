@@ -13,6 +13,7 @@ local json = require 'cjson'
 local config = require 'lapis.config'.get()
 local jwt = require 'resty.jwt'
 local array = require 'array'
+local broadcast = require 'util.broadcast'
 
 local Join = {}
 
@@ -76,6 +77,21 @@ function Join:POST()
   local room = VoiceRooms:find({
     channel_id = channel.id
   })
+
+  if not channel.community_id then
+    local conversation = channel:get_voice_conversation()
+    if (not room) or #room.voice_users == 0 then
+      local users = array.map(conversation:get_participants(), function (row)
+        return row.user_id
+      end)
+
+      for _, id in ipairs(array.without(users, { self.user.id })) do
+        broadcast('user:' .. id, 'RINGING', {
+          conversation_id = conversation.id
+        })
+      end
+    end
+  end
 
   if room then
     return {
