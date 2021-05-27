@@ -1,5 +1,4 @@
 local model = require('lapis.db.model')
-local webhook = require "webhook"
 local Model, enum = model.Model, model.enum
 
 local Messages = Model:extend('messages', {
