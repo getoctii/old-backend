@@ -355,6 +355,6 @@ return {
   end,
   [1622077676] = function()
     schema.add_column('messages', 'rich_content', 'json')
-    schema.add_column('channels', 'webhook_code', uuid .. ' DEFAULT UUID()')
+    schema.add_column('channels', 'webhook_code', uuid .. ' DEFAULT gen_random_uuid()')
   end
 }
