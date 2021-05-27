@@ -309,12 +309,11 @@ function Channel:PATCH()
         })
       end
     end
-
-    if params.webhook_code then
-      patch.webhook_code = uuid()
-    end
-
     resubscribe('community:' .. channel.community_id)
+  end
+
+  if params.webhook_code then
+    patch.webhook_code = uuid()
   end
 
   channel:update(patch)
