@@ -20,6 +20,7 @@ local types = require 'tableshape'.types
 local custom_types = require 'util.types'
 local inspect = require 'inspect'
 local VoiceRooms = require 'models.voice_rooms'
+local uuid = require 'util.uuid'
 
 local function sort_channels(channels)
   table.sort(channels, function(a, b)
@@ -87,6 +88,19 @@ function Channel:GET()
     voice_users = json.empty_array
   end
 
+  local webhook_code = nil
+
+  if channel.community_id then
+    local member = helpers.assert_error(MembersModel:find({
+      community_id = channel.community_id,
+      user_id = self.user.id
+    }), { 404, 'ChannelNotFound' })
+
+    if engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_CHANNELS }), channel) then
+      webhook_code = channel.webhook_code
+    end
+  end
+
   return {
     json = {
       id = channel.id,
@@ -102,7 +116,8 @@ function Channel:GET()
       overrides = mapped_overrides,
       base_allow = empty(channel.base_allow) and json.empty_array or channel.base_allow,
       base_deny = empty(channel.base_deny) and json.empty_array or channel.base_deny,
-      voice_users = voice_users
+      voice_users = voice_users,
+      webhook_code = webhook_code
     }
   }
 end
@@ -163,7 +178,8 @@ function Channel:PATCH()
     parent = (custom_types.uuid + custom_types.null):is_optional(),
     previous_channel_id = (custom_types.uuid + custom_types.null):is_optional(),
     base_allow = custom_types.overrides:is_optional(),
-    base_deny = custom_types.overrides:is_optional()
+    base_deny = custom_types.overrides:is_optional(),
+    webhook_code = types.boolean
   })
 
   local channel = helpers.assert_error(ChannelsModel:find({ id = params.id }), { 404, 'ChannelNotFound' })
@@ -292,6 +308,10 @@ function Channel:PATCH()
           community_id = channel.community_id,
         })
       end
+    end
+
+    if params.webhook_code then
+      patch.webhook_code = uuid()
     end
 
     resubscribe('community:' .. channel.community_id)

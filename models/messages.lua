@@ -1,4 +1,5 @@
 local model = require('lapis.db.model')
+local webhook = require "webhook"
 local Model, enum = model.Model, model.enum
 
 local Messages = Model:extend('messages', {
@@ -14,7 +15,8 @@ Messages.types = enum {
   pinned = 2,
   member_added = 3,
   member_removed = 4,
-  administrator = 5
+  administrator = 5,
+  webhook = 6
 }
 
 return Messages

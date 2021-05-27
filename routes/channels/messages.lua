@@ -51,7 +51,7 @@ function Messages:GET()
     or MessagesModel:select('WHERE channel_id = ? ORDER BY created_at DESC LIMIT 25', params.id)
 
   local messages = map(page, function(row)
-    return {
+    local message = {
       id = row.id,
       author_id = row.author_id,
       type = row.type,
@@ -59,8 +59,11 @@ function Messages:GET()
       updated_at = row.updated_at,
       content = row.content,
       encrypted_content = row.encrypted_content,
-      self_encrypted_content = row.self_encrypted_content
+      self_encrypted_content = row.self_encrypted_content,
+      rich_content = row.rich_content
     }
+
+    return message
   end)
 
   if empty(messages) then

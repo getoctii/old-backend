@@ -352,5 +352,9 @@ return {
   end,
   [1621555678] = function()
     schema.add_column('users', 'totp_key', types.text { null = true })
+  end,
+  [1622077676] = function()
+    schema.add_column('messages', 'rich_content', 'json')
+    schema.add_column('channels', 'webhook_code', uuid .. ' DEFAULT UUID()')
   end
 }
