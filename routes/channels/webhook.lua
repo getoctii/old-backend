@@ -16,7 +16,7 @@ function Webhook:POST()
     id = custom_types.uuid,
     code = custom_types.uuid,
     username = custom_types.username,
-    avatar = custom_types.images,
+    avatar = custom_types.image,
     content = types.string:length(1, 5000):is_optional()
   })
 
