@@ -64,6 +64,6 @@ config('production', {
   port = 8086,
   pushpin = 'http://pushpin:5561',
   push = 'http://push:8080',
-  resolver = '127.0.0.11',
+  resolver = '127.0.0.11 ipv6=off',
   subscriptions_webhook = '/run/secrets/subscriptions_webhook'
 })
