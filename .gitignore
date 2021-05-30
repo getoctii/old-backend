@@ -12,3 +12,4 @@ nginx.conf.compiled
 temp/**
 !temp/.gitkeep
 keys
+secrets/
