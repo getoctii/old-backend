@@ -40,9 +40,9 @@ config('development', {
 config('production', {
   postgres = {
     host = 'db.octii.chat',
-    user = 'OLD_MONOLITH',
+    user = 'monolith',
     password = read_file('/run/secrets/db_password'),
-    database = 'MONOLITH',
+    database = 'monolith',
   },
   jwt = {
     public = '/run/secrets/auth_public',
