@@ -54,7 +54,7 @@ return {
   password = types.string:length(8, 128),
   regexp = regexp,
   uuid = uuid_type,
-  image = regexp('^(https:\\/\\/innstor\\.innatical\\.com\\/[a-zA-Z0-9_-]+|https:\\/\\/file\\.coffee\\/u\\/[a-zA-Z0-9_-]{7,14}\\.(png|jpeg|jpg|gif))$'),
+  image = regexp('^https:\\/\\/cdn\\.octii.chat\\/icons\\/.+\\/.+$'),
   color = types.pattern(three) + types.pattern(six),
   permissions = types.array_of(types.one_of(C 'x for x=1,18' () )) / new_set,
   overrides = types.array_of(types.one_of({
