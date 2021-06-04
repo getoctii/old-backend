@@ -12,7 +12,7 @@ services:
       - source: pushpin_routes
         target: /etc/pushpin/routes
   gateway:
-    image: registry.gitlab.com/innatical/octii/backend:latest
+    image: ghcr.io/innatical/octii-backend:master
     networks:
       - octii
     environment:
