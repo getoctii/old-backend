@@ -105,10 +105,17 @@ function Join:POST()
     local voice_pairs = to_pairs(config.voice_servers)
     local pair = voice_pairs[math.random(#voice_pairs)]
 
+    local tokenfile = assert(io.open(config.voice_token, 'r'))
+    local token = assert(tokenfile:read('a'))
+    tokenfile:close()
+
     local httpc = assert(http.new())
 
     local res = assert(httpc:request_uri(pair[2].private_url .. '/rooms', {
       method = 'POST',
+      headers = {
+        ['Authorization'] = token
+      }
     }))
 
     assert(res.status == 200)
