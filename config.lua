@@ -39,7 +39,7 @@ config('development', {
 
 config('production', {
   postgres = {
-    host = 'db.octii.chat',
+    host = 'postgres',
     user = 'monolith',
     password = read_file('/run/secrets/db_password'),
     database = 'monolith',
