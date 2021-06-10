@@ -10,6 +10,8 @@ services:
         target: /etc/pushpin/pushpin.conf
       - source: pushpin_routes
         target: /etc/pushpin/routes
+    ports:
+      - "3000:7999"
   gateway:
     image: ghcr.io/innatical/octii-backend:master
     networks:
