@@ -2,10 +2,9 @@ version: "3.8"
 services:
   pushpin:
     image: fanout/pushpin
-    ports:
-      - 7999:7999
     networks:
       - octii
+      - innatical
     configs:
       - source: pushpin_config
         target: /etc/pushpin/pushpin.conf
@@ -15,6 +14,7 @@ services:
     image: ghcr.io/innatical/octii-backend:master
     networks:
       - octii
+      - innatical
     environment:
       - ENVIROMENT=production
     configs:
@@ -29,6 +29,9 @@ services:
       - db_password
 networks:
   octii:
+  innatical:
+    external: true
+    name: innatical
 configs:
   gateway_config:
     file: config.lua
