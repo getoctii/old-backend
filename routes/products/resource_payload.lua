@@ -11,6 +11,7 @@ local engine = require 'util.permissions.engine'
 local Set = require 'pl.Set'
 local GroupsModel = require 'models.groups'
 local tablex = require 'pl.tablex'
+local json = require 'cjson'
 
 local theme_type = types.shape {
   colors = types.shape {
@@ -94,6 +95,11 @@ local theme_bundle_type = types.shape {
   light = theme_type
 }
 
+local server_integration_type = types.shape {
+  name = types.string,
+  token = custom_types.null:is_optional()
+}
+
 local Payload = {}
 
 function Payload:GET()
@@ -130,12 +136,6 @@ function Payload:PUT()
     resource_id = custom_types.uuid
   })
 
-
-  local tmp = tablex.copy(self.params)
-  tmp.id = nil
-  tmp.resource_id = nil
-  local payload = validate(tmp, theme_bundle_type)
-
   local resource = helpers.assert_error(ResourcesModel:find(params.resource_id), { 404, 'ResourceNotFound' })
   local member = helpers.assert_error(MembersModel:find({
     community_id = resource:get_product().organization_id,
@@ -143,10 +143,41 @@ function Payload:PUT()
   }), { 403, 'MissingPermissions' })
   helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_PRODUCTS })), { 403, 'MissingPermissions' })
 
-  if not resource.payload then
-    payload.id = uuid()
+  local tmp = tablex.copy(self.params)
+  tmp.id = nil
+  tmp.resource_id = nil
+  local payload
+
+  if resource.type == ResourcesModel.types.THEME then
+    payload = validate(tmp, theme_bundle_type)
+
+    if not resource.payload then
+      payload.id = uuid()
+    else
+      payload.id = resource.payload.id
+    end
+  elseif resource.type == ResourcesModel.types.SERVER_INTEGRATION then
+    payload = validate(tmp, server_integration_type)
+
+    if not resource.payload then
+      payload.id = uuid()
+    else
+      payload.id = resource.payload.id
+    end
+
+    if payload.token == json.null or not resource.payload then
+      payload.token = uuid()
+    else
+      payload.token = resource.payload.token
+    end
   else
-    payload.id = resource.payload.id
+    return {
+      status = 400,
+      json = {
+        errors = {'NotImplmented'}
+      },
+      layout = false
+    }
   end
 
   resource:update({
