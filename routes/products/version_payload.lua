@@ -8,6 +8,8 @@ local engine = require 'util.permissions.engine'
 local Set = require 'pl.Set'
 local GroupsModel = require 'models.groups'
 local PurchasesModel = require 'models.purchases'
+local array = require 'array'
+local json = require 'cjson'
 
 local Payload = {}
 
@@ -27,7 +29,11 @@ function Payload:GET()
   }), { 403, 'MissingPermissions' }), Set({ GroupsModel.permissions.MANAGE_PRODUCTS })), { 403, 'MissingPermissions' })
 
   return {
-    json = version.payload
+    json = {
+      themes = array.is_empty(version.payload.themes) and json.empty_array or version.payload.themes,
+      client = array.is_empty(version.payload.client) and json.empty_array or version.payload.client,
+      server = array.is_empty(version.payload.server) and json.empty_array or version.payload.server
+    }
   }
 end
 
