@@ -356,5 +356,15 @@ return {
   [1622077676] = function()
     schema.add_column('messages', 'rich_content', 'json')
     schema.add_column('channels', 'webhook_code', uuid .. ' DEFAULT gen_random_uuid()')
+  end,
+  [1623537216] = function()
+    schema.create_table('integrations', {
+     { 'community_id', uuid },
+     { 'resource_id', uuid },
+      'PRIMARY KEY (community_id, resource_id)'
+    })
+  end,
+  [1623632088] = function()
+    schema.add_column('resources', 'commands', 'json DEFAULT \'[]\'')
   end
 }

@@ -96,7 +96,6 @@ local theme_bundle_type = types.shape {
 }
 
 local server_integration_type = types.shape {
-  name = types.string,
   token = custom_types.null:is_optional()
 }
 
@@ -158,12 +157,6 @@ function Payload:PUT()
     end
   elseif resource.type == ResourcesModel.types.SERVER_INTEGRATION then
     payload = validate(tmp, server_integration_type)
-
-    if not resource.payload then
-      payload.id = uuid()
-    else
-      payload.id = resource.payload.id
-    end
 
     if payload.token == json.null or not resource.payload then
       payload.token = uuid()

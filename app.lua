@@ -41,7 +41,7 @@ app:before_filter(function(self)
     return
   end
 
-  if self.route_name ~= 'users.login' and self.route_name ~= 'users.register' and self.route_name ~= 'users.newsletter' and self.route_name ~= 'voice.users' and self.route_name ~= 'voice.started' and self.route_name ~= 'channels.webhook' then
+  if self.route_name ~= 'users.login' and self.route_name ~= 'integrations.events' and self.route_name ~= 'integrations.commands' and self.route_name ~= 'integrations.reply' and self.route_name ~= 'users.register' and self.route_name ~= 'users.newsletter' and self.route_name ~= 'voice.users' and self.route_name ~= 'voice.started' and self.route_name ~= 'channels.webhook' then
     local key_file = assert(io.open(config.jwt.public))
     local key = assert(key_file:read('a'))
     key_file:close()
@@ -138,5 +138,6 @@ app:include('routes.admin')
 app:include('routes.members')
 app:include('routes.relationships')
 app:include('routes.products')
+app:include('routes.integrations')
 
 return app

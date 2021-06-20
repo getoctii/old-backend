@@ -18,5 +18,6 @@ app:match('members_info', '/:id/members/:user_id', guard(json_params(helpers.res
 app:match('members_search', '/:id/members/search', guard(json_params(helpers.respond_to(require 'routes.communities.members_search'))))
 app:match('groups', '/:id/groups', guard(json_params(helpers.respond_to(require 'routes.communities.groups'))))
 app:match('products', '/:id/products', guard(json_params(helpers.respond_to(require 'routes.communities.products'))))
+app:match('integrations', '/:id/integrations', guard(json_params(helpers.respond_to(require 'routes.communities.integrations'))))
 
 return app

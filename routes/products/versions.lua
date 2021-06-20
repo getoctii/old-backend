@@ -62,10 +62,19 @@ function Versions:POST()
     return resource.payload
   end)
 
+  local server_integrations = array.map(array.filter(resources, function(resource)
+    return resource.type == ResourcesModel.types.SERVER_INTEGRATION and resources.payload ~= db.NULL
+  end), function(resource)
+    return {
+      id = resource.id,
+      name = resource.name
+    }
+  end)
+
   local payload = {
     themes = array.is_empty(themes) and json.empty_array or themes,
     client = json.empty_array,
-    server = json.empty_array
+    server = array.is_empty(server_integrations) and json.empty_array or server_integrations
   }
 
   local version = VersionsModel:create({

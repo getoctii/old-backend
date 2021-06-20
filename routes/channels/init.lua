@@ -15,5 +15,6 @@ app:match('typing', '/:id/typing',guard(json_params(helpers.respond_to(require '
 app:match('overrides', '/:id/overrides/:group_id', guard(json_params(helpers.respond_to(require 'routes.channels.overrides'))))
 app:match('join', '/:id/join', guard(json_params(helpers.respond_to(require 'routes.channels.join'))))
 app:match('webhook', '/:id/webhook/:code', guard(json_params(helpers.respond_to(require 'routes.channels.webhook'))))
+app:match('execute', '/:id/execute', guard(json_params(helpers.respond_to(require 'routes.channels.execute'))))
 
 return app

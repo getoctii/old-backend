@@ -2,6 +2,7 @@ local config = require 'lapis.config'
 
 local function read_file(filename)
   local file = io.open(filename)
+  if not file then return nil end
   local data = file:read("*a")
   file:close()
   return data
@@ -9,17 +10,17 @@ end
 
 config('development', {
   postgres = {
-    host = 'postgres',
-    user = 'neko',
-    password = 'neko',
-    database = 'neko',
+    host = '127.0.0.1',
+    user = 'postgres',
+    password = 'password',
+    database = 'neko-chat',
   },
   jwt = {
-    public = 'keys/public.pem',
-    private = 'keys/private.pem',
-    voice = 'keys/voice.pem'
+    public = 'secrets/auth_public',
+    private = 'secrets/auth_private',
+    voice = 'secrets/voice_private'
   },
-  code_cache = 'on',
+  code_cache = 'off',
   default_profile_pictures = {
     'img1',
     'img2'
@@ -30,11 +31,11 @@ config('development', {
       private_url = 'http://host.docker.internal:8081'
     }
   },
-  voice_token = 'keys/voice_token',
+  voice_token = 'secrets/voice_token',
   ssl_certificate = '/etc/ssl/cert.pem',
   port = 8086,
-  pushpin = 'http://pushpin:5561',
-  resolver = '127.0.0.11'
+  pushpin = 'http://127.0.0.1:5561',
+  resolver = '1.1.1.1'
 })
 
 config('production', {

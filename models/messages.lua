@@ -15,7 +15,8 @@ Messages.types = enum {
   member_added = 3,
   member_removed = 4,
   administrator = 5,
-  webhook = 6
+  webhook = 6,
+  integration = 7
 }
 
 return Messages
