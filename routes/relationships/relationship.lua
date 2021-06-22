@@ -16,7 +16,10 @@ function Relationship:POST()
 
   helpers.assert_error(params.recipient_id ~= self.user.id, { 400, 'InvalidRecipient' })
   helpers.assert_error(UsersModel:find({ id = params.recipient_id }), { 404, 'RecipientNotFound' })
-
+  helpers.assert_error(not RelationshipsModel:find({
+    user_id = self.user.id,
+    recipient_id = params.recipient_id
+  }), { 400, 'AlreadyExists' })
   RelationshipsModel:create({
     user_id = self.user.id,
     recipient_id = params.recipient_id,
