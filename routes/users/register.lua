@@ -21,12 +21,8 @@ function Register:POST()
     username = custom_types.username,
     password = custom_types.password,
     email = custom_types.email,
-    betaCode = types.string,
     keychain = custom_types.keychain
   })
-
-  local code = helpers.assert_error(Codes:find({ id = params.betaCode }), { 400, 'WrongBetaCode' })
-  if code.used then helpers.yield_error({ 400, 'WrongBetaCode' }) end
 
   local salt = encoding.encode_base64(assert(rand.bytes(32))) -- 256 bit salt because we paranoid bois
   local hashed = assert(argon2.hash_encoded(params.password, salt, {
@@ -45,12 +41,6 @@ function Register:POST()
     discriminator = generateDiscriminator(params.username),
     keychain = db.raw(encode_json(params.keychain))
   })
-
-  if not code.partner then
-    code:update({
-      used = true
-    })
-  end
 
   return {
     status = 201,
