@@ -17,12 +17,15 @@ function Resources:GET()
     resource_id = custom_types.uuid
   })
 
+  -- Security Issue
   local resource = helpers.assert_error(ResourcesModel:find(params.resource_id), { 404, 'ResourceNotFound' })
-  local member = helpers.assert_error(MembersModel:find({
-    community_id = resource:get_product().organization_id,
-    user_id = self.user.id
-  }), { 403, 'MissingPermissions' })
-  helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_PRODUCTS })), { 403, 'MissingPermissions' })
+  if not resource:get_product().approved then
+    local member = helpers.assert_error(MembersModel:find({
+      community_id = resource:get_product().organization_id,
+      user_id = self.user.id
+    }), { 403, 'MissingPermissions' })
+    helpers.assert_error(engine.has_community_permissions(member, Set({ GroupsModel.permissions.MANAGE_PRODUCTS })), { 403, 'MissingPermissions' })
+  end
 
   return {
     json = {
