@@ -64,7 +64,7 @@ function Invites:POST()
 
   local invite = InvitesModel:create({
     id = uuid(),
-    code = nanoid.generate(10),
+    code = nanoid.safe_simple(),
     community_id = params.id,
     author_id = self.user.id,
     uses = 0
