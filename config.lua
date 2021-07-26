@@ -55,7 +55,7 @@ config('production', {
   voice_token = os.getenv('VOICE_TOKEN'),
   ssl_certificate = '/etc/ssl/cert.pem',
   port = 8086,
-  pushpin = 'http://pushpin:5561',
+  pushpin = os.getenv('PUSHPIN_ADDR'),
   push = 'http://push:8080',
   resolver = '127.0.0.11 ipv6=off',
   subscriptions_webhook = os.getenv('SUBSCRIPTIONS_WEBHOOK')
