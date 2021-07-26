@@ -16,7 +16,7 @@ RUN \
   /usr/local/openresty/luajit/bin/luarocks install array && \
   /usr/local/openresty/luajit/bin/luarocks install lua-resty-jit-uuid && \
   /usr/local/openresty/luajit/bin/luarocks install penlight && \
-  /usr/local/openresty/luajit/bin/luarocks install nanoid && \
+  /usr/local/openresty/luajit/bin/luarocks install lua-resty-nanoid && \
   /usr/local/openresty/luajit/bin/luarocks install tableshape && \
   /usr/local/openresty/luajit/bin/luarocks install otp
 
