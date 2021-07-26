@@ -1,13 +1,5 @@
 local config = require 'lapis.config'
 
-local function read_file(filename)
-  local file = io.open(filename)
-  if not file then return nil end
-  local data = file:read("*a")
-  file:close()
-  return data
-end
-
 config('development', {
   postgres = {
     host = '127.0.0.1',
@@ -16,9 +8,9 @@ config('development', {
     database = 'neko-chat',
   },
   jwt = {
-    public = 'secrets/auth_public',
-    private = 'secrets/auth_private',
-    voice = 'secrets/voice_private'
+    public = os.getenv('AUTH_PUBLIC'),
+    private = os.getenv('AUTH_PRIVATE'),
+    voice = os.getenv('AUTH_VOICE')
   },
   code_cache = 'off',
   default_profile_pictures = {
@@ -31,7 +23,7 @@ config('development', {
       private_url = 'http://host.docker.internal:8081'
     }
   },
-  voice_token = 'secrets/voice_token',
+  voice_token = os.getenv('VOICE_TOKEN'),
   ssl_certificate = '/etc/ssl/cert.pem',
   port = 8086,
   pushpin = 'http://127.0.0.1:5561',
@@ -40,15 +32,15 @@ config('development', {
 
 config('production', {
   postgres = {
-    host = 'postgres',
-    user = 'monolith',
-    password = read_file('/run/secrets/db_password'),
-    database = 'monolith',
+    host = 'db.innatical.com',
+    user = 'octii',
+    password = os.getenv('DB_PASSWORD'),
+    database = 'octii',
   },
   jwt = {
-    public = '/run/secrets/auth_public',
-    private = '/run/secrets/auth_private',
-    voice = '/run/secrets/voice_private'
+    public = os.getenv('AUTH_PUBLIC'),
+    private = os.getenv('AUTH_PRIVATE'),
+    voice = os.getenv('AUTH_VOICE')
   },
   code_cache = 'on',
   default_profile_pictures = {
@@ -60,11 +52,11 @@ config('production', {
       private_url = 'https://admin.voice.octii.chat',
     }
   },
-  voice_token = '/run/secrets/voice_token',
+  voice_token = os.getenv('VOICE_TOKEN'),
   ssl_certificate = '/etc/ssl/cert.pem',
   port = 8086,
   pushpin = 'http://pushpin:5561',
   push = 'http://push:8080',
   resolver = '127.0.0.11 ipv6=off',
-  subscriptions_webhook = '/run/secrets/subscriptions_webhook'
+  subscriptions_webhook = os.getenv('SUBSCRIPTIONS_WEBHOOK')
 })

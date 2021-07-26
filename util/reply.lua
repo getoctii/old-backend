@@ -3,9 +3,6 @@ local uuid = require 'util.uuid'
 local jwt = require 'resty.jwt'
 
 local function generateReplyToken(id)
-  local keyfile = assert(io.open(config.jwt.private, 'r'))
-  local key = assert(keyfile:read('a'))
-  keyfile:close()
   local time = os.time()
 
   local table = {
@@ -24,7 +21,7 @@ local function generateReplyToken(id)
       jti = uuid()
     }
   }
-  return jwt:sign(key, table)
+  return jwt:sign(config.jwt.private, table)
 
 end
 

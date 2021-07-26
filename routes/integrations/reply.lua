@@ -34,10 +34,7 @@ function Reply:POST()
   helpers.assert_error(resource.payload ~= db.NULL, { 400, 'ResourceNotInitalized' })
   helpers.assert_error(resource.type == ResourcesModel.types.SERVER_INTEGRATION, { 400, 'WrongType'})
 
-  local key_file = assert(io.open(config.jwt.public))
-  local key = assert(key_file:read('a'))
-  key_file:close()
-  local token = jwt:verify(key, params.reply_token, {
+  local token = jwt:verify(config.jwt.public, params.reply_token, {
     iss = validators.equals('chat.innatical.com'),
     aud = validators.equals('chat.innatical.com'),
     nbf = validators.is_not_before(),

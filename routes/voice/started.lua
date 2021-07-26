@@ -12,9 +12,7 @@ function Started:POST()
     id = custom_types.uuid,
   })
 
-  local tokenfile = assert(io.open(config.voice_token, 'r'))
-  local token = assert(tokenfile:read('a'))
-  tokenfile:close()
+  local token = config.voice_token
 
   helpers.assert_error(self.req.headers.Authorization == token, { 403, 'Unauthorized' })
 

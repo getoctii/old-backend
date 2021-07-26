@@ -17,11 +17,7 @@ function Newsletter:POST()
     NewsletterSubscribers:create({ email = params.email })
     local httpc = assert(http.new())
 
-    local hookfile = assert(io.open(config.subscriptions_webhook, 'r'))
-    local hook = assert(hookfile:read('a'))
-    hookfile:close()
-
-    assert(httpc:request_uri(hook, {
+    assert(httpc:request_uri(config.subscriptions_webhook, {
       method = 'POST',
       headers = {
         ['content-type'] = 'application/json'

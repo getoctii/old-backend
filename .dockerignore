@@ -3,5 +3,4 @@ logs
 lua_modules
 temp
 keys
-config.lua
 secrets/

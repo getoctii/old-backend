@@ -28,9 +28,6 @@ local function to_pairs(tbl)
 end
 
 local function generate_voice_token(room_id, user_id)
-  local keyfile = assert(io.open(config.jwt.voice, 'r'))
-  local key = assert(keyfile:read('a'))
-  keyfile:close()
   local time = os.time()
 
   local table = {
@@ -49,7 +46,7 @@ local function generate_voice_token(room_id, user_id)
     }
   }
 
-  return jwt:sign(key, table)
+  return jwt:sign(config.jwt.voice, table)
 end
 
 function Join:POST()
@@ -105,9 +102,7 @@ function Join:POST()
     local voice_pairs = to_pairs(config.voice_servers)
     local pair = voice_pairs[math.random(#voice_pairs)]
 
-    local tokenfile = assert(io.open(config.voice_token, 'r'))
-    local token = assert(tokenfile:read('a'))
-    tokenfile:close()
+    local token = config.voice_token
 
     local httpc = assert(http.new())
 
