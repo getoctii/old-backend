@@ -40,7 +40,7 @@ config('production', {
   jwt = {
     public = os.getenv('AUTH_PUBLIC'),
     private = os.getenv('AUTH_PRIVATE'),
-    voice = os.getenv('AUTH_VOICE')
+    voice = os.getenv('AUTH_VOICE_PRIVATE')
   },
   code_cache = 'on',
   default_profile_pictures = {
