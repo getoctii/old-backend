@@ -57,6 +57,6 @@ config('production', {
   port = 8086,
   pushpin = os.getenv('PUSHPIN_ADDR'),
   push = 'http://push:8080',
-  resolver = '127.0.0.11 ipv6=off',
+  resolver = '1.1.1.1',
   subscriptions_webhook = os.getenv('SUBSCRIPTIONS_WEBHOOK')
 })
