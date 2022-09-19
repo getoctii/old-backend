@@ -1,0 +1,15 @@
+.DS_Store
+*.key
+*.key.pub
+*.pub
+*.pem
+logs/
+nginx.conf.compiled
+/luarocks
+/lua
+/lua_modules
+/.luarocks
+temp/**
+!temp/.gitkeep
+keys
+secrets/

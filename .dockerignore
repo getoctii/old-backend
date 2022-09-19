@@ -1,0 +1,6 @@
+.vscode
+logs
+lua_modules
+temp
+keys
+secrets/

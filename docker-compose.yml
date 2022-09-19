@@ -1,0 +1,56 @@
+version: "3.8"
+services:
+  pushpin:
+    image: fanout/pushpin
+    networks:
+      - octii
+      - innatical
+    configs:
+      - source: pushpin_config
+        target: /etc/pushpin/pushpin.conf
+      - source: pushpin_routes
+        target: /etc/pushpin/routes
+    ports:
+      - "3000:7999"
+  gateway:
+    image: ghcr.io/innatical/octii-backend:master
+    networks:
+      - octii
+      - innatical
+    environment:
+      - ENVIROMENT=production
+    configs:
+      - source: gateway_config
+        target: /usr/src/app/config.lua
+    secrets:
+      - auth_private
+      - auth_public
+      - voice_private
+      - voice_token
+      - subscriptions_webhook
+      - db_password
+networks:
+  octii:
+  innatical:
+    external: true
+    name: innatical
+configs:
+  gateway_config:
+    file: config.lua
+  pushpin_config:
+    file: pushpin/pushpin.conf
+  pushpin_routes:
+    file: pushpin/routes
+secrets:
+  auth_private:
+    file: secrets/auth_private
+  auth_public:
+    file: secrets/auth_public
+  voice_private:
+    file: secrets/voice_private
+  voice_token:
+    file: secrets/voice_token
+  subscriptions_webhook:
+    file: secrets/subscriptions_webhook
+  db_password:
+    file: secrets/db_password
